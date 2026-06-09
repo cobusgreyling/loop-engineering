@@ -247,6 +247,48 @@
         "suggested_daily_cap": 100000,
         "early_exit_required": false
       }
+    },
+    {
+      "id": "issue-triage",
+      "name": "Issue Triage",
+      "file": "issue-triage.md",
+      "goal": "Discover, deduplicate, prioritize and label incoming issues/discussions so the team always has a clean actionable queue. Excellent low-risk companion to Daily Triage.",
+      "cadence": "2h-1d",
+      "risk": "low",
+      "tools": [
+        "grok",
+        "claude-code",
+        "codex",
+        "github-actions"
+      ],
+      "skills": [
+        "issue-triage",
+        "loop-verifier"
+      ],
+      "state": "issue-triage-state.md",
+      "phases": [
+        "discover",
+        "dedupe",
+        "score",
+        "propose-labels",
+        "human-review"
+      ],
+      "human_gates": [
+        "security",
+        "p0-p1",
+        "ambiguous-duplicates",
+        "stale-closures"
+      ],
+      "starter": "starters/minimal-loop",
+      "week_one_mode": "L1",
+      "token_cost": "low",
+      "cost": {
+        "tokens_noop": 3000,
+        "tokens_report": 30000,
+        "tokens_action": 60000,
+        "suggested_daily_cap": 80000,
+        "early_exit_required": false
+      }
     }
   ]
 }

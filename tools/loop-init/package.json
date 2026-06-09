@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop-init",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Scaffold loop engineering starters into your project by pattern and tool.",
   "type": "module",
   "bin": {
@@ -34,6 +34,10 @@
     "type": "git",
     "url": "git+https://github.com/cobusgreyling/loop-engineering.git",
     "directory": "tools/loop-init"
+  },
+  "homepage": "https://cobusgreyling.github.io/loop-engineering/",
+  "bugs": {
+    "url": "https://github.com/cobusgreyling/loop-engineering/issues"
   },
   "publishConfig": {
     "access": "public"

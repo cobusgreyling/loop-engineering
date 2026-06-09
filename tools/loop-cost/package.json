@@ -34,6 +34,10 @@
     "url": "git+https://github.com/cobusgreyling/loop-engineering.git",
     "directory": "tools/loop-cost"
   },
+  "homepage": "https://cobusgreyling.github.io/loop-engineering/",
+  "bugs": {
+    "url": "https://github.com/cobusgreyling/loop-engineering/issues"
+  },
   "publishConfig": {
     "access": "public"
   },

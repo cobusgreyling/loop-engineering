@@ -49,6 +49,10 @@ export interface LoopSignals {
         loopMdBudget: boolean;
         budgetSkill: boolean;
     };
+    loopActivity: {
+        present: boolean;
+        evidence: string[];
+    };
 }
 export interface Finding {
     level: 'ok' | 'warn' | 'fail';

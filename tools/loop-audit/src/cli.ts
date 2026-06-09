@@ -10,7 +10,7 @@ const suggest = args.includes('--suggest') || args.includes('--fix');
 const help = args.includes('--help') || args.includes('-h');
 
 if (help) {
-  console.log(`loop-audit — Loop Readiness Score CLI (v1.1+)
+  console.log(`loop-audit — Loop Readiness Score CLI (v1.4+)
 
 Usage:
   loop-audit [path] [options]
@@ -21,14 +21,20 @@ Options:
   --suggest   Show copy-from-template commands for missing pieces (recommended on first runs)
   --help, -h  This help
 
+New in v1.4:
+  • Dynamic "loop activity" detection (git history, "Last run" in STATE, scheduled workflows)
+  • Higher L3 bar requires proven usage, not just files
+  • Stronger recommendations when structure exists but no runs yet
+
 Exit codes:
   0  score >= 40
   2  score < 40 (early stage or gate)
 
 Examples:
   loop-audit .
-  loop-audit starters/minimal-loop --suggest
+  loop-audit . --suggest
   npx @cobusgreyling/loop-audit . --json
+  npx @cobusgreyling/loop-audit starters/minimal-loop --suggest
   bash scripts/before-after-demo.sh
 `);
   process.exit(0);
@@ -73,6 +79,9 @@ try {
     console.log('  # Or scaffold automatically:');
     console.log('  npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok');
     console.log('  npx @cobusgreyling/loop-cost --pattern daily-triage --level L1');
+    console.log('');
+    console.log('  # IMPORTANT (v1.4): After scaffolding, actually RUN a loop (report-only) and commit the updated STATE.md.');
+    console.log('  # This creates the "loopActivity" evidence that pushes you toward real L2/L3 scores.');
     console.log('');
     console.log('See docs/loop-design-checklist.md and patterns/ for full guidance.');
   }

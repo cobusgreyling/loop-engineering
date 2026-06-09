@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 const STATE_FILES = [
     'STATE.md',
     'pr-babysitter-state.md',
@@ -7,6 +8,7 @@ const STATE_FILES = [
     'post-merge-state.md',
     'dependency-sweeper-state.md',
     'changelog-drafter-state.md',
+    'issue-triage-state.md',
 ];
 const LOOP_SKILL_NAMES = [
     'loop-triage',
@@ -19,6 +21,7 @@ const LOOP_SKILL_NAMES = [
     'rebase-and-clean',
     'changelog-scan',
     'draft-release-notes',
+    'issue-triage',
 ];
 const SAFETY_FILES = ['safety.md', 'docs/safety.md', 'SECURITY.md'];
 const MCP_FILES = ['.mcp.json', 'mcp.json', '.mcp/config.json'];
@@ -72,6 +75,73 @@ async function findSkills(root) {
     }
     return found;
 }
+async function detectLoopActivity(root) {
+    const evidence = [];
+    const stateCandidates = [...STATE_FILES, 'STATE.md'];
+    // 1. Look for "Last run" timestamps or dated entries inside state files (strong real-usage signal)
+    for (const sf of stateCandidates) {
+        try {
+            const p = path.join(root, sf);
+            if (await fileExists(p)) {
+                const txt = await readFile(p, 'utf8');
+                if (/last\s*run|last updated|^\s*-\s*\d{4}-\d{2}-\d{2}/im.test(txt) || /triage|loop run|changelog drafter/i.test(txt)) {
+                    evidence.push(`state:${sf}`);
+                }
+            }
+        }
+        catch { }
+    }
+    // 2. Presence of run log artifacts or dedicated log templates being used
+    const logHints = ['loop-run-log', 'run-log', 'loop.log', 'audit-report'];
+    try {
+        const entries = await readdir(root, { withFileTypes: true });
+        for (const e of entries) {
+            if (e.isFile() && logHints.some(h => e.name.toLowerCase().includes(h))) {
+                evidence.push(`log:${e.name}`);
+            }
+        }
+    }
+    catch { }
+    // 3. Workflow or LOOP evidence of scheduled execution
+    try {
+        const wfDir = path.join(root, '.github', 'workflows');
+        if (await fileExists(wfDir)) {
+            const wfs = await readdir(wfDir);
+            if (wfs.some(w => /triage|changelog|daily|loop|audit|pr-babysit/i.test(w))) {
+                evidence.push('github:loop-workflows');
+            }
+        }
+    }
+    catch { }
+    // 4. Light git history scan for loop-related commits (best dynamic proof)
+    try {
+        const log = execSync('git log --oneline -25 -- .', {
+            cwd: root,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+            timeout: 1500,
+        });
+        const lower = log.toLowerCase();
+        if (/state\.md|loop| t riage |changelog-drafter|post-merge|daily triage|audit/i.test(lower)) {
+            const firstMatch = log.trim().split('\n')[0] || '';
+            evidence.push(`git:${firstMatch.slice(0, 60)}`);
+        }
+    }
+    catch {
+        // git not available or not a repo — ignore gracefully
+    }
+    // 5. Check LOOP.md or a state for explicit "Last run" human-readable proof
+    try {
+        const loopP = path.join(root, 'LOOP.md');
+        if (await fileExists(loopP)) {
+            const txt = await readFile(loopP, 'utf8');
+            if (/last run|cadence|scheduled|automation/i.test(txt))
+                evidence.push('LOOP.md:active');
+        }
+    }
+    catch { }
+    return { present: evidence.length > 0, evidence: Array.from(new Set(evidence)).slice(0, 4) };
+}
 export function computeScore(signals) {
     let score = 10;
     if (signals.stateFile.present)
@@ -110,12 +180,16 @@ export function computeScore(signals) {
         score += 2;
     if (signals.cost.budgetSkill)
         score += 2;
+    if (signals.loopActivity.present)
+        score += 6;
     score = Math.min(100, Math.max(0, score));
     const costReady = signals.cost.budgetDoc &&
         signals.cost.runLog &&
         signals.cost.loopMdBudget;
+    const hasRealActivity = signals.loopActivity.present;
+    const l3Ready = costReady && hasRealActivity;
     let level = 'L0';
-    if (score >= 78 && signals.verifier.present && signals.stateFile.present && costReady)
+    if (score >= 78 && signals.verifier.present && signals.stateFile.present && l3Ready)
         level = 'L3';
     else if (score >= 58 && signals.triage.present)
         level = 'L2';
@@ -123,15 +197,17 @@ export function computeScore(signals) {
         level = 'L1';
     else
         level = 'L0';
-    const assessment = score >= 82 && costReady
+    const assessment = score >= 82 && l3Ready
         ? 'Strong loop readiness — good candidate for L3 with explicit gates.'
         : score >= 82 && !costReady
             ? 'Strong signals but missing cost observability (loop-budget.md, loop-run-log.md, LOOP.md budget) — add before L3.'
-            : score >= 62
-                ? 'Good foundation — add missing verifier + safety docs for L3.'
-                : score >= 42
-                    ? 'Early loop setup — focus on L1 state + triage before enabling actions.'
-                    : 'Not loop-ready — start with a starter from this repo (minimal-loop or pr-babysitter).';
+            : score >= 82 && !hasRealActivity
+                ? 'Strong structure but no proven loop runs yet — run one L1 cycle and commit state before L3.'
+                : score >= 62
+                    ? 'Good foundation — add missing verifier + safety docs for L3.'
+                    : score >= 42
+                        ? 'Early loop setup — focus on L1 state + triage before enabling actions.'
+                        : 'Not loop-ready — start with a starter from this repo (minimal-loop or pr-babysitter).';
     return { score, level, assessment };
 }
 export async function auditProject(target) {
@@ -154,7 +230,8 @@ export async function auditProject(target) {
         skillNames.includes('ci-triage') ||
         skillNames.includes('dependency-triage') ||
         skillNames.includes('post-merge-scan') ||
-        skillNames.includes('changelog-scan');
+        skillNames.includes('changelog-scan') ||
+        skillNames.includes('issue-triage');
     let loopMdContent = '';
     if (loopMd) {
         loopMdContent = await readFile(path.join(root, 'LOOP.md'), 'utf8');
@@ -215,6 +292,7 @@ export async function auditProject(target) {
             break;
         }
     }
+    const loopActivity = await detectLoopActivity(root);
     const signals = {
         stateFile: { present: statePaths.length > 0, paths: statePaths },
         loopConfig: { present: loopMd, path: loopMd ? 'LOOP.md' : undefined },
@@ -230,6 +308,7 @@ export async function auditProject(target) {
         worktreeEvidence: { present: worktreeEvidence },
         registry: { present: registryPresent },
         cost: { budgetDoc, runLog, loopMdBudget, budgetSkill },
+        loopActivity,
     };
     if (!signals.stateFile.present) {
         findings.push({ level: 'fail', message: 'No state file (STATE.md or pattern-specific state).' });
@@ -319,6 +398,13 @@ export async function auditProject(target) {
     else {
         findings.push({ level: 'ok', message: 'loop-budget skill present.' });
     }
+    if (!signals.loopActivity.present) {
+        findings.push({ level: 'warn', message: 'No evidence of actual loop runs detected (no "Last run" entries in state, loop-related git activity, or scheduled workflows yet).' });
+        recommendations.push('Run one loop (report-only), update + commit STATE.md (or pattern state). This turns structure into proven usage.');
+    }
+    else {
+        findings.push({ level: 'ok', message: `Loop activity detected — real usage signals present (${signals.loopActivity.evidence.length} sources).` });
+    }
     const { score, level, assessment } = computeScore(signals);
     const costReady = signals.cost.budgetDoc &&
         signals.cost.runLog &&
@@ -327,6 +413,12 @@ export async function auditProject(target) {
         findings.push({
             level: 'warn',
             message: 'Score qualifies for L3 but cost observability is incomplete — capped at L2 until budget + run log + LOOP.md budget exist.',
+        });
+    }
+    if (score >= 78 && signals.verifier.present && signals.stateFile.present && costReady && !signals.loopActivity.present) {
+        findings.push({
+            level: 'warn',
+            message: 'Score qualifies for L3 but no proven loop activity yet — capped at L2 until you run and commit at least one loop cycle.',
         });
     }
     return {

@@ -8,8 +8,8 @@ flowchart TD
     B -->|yes| C[CI Sweeper]
     B -->|no| D{PRs stalling?}
     D -->|yes| E[PR Babysitter]
-    D -->|no| F{Morning chaos / unknown priorities?}
-    F -->|yes| G[Daily Triage]
+    D -->|no| F{Morning chaos or noisy issues?}
+    F -->|yes| G[Daily Triage + Issue Triage]
     F -->|no| H{Dependabot / CVE noise?}
     H -->|yes| I[Dependency Sweeper]
     H -->|no| J{Merge debt / TODOs piling up?}
@@ -45,7 +45,7 @@ npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok   # scaffolds 
 |---------|---------|------------|
 | CI failing on main or PRs | [CI Sweeper](../patterns/ci-sweeper.md) | L2, 15m cadence, max 3 attempts |
 | PRs waiting on review/CI/rebase | [PR Babysitter](../patterns/pr-babysitter.md) | L1 watch → L2 assisted |
-| "What should I work on?" every morning | [Daily Triage](../patterns/daily-triage.md) | **L1 report-only week one** |
+| "What should I work on?" every morning or noisy GitHub issues | [Daily Triage](../patterns/daily-triage.md) + [Issue Triage](../patterns/issue-triage.md) (new) | **L1 report-only week one** — low risk, excellent pair |
 | Outdated packages / CVE alerts | [Dependency Sweeper](../patterns/dependency-sweeper.md) | L2 patch-only, denylist majors |
 | TODOs and cleanup after merges | [Post-Merge Cleanup](../patterns/post-merge-cleanup.md) | L1 off-peak, small fixes only |
 | Stale or missing release notes | [Changelog Drafter](../patterns/changelog-drafter.md) | **L1** (draft only first), very low risk |

@@ -8,9 +8,11 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/cobusgreyling/loop-engineering/stargazers"><img src="https://img.shields.io/github/stars/cobusgreyling/loop-engineering?style=social" alt="GitHub stars"></a>
   <a href="https://github.com/cobusgreyling/loop-engineering/actions/workflows/audit.yml"><img src="https://img.shields.io/github/actions/workflow/status/cobusgreyling/loop-engineering/audit.yml?label=loop-audit%20dogfood" alt="loop-audit dogfood"></a>
+  <a href="https://www.npmjs.com/package/@cobusgreyling/loop-audit"><img src="https://img.shields.io/npm/v/@cobusgreyling/loop-audit?label=loop-audit" alt="loop-audit npm"></a>
   <a href="https://github.com/cobusgreyling/loop-engineering/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT"></a>
-  <a href="https://cobusgreyling.github.io/loop-engineering/"><img src="https://img.shields.io/badge/GitHub_Pages-live-3ee8c5" alt="Pages"></a>
+  <a href="https://cobusgreyling.github.io/loop-engineering/"><img src="https://img.shields.io/badge/GitHub_Pages-live%20%7C%20interactive-3ee8c5" alt="Pages"></a>
 </p>
 
 
@@ -42,10 +44,10 @@ A loop is a recursive goal: you define a purpose and the AI iterates (often with
 | [Pattern Picker](docs/pattern-picker.md) | Which loop to run first — **start here if unsure** |
 | [Primitives Matrix](docs/primitives-matrix.md) | Grok vs Claude Code vs Codex — bookmark this |
 | [Loop Design Checklist](docs/loop-design-checklist.md) | Ship readiness rubric |
-| [Patterns](patterns/README.md) | 6 production patterns including the new low-risk Changelog Drafter |
+| [Patterns](patterns/README.md) | 7 production patterns + [interactive picker](https://cobusgreyling.github.io/loop-engineering/#interactive) |
 | [Starters](starters/) | Clone-and-run kits (Grok, Claude Code, Codex) |
-| [loop-audit](tools/loop-audit/) | Loop Readiness Score CLI — `npx @cobusgreyling/loop-audit` |
-| [loop-init](tools/loop-init/) | Scaffold starters + budget/run-log — `npx @cobusgreyling/loop-init` |
+| [loop-audit](tools/loop-audit/) | Loop Readiness Score CLI (v1.4 + activity detection) — `npx @cobusgreyling/loop-audit . --suggest` |
+| [loop-init](tools/loop-init/) | Scaffold starters + budget/run-log (v1.2) — `npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok` |
 | [loop-cost](tools/loop-cost/) | Token spend estimator — `npx @cobusgreyling/loop-cost` |
 | [Stories](stories/) | Real wins and honest failures |
 
@@ -107,10 +109,11 @@ flowchart LR
 | [Dependency Sweeper](patterns/dependency-sweeper.md) | 6h–1d | [dependency-sweeper](starters/dependency-sweeper/) | L2 patch-only | Medium |
 | [Changelog Drafter](patterns/changelog-drafter.md) | 1d or tag | [changelog-drafter](starters/changelog-drafter/) | **L1** draft | Low |
 | [Post-Merge Cleanup](patterns/post-merge-cleanup.md) | 1d–6h | [post-merge-cleanup](starters/post-merge-cleanup/) | **L1** off-peak | Low |
+| [Issue Triage](patterns/issue-triage.md) | 2h–1d | [minimal-loop](starters/minimal-loop/) | **L1** propose-only | Low |
 
-Not sure which to pick? See [pattern-picker](docs/pattern-picker.md).
+Not sure which to pick? Try the [interactive picker](https://cobusgreyling.github.io/loop-engineering/#interactive) or [pattern-picker](docs/pattern-picker.md).
 
-Machine-readable index: [patterns/registry.yaml](patterns/registry.yaml) (now 6 patterns)
+Machine-readable index: [patterns/registry.yaml](patterns/registry.yaml) (7 patterns)
 
 ## Getting Started (5 minutes)
 
@@ -131,7 +134,9 @@ bash scripts/before-after-demo.sh
 /loop 1d Run loop-triage. Update STATE.md. No auto-fix in week one.
 ```
 
-Packages publish from tagged releases — see [docs/RELEASE.md](docs/RELEASE.md). Until npm is live, run from this repo:
+All three CLIs publish to npm from tagged releases — see [docs/RELEASE.md](docs/RELEASE.md). No clone required.
+
+**Develop from source** (monorepo contributors):
 
 ```bash
 cd tools/loop-init && npm ci && npm test && node dist/cli.js /path/to/project --pattern daily-triage --tool grok
@@ -173,7 +178,7 @@ Addy Osmani:
 
 ## Contributing
 
-Share production patterns, tool mappings, and failure stories. See [CONTRIBUTING.md](CONTRIBUTING.md) and [GitHub Discussions](https://github.com/cobusgreyling/loop-engineering/discussions).
+Share production patterns, tool mappings, and failure stories. See [CONTRIBUTING.md](CONTRIBUTING.md), [adopters](docs/adopters.md), and [GitHub Discussions](https://github.com/cobusgreyling/loop-engineering/discussions).
 
 ## Sources
 

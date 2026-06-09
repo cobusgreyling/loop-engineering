@@ -507,3 +507,105 @@ section {
   .hero { padding: 48px 0 40px; }
   .flow-arrow { display: none; }
 }
+
+/* === Interactive widgets (v1.4 site upgrade) === */
+.interactive {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin: 24px 0;
+}
+
+.symptom-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.symptom-pill {
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+
+.symptom-pill:hover { border-color: var(--accent); color: var(--text); }
+.symptom-pill.active {
+  background: rgba(62, 232, 197, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.reco-card {
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: #050810;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.reco-card .cmd {
+  font-family: var(--font-mono);
+  background: rgba(255,255,255,0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 16px;
+  margin: 16px 0;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.check-item input { accent-color: var(--accent); }
+
+.live-score {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-radius: 10px;
+}
+
+.live-score .big {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.live-score .meta { font-size: 0.85rem; }
+
+.copy-btn {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(62,232,197,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(62,232,197,0.3);
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.copy-btn:hover { background: rgba(62,232,197,0.2); }

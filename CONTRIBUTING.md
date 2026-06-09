@@ -52,8 +52,9 @@ Also add an entry to `patterns/registry.yaml`.
 
 ## Community
 
-- **Questions**: open an issue with label `question` or `pattern-request`
-- **Discussions**: enable GitHub Discussions on the repo for pattern Q&A (recommended for maintainers)
+- **Questions**: [GitHub Discussions](https://github.com/cobusgreyling/loop-engineering/discussions) (preferred) or issue with label `question`
+- **Show your loop**: post in Discussions or add a row to [docs/adopters.md](./docs/adopters.md)
+- **Good first issues**: look for label [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 - **Security**: see [SECURITY.md](./SECURITY.md) — do not file public issues for exploitable vulnerabilities
 
 Thank you for helping make this the go-to reference for loop engineering.

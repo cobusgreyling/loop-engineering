@@ -32,7 +32,7 @@ title: Loop Engineering — Showcase
 </nav>
 
 <header class="hero wrap">
-  <div class="badge">Open source · Tool-agnostic · Production-ready · L3 dogfood score · 6 patterns</div>
+  <div class="badge">Open source · Tool-agnostic · Production-ready · L3 dogfood · 7 patterns · Interactive tools</div>
   <h1>Design the system<br>that prompts your agents</h1>
   <p class="lead">
     Loop engineering moves you from "I prompt → agent responds → I prompt again"
@@ -43,6 +43,12 @@ title: Loop Engineering — Showcase
     <a href="https://cobusgreyling.substack.com/p/loop-engineering" class="btn btn-ghost">Read the Essay</a>
     <a href="https://github.com/cobusgreyling/loop-engineering/blob/main/docs/primitives-matrix.md" class="btn btn-ghost">Primitives Matrix</a>
   </div>
+  <p style="text-align:center; margin-top:-12px; margin-bottom:32px; font-size:0.9rem; color:var(--text-muted);">
+    Or try instantly: <code style="background:#050810;padding:2px 6px;border-radius:4px;">npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok</code>
+    &nbsp; <button onclick="copyNpxInit()" class="copy-btn" style="vertical-align:middle;">Copy</button>
+    &nbsp;&nbsp; <code style="background:#050810;padding:2px 6px;border-radius:4px;">npx @cobusgreyling/loop-audit . --suggest</code>
+    <button onclick="copyNpxAudit()" class="copy-btn" style="vertical-align:middle;">Copy</button>
+  </p>
   <img
     class="hero-img"
     src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/cobus-greyling.jpg"
@@ -259,6 +265,71 @@ npx @cobusgreyling/loop-audit . --suggest
   </p>
 </section>
 
+<!-- NEW: Interactive tools (makes the showcase actually useful to play with) -->
+<section id="interactive" class="wrap" style="padding-top: 12px;">
+  <p class="section-label">Play with it</p>
+  <h2 class="section-title">Interactive Pattern Picker &amp; Readiness Simulator</h2>
+  <p class="section-desc">Pick your pain. See the exact loop + commands. Simulate your score live.</p>
+
+  <div class="interactive">
+    <h3 style="font-size:1rem; margin-bottom:8px;">What's hurting right now?</h3>
+    <div class="symptom-pills" id="symptom-pills">
+      <div class="symptom-pill" data-symptom="ci">CI red / flaky checks</div>
+      <div class="symptom-pill" data-symptom="prs">PRs stalling on review/CI</div>
+      <div class="symptom-pill" data-symptom="morning">Morning chaos — what should I do?</div>
+      <div class="symptom-pill" data-symptom="deps">Dependabot / CVE noise</div>
+      <div class="symptom-pill" data-symptom="debt">Merge debt / TODOs piling up</div>
+      <div class="symptom-pill" data-symptom="releases">Stale release notes / changelogs</div>
+    </div>
+
+    <div id="reco-output" class="reco-card" style="display:none;">
+      <strong>Recommended:</strong> <span id="reco-name"></span> <span id="reco-meta" style="color:var(--text-muted);"></span><br>
+      <span style="font-size:0.8rem;">Scaffold:</span> <code id="reco-npx" class="cmd"></code> <button onclick="copyRecoNpx()" class="copy-btn">Copy</button><br>
+      <span style="font-size:0.8rem;">First run (report-only):</span> <code id="reco-loop" style="font-family:var(--font-mono);"></code>
+      <div style="margin-top:8px;">
+        <a id="reco-link" class="link" href="#" target="_blank" rel="noopener">Read full pattern →</a>
+        <a id="reco-starter" class="link" href="#" target="_blank" rel="noopener" style="margin-left:12px">Open starter →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="interactive">
+    <h3 style="font-size:1rem; margin-bottom:8px;">Live Loop Readiness Simulator (mirrors loop-audit)</h3>
+    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Check the boxes you already have (or plan to add). Score updates live.</p>
+
+    <div class="check-grid" id="sim-checks">
+      <label class="check-item"><input type="checkbox" data-sig="stateFile"> State file (STATE.md or pattern state)</label>
+      <label class="check-item"><input type="checkbox" data-sig="triage"> Triage skill present</label>
+      <label class="check-item"><input type="checkbox" data-sig="verifier"> Verifier skill / maker-checker</label>
+      <label class="check-item"><input type="checkbox" data-sig="loopConfig"> LOOP.md (cadence + gates)</label>
+      <label class="check-item"><input type="checkbox" data-sig="safety"> Safety docs or LOOP.md gates</label>
+      <label class="check-item"><input type="checkbox" data-sig="github"> .github + workflows (dogfood)</label>
+      <label class="check-item"><input type="checkbox" data-sig="mcp"> MCP / connectors configured</label>
+      <label class="check-item"><input type="checkbox" data-sig="worktree"> Worktree isolation evidence</label>
+      <label class="check-item"><input type="checkbox" data-sig="registry"> patterns/registry.yaml</label>
+      <label class="check-item"><input type="checkbox" data-sig="budgetDoc"> loop-budget.md (token caps)</label>
+      <label class="check-item"><input type="checkbox" data-sig="runLog"> loop-run-log.md (run history)</label>
+      <label class="check-item"><input type="checkbox" data-sig="loopMdBudget"> LOOP.md budget section</label>
+      <label class="check-item"><input type="checkbox" data-sig="activity"> Loop activity (real runs / "Last run" timestamps)</label>
+    </div>
+
+    <div class="live-score">
+      <div>
+        <div class="big" id="live-score">10</div>
+        <div style="font-size:0.7rem; color:var(--text-muted);">/ 100</div>
+      </div>
+      <div class="meta">
+        <div><strong id="live-level">L0</strong> — <span id="live-assessment">Not loop-ready — start with a starter.</span></div>
+        <div id="live-reco" style="margin-top:4px; font-size:0.8rem; color:var(--accent);"></div>
+      </div>
+    </div>
+
+    <div style="font-size:0.75rem; color:var(--text-muted);">
+      Client-side approximation of <code>loop-audit</code> v1.4 scoring. L3 requires verifier + state + cost observability + proven activity.
+    </div>
+  </div>
+</section>
+
 <section class="wrap" style="padding-top: 0;">
   <p class="section-label">Deep dives</p>
   <h2 class="section-title">Engineering, not hype</h2>
@@ -329,6 +400,210 @@ npx @cobusgreyling/loop-audit . --suggest
     Built by <a href="https://github.com/cobusgreyling">Cobus Greyling</a>
   </p>
 </footer>
+
+<script>
+// Copy helpers for hero
+function copyNpxInit() {
+  const txt = 'npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok';
+  navigator.clipboard.writeText(txt).then(() => {
+    const b = event.currentTarget; // best effort
+  });
+  // visual feedback
+  const orig = event.target.textContent;
+  event.target.textContent = 'Copied!';
+  setTimeout(() => { if (event.target) event.target.textContent = orig || 'Copy'; }, 1400);
+}
+function copyNpxAudit() {
+  const txt = 'npx @cobusgreyling/loop-audit . --suggest';
+  navigator.clipboard.writeText(txt);
+  const t = event.target;
+  const orig = t.textContent;
+  t.textContent = 'Copied!';
+  setTimeout(() => t.textContent = orig || 'Copy', 1400);
+}
+
+// === Interactive Pattern Picker ===
+const PATTERNS = {
+  ci: {
+    name: 'CI Sweeper',
+    meta: '5–15m • Medium risk • L2 cautious',
+    npx: 'npx @cobusgreyling/loop-init . --pattern ci-sweeper --tool grok',
+    loop: '/loop 15m Run ci-triage on failing CI. Update ci-sweeper-state.md. Fix only regressions in worktree. Max 3 attempts.',
+    patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/ci-sweeper.md',
+    starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/ci-sweeper'
+  },
+  prs: {
+    name: 'PR Babysitter',
+    meta: '5–15m • Medium risk • L1 watch → L2',
+    npx: 'npx @cobusgreyling/loop-init . --pattern pr-babysitter --tool grok',
+    loop: '/loop 10m Run pr-review-triage. Update pr-babysitter-state.md. Worktree + verifier. No auto-merge by default.',
+    patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/pr-babysitter.md',
+    starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/pr-babysitter'
+  },
+  morning: {
+    name: 'Daily Triage',
+    meta: '1d–2h • Low risk • Start here (L1)',
+    npx: 'npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok',
+    loop: '/loop 1d Run loop-triage. Update STATE.md. No auto-fix in week one.',
+    patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/daily-triage.md',
+    starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/minimal-loop'
+  },
+  deps: {
+    name: 'Dependency Sweeper',
+    meta: '6h–1d • Medium risk • Patch-only first',
+    npx: 'npx @cobusgreyling/loop-init . --pattern dependency-sweeper --tool grok',
+    loop: '/loop 6h Run dependency-triage. Patch-only auto-fix in worktree + verifier. Escalate majors.',
+    patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/dependency-sweeper.md',
+    starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/dependency-sweeper'
+  },
+  debt: {
+    name: 'Post-Merge Cleanup',
+    meta: '1d–6h • Low risk • Off-peak L1',
+    npx: 'npx @cobusgreyling/loop-init . --pattern post-merge-cleanup --tool grok',
+    loop: '/loop 1d Run post-merge-scan on recent merges. Update post-merge-state.md. Small fixes only.',
+    patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/post-merge-cleanup.md',
+    starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/post-merge-cleanup'
+  },
+  releases: {
+    name: 'Changelog Drafter',
+    meta: '1d or tag • Low risk • New favorite',
+    npx: 'npx @cobusgreyling/loop-init . --pattern changelog-drafter --tool grok',
+    loop: '/loop 1d Run changelog-scan + draft-release-notes. Write RELEASE_NOTES_DRAFT.md. Human review only.',
+    patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/changelog-drafter.md',
+    starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/changelog-drafter'
+  }
+};
+
+function setupPatternPicker() {
+  const container = document.getElementById('symptom-pills');
+  const output = document.getElementById('reco-output');
+  if (!container || !output) return;
+
+  let current = null;
+
+  container.addEventListener('click', (e) => {
+    const pill = e.target.closest('.symptom-pill');
+    if (!pill) return;
+    const sym = pill.dataset.symptom;
+    if (!sym || !PATTERNS[sym]) return;
+
+    // toggle active
+    container.querySelectorAll('.symptom-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+
+    const p = PATTERNS[sym];
+    document.getElementById('reco-name').textContent = p.name;
+    document.getElementById('reco-meta').textContent = ' — ' + p.meta;
+    document.getElementById('reco-npx').textContent = p.npx;
+    document.getElementById('reco-loop').textContent = p.loop;
+    document.getElementById('reco-link').href = p.patternHref;
+    document.getElementById('reco-starter').href = p.starterHref;
+
+    output.style.display = 'block';
+    current = p;
+  });
+
+  // expose for the copy button in reco card
+  window.copyRecoNpx = () => {
+    if (!current) return;
+    navigator.clipboard.writeText(current.npx);
+    const btns = document.querySelectorAll('#reco-output .copy-btn');
+    if (btns[0]) {
+      const o = btns[0].textContent;
+      btns[0].textContent = 'Copied!';
+      setTimeout(() => btns[0].textContent = o, 1200);
+    }
+  };
+}
+
+// === Live Readiness Simulator (client-side port of computeScore + L3 rules) ===
+function setupSimulator() {
+  const checks = document.querySelectorAll('#sim-checks input[type="checkbox"]');
+  const scoreEl = document.getElementById('live-score');
+  const levelEl = document.getElementById('live-level');
+  const assessEl = document.getElementById('live-assessment');
+  const recoEl = document.getElementById('live-reco');
+  if (!checks.length || !scoreEl) return;
+
+  function computeLive() {
+    const sig = {};
+    checks.forEach(ch => { sig[ch.dataset.sig] = ch.checked; });
+
+    let score = 10;
+    if (sig.stateFile) score += 18;
+    if (sig.triage) score += 14;
+    if (sig.loopConfig) score += 9;
+    if (sig.safety) score += 8; // combined safety
+    if (sig.github) score += 10;
+    if (sig.mcp) score += 3;
+    if (sig.worktree) score += 3;
+    if (sig.registry) score += 2;
+    if (sig.budgetDoc) score += 3;
+    if (sig.runLog) score += 3;
+    if (sig.loopMdBudget) score += 2;
+    if (sig.activity) score += 6;
+    if (sig.verifier) score += 14;
+
+    // skills bonus rough (if verifier + triage we assume 2+)
+    if (sig.triage && sig.verifier) score += 10;
+    else if (sig.triage) score += 5;
+
+    score = Math.max(0, Math.min(100, score));
+
+    let level = 'L0';
+    let assess = 'Not loop-ready — start with a starter from this repo.';
+    let reco = 'Add STATE.md + one triage skill first.';
+
+    const hasActivity = !!sig.activity;
+    const hasState = !!sig.stateFile;
+    const hasTriage = !!sig.triage;
+    const hasVerifier = !!sig.verifier;
+    const costReady = !!(sig.budgetDoc && sig.runLog && sig.loopMdBudget);
+
+    if (score >= 78 && hasVerifier && hasState && hasActivity && costReady) {
+      level = 'L3';
+      assess = 'Strong loop readiness — good candidate for L3 with explicit gates.';
+      reco = 'You have structure, cost observability, and real usage. Run unattended only where allowlisted.';
+    } else if (score >= 78 && hasVerifier && hasState && !costReady) {
+      level = 'L2';
+      assess = 'Strong signals but missing cost observability — add budget + run log before L3.';
+      reco = 'npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok (scaffolds loop-budget.md + loop-run-log.md)';
+    } else if (score >= 78 && hasVerifier && hasState && costReady && !hasActivity) {
+      level = 'L2';
+      assess = 'Strong structure but no proven loop runs yet.';
+      reco = 'Run one L1 loop, update STATE.md, and commit — activity is required for L3.';
+    } else if (score >= 58 && hasTriage) {
+      level = 'L2';
+      assess = 'Good foundation — add missing verifier + safety docs for L3.';
+      reco = 'Add loop-verifier + document human gates in LOOP.md.';
+    } else if (score >= 38 && hasState) {
+      level = 'L1';
+      assess = 'Early loop setup — focus on L1 state + triage before enabling actions.';
+      reco = 'Run report-only for a week, then add verifier for assisted fixes.';
+    } else {
+      level = 'L0';
+      assess = 'Not loop-ready — start with a starter from this repo (minimal-loop or pr-babysitter).';
+      reco = 'npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok';
+    }
+
+    scoreEl.textContent = score;
+    levelEl.textContent = level;
+    assessEl.textContent = assess;
+    recoEl.textContent = 'Next: ' + reco;
+  }
+
+  checks.forEach(ch => ch.addEventListener('change', computeLive));
+  // seed with a reasonable starting state (like many people have)
+  // (user can immediately interact)
+  computeLive();
+}
+
+// Boot
+document.addEventListener('DOMContentLoaded', () => {
+  setupPatternPicker();
+  setupSimulator();
+});
+</script>
 
 </body>
 </html>

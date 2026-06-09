@@ -16,6 +16,7 @@ Each pattern answers:
 |---------|---------|------|------|
 | PR Babysitter | 5–15m | Medium | [pr-babysitter.md](./pr-babysitter.md) |
 | Daily Triage | 1d–2h | Low | [daily-triage.md](./daily-triage.md) |
+| Issue Triage (new) | 2h–1d | Low | [issue-triage.md](./issue-triage.md) |
 | CI Sweeper | 5–15m | Medium | [ci-sweeper.md](./ci-sweeper.md) |
 | Post-Merge Cleanup | 1d–6h | Low | [post-merge-cleanup.md](./post-merge-cleanup.md) |
 | Dependency Sweeper | 6h–1d | Medium | [dependency-sweeper.md](./dependency-sweeper.md) |
