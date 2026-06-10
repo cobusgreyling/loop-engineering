@@ -105,15 +105,15 @@ jobs:
             echo "PR #$EXISTING already open"
             PR_NUMBER="$EXISTING"
           else
-            PR_NUMBER=$(gh pr create \
+            gh pr create \
               --base main \
               --head "$BRANCH" \
               --title "chore(loop): daily triage STATE.md $(date -u +%Y-%m-%d)" \
               --body "Automated daily triage update from \`daily-triage.yml\`.
 
           - Loop readiness: **${{ steps.audit.outputs.score }}** (${{ steps.audit.outputs.level }})
-          - Merges automatically when \`validate\` and \`audit\` pass." \
-              --json number -q '.number')
+          - Merges automatically when \`validate\` and \`audit\` pass."
+            PR_NUMBER=$(gh pr view "$BRANCH" --json number -q '.number')
           fi
 
           gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
