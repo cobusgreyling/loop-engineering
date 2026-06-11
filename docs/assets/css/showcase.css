@@ -56,7 +56,9 @@ a:hover { color: #6ff5d8; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   height: 64px;
+  position: relative;
 }
 
 .logo {
@@ -81,6 +83,47 @@ a:hover { color: #6ff5d8; }
 }
 
 .nav-links a:hover { color: var(--text); }
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+}
+
+.nav-toggle-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
 
 .btn {
   display: inline-flex;
@@ -491,6 +534,24 @@ section {
   margin-bottom: 28px;
 }
 
+.cta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cta-stars {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.cta-stars img {
+  display: block;
+  border-radius: 999px;
+}
+
 .footer {
   padding: 32px 24px;
   text-align: center;
@@ -503,7 +564,50 @@ section {
 .footer a:hover { color: var(--accent); }
 
 @media (max-width: 640px) {
-  .nav-links { display: none; }
+  .nav-toggle { display: flex; }
+
+  .nav-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(7, 11, 18, 0.98);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  }
+
+  .nav-menu.open { display: flex; }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .nav-links a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+
+  .nav-links a:hover {
+    background: rgba(62, 232, 197, 0.08);
+  }
+
+  .nav-menu .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  body.nav-open { overflow: hidden; }
+
   .hero { padding: 48px 0 40px; }
   .flow-arrow { display: none; }
 }

@@ -20,14 +20,28 @@ title: Loop Engineering — Showcase
 <nav class="nav">
   <div class="wrap nav-inner">
     <a href="#" class="logo">Loop <span>Engineering</span></a>
-    <ul class="nav-links">
-      <li><a href="#patterns">Patterns</a></li>
-      <li><a href="#primitives">Primitives</a></li>
-      <li><a href="#start">Get Started</a></li>
-      <li><a href="https://cobusgreyling.substack.com/p/loop-engineering">Essay</a></li>
-      <li><a href="https://github.com/cobusgreyling/loop-engineering">GitHub</a></li>
-    </ul>
-    <a href="https://github.com/cobusgreyling/loop-engineering" class="btn btn-primary">View Repo</a>
+    <button
+      type="button"
+      class="nav-toggle"
+      aria-label="Open menu"
+      aria-expanded="false"
+      aria-controls="nav-menu"
+    >
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
+    <div id="nav-menu" class="nav-menu">
+      <ul class="nav-links">
+        <li><a href="#patterns">Patterns</a></li>
+        <li><a href="#primitives">Primitives</a></li>
+        <li><a href="#interactive">Picker</a></li>
+        <li><a href="#start">Get Started</a></li>
+        <li><a href="https://cobusgreyling.substack.com/p/loop-engineering">Essay</a></li>
+        <li><a href="https://github.com/cobusgreyling/loop-engineering">GitHub</a></li>
+      </ul>
+      <a href="https://github.com/cobusgreyling/loop-engineering" class="btn btn-primary">View Repo</a>
+    </div>
   </div>
 </nav>
 
@@ -402,8 +416,17 @@ npx @cobusgreyling/loop-audit . --suggest
 <div class="cta">
   <h2>Ready to stop prompting?</h2>
   <p>The best loops are boring, reliable, and transparent.</p>
-  <a href="https://github.com/cobusgreyling/loop-engineering" class="btn btn-primary">Star on GitHub</a>
-  <a href="https://github.com/cobusgreyling/loop-engineering/blob/main/CONTRIBUTING.md" class="btn btn-ghost" style="margin-left: 12px;">Contribute a pattern</a>
+  <div class="cta-actions">
+    <a href="https://github.com/cobusgreyling/loop-engineering" class="btn btn-primary">Star on GitHub</a>
+    <a href="https://github.com/cobusgreyling/loop-engineering/stargazers" class="cta-stars" aria-label="GitHub stars">
+      <img
+        src="https://img.shields.io/github/stars/cobusgreyling/loop-engineering?style=for-the-badge&logo=github&label=Stars&labelColor=111a28&color=3ee8c5"
+        alt="GitHub stars"
+        height="32"
+      />
+    </a>
+    <a href="https://github.com/cobusgreyling/loop-engineering/blob/main/CONTRIBUTING.md" class="btn btn-ghost">Contribute a pattern</a>
+  </div>
 </div>
 
 <footer class="footer">
@@ -625,8 +648,37 @@ function setupSimulator() {
   computeLive();
 }
 
+function setupMobileNav() {
+  const toggle = document.querySelector('.nav-toggle');
+  const menu = document.getElementById('nav-menu');
+  if (!toggle || !menu) return;
+
+  const closeMenu = () => {
+    menu.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
+    document.body.classList.remove('nav-open');
+  };
+
+  toggle.addEventListener('click', () => {
+    const open = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    document.body.classList.toggle('nav-open', open);
+  });
+
+  menu.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', closeMenu);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
+  });
+}
+
 // Boot
 document.addEventListener('DOMContentLoaded', () => {
+  setupMobileNav();
   setupPatternPicker();
   setupSimulator();
 });

@@ -38,6 +38,20 @@ A loop is a recursive goal: you define a purpose and the AI iterates (often with
   <strong><a href="https://cobusgreyling.substack.com/p/loop-engineering">→ Read the Loop Engineering essay on Substack</a></strong>
 </p>
 
+## Contents
+
+- [Quick Links](#quick-links)
+- [Why This Matters](#why-this-matters)
+- [The Five Building Blocks + Memory](#the-five-building-blocks--memory)
+- [Patterns](#patterns)
+- [Getting Started (5 minutes)](#getting-started-5-minutes)
+- [Examples by Tool](#examples-by-tool)
+- [Operating & Safety](#operating--safety)
+- [Caveats](#caveats)
+- [Contributing](#contributing)
+- [Sources](#sources)
+- [License](#license)
+
 ## Quick Links
 
 | Start here | Description |
