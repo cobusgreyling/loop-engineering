@@ -144,10 +144,15 @@ jobs:
           fi
 
           BRANCH="automated/daily-triage-$(date -u +%Y-%m-%d)"
-          git fetch origin "$BRANCH" 2>/dev/null && git checkout "$BRANCH" || git checkout -b "$BRANCH"
+          git fetch origin main "$BRANCH" 2>/dev/null || git fetch origin main
+          # -B keeps working-tree edits; avoids checkout conflicts with modified STATE.md
+          git checkout -B "$BRANCH"
           git add STATE.md loop-run-log.md
           git commit -m "chore(loop): daily triage update STATE.md + run log [automated]"
-          git push -u origin "$BRANCH"
+          if git rev-parse --verify "refs/remotes/origin/${BRANCH}" >/dev/null 2>&1; then
+            git rebase "origin/${BRANCH}"
+          fi
+          git push -u origin "$BRANCH" --force-with-lease
           echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
           echo "opened=true" >> "$GITHUB_OUTPUT"
