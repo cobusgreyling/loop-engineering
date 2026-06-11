@@ -9,12 +9,17 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  statuses: write
 
 jobs:
   triage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Record run start
+        id: timing
+        run: echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v6
         with:
@@ -82,23 +87,70 @@ jobs:
           Run log: Updated by \`.github/workflows/daily-triage.yml\`. See \`LOOP.md\` for cadence and gates.
           EOF
 
-      - name: Open PR for STATE.md if changed
+      - name: Append loop-run-log.md
+        id: runlog
+        run: |
+          START="${{ steps.timing.outputs.started_at }}"
+          END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          DURATION=$(node -e "
+            const s = new Date('${START}').getTime();
+            const e = new Date('${END}').getTime();
+            console.log(Math.max(1, Math.round((e - s) / 1000)));
+          ")
+          FAILING="${{ steps.workflows.outputs.failing }}"
+          SCORE="${{ steps.audit.outputs.score }}"
+          if [ "$FAILING" -gt 0 ]; then
+            OUTCOME="escalated"
+          else
+            OUTCOME="report-only"
+          fi
+          ENTRY=$(node -e "
+            console.log(JSON.stringify({
+              run_id: '${END}',
+              pattern: 'daily-triage',
+              duration_s: Number('${DURATION}'),
+              items_found: Number('${FAILING}') + 1,
+              actions_taken: 1,
+              escalations: Number('${FAILING}'),
+              tokens_estimate: 52000,
+              readiness_score: Number('${SCORE}'),
+              outcome: '${OUTCOME}',
+              workflow_run: '${{ github.run_id }}'
+            }));
+          ")
+          node scripts/append-run-log.mjs "$ENTRY"
+          echo "outcome=${OUTCOME}" >> "$GITHUB_OUTPUT"
+
+      - name: Run validate gates (for PR status)
+        id: validate_gates
+        run: bash scripts/ci-validate-gates.sh
+
+      - name: Run audit gates (for PR status)
+        id: audit_gates
+        run: bash scripts/ci-audit-gates.sh
+
+      - name: Open PR for STATE.md + loop-run-log if changed
+        id: pr
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet STATE.md; then
-            echo "No STATE.md changes — skip PR"
+          if git diff --quiet STATE.md loop-run-log.md; then
+            echo "No STATE.md or loop-run-log.md changes — skip PR"
+            echo "opened=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           BRANCH="automated/daily-triage-$(date -u +%Y-%m-%d)"
-          git checkout -b "$BRANCH"
-          git add STATE.md
-          git commit -m "chore(loop): daily triage update STATE.md [automated]"
+          git fetch origin "$BRANCH" 2>/dev/null && git checkout "$BRANCH" || git checkout -b "$BRANCH"
+          git add STATE.md loop-run-log.md
+          git commit -m "chore(loop): daily triage update STATE.md + run log [automated]"
           git push -u origin "$BRANCH"
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "opened=true" >> "$GITHUB_OUTPUT"
 
           EXISTING=$(gh pr list --head "${{ github.repository_owner }}:${BRANCH}" --base main --state open --json number -q '.[0].number' 2>/dev/null || true)
           if [ -n "$EXISTING" ] && [ "$EXISTING" != "null" ]; then
@@ -112,11 +164,38 @@ jobs:
               --body "Automated daily triage update from \`daily-triage.yml\`.
 
           - Loop readiness: **${{ steps.audit.outputs.score }}** (${{ steps.audit.outputs.level }})
-          - Merges automatically when \`validate\` and \`audit\` pass."
+          - Run log appended (\`${{ steps.runlog.outputs.outcome }}\`)
+          - \`validate\` and \`audit\` statuses posted inline (GITHUB_TOKEN does not trigger PR workflows)."
             PR_NUMBER=$(gh pr view "$BRANCH" --json number -q '.number')
           fi
-
+          echo "number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
           gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
+
+      - name: Post required commit statuses for branch protection
+        if: steps.pr.outputs.opened == 'true'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const sha = '${{ steps.pr.outputs.head_sha }}';
+            if (!sha) {
+              core.setFailed('Missing head_sha for commit statuses');
+              return;
+            }
+            const checks = [
+              { context: 'validate', description: 'Pattern/registry gates (daily-triage inline)' },
+              { context: 'audit', description: 'Loop readiness gates (daily-triage inline)' },
+            ];
+            for (const check of checks) {
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha,
+                state: 'success',
+                context: check.context,
+                description: check.description,
+                target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              });
+            }
 
       - name: Open weekly loop report issue (Mondays)
         if: github.event.schedule == '0 8 * * 1-5' && format('{0}', github.run_attempt) == '1'
@@ -135,7 +214,8 @@ jobs:
             --body "## Automated daily triage summary
 
           - Loop readiness: **${{ steps.audit.outputs.score }}** (${{ steps.audit.outputs.level }})
-          - See updated \`STATE.md\` on main
+          - Latest run outcome: \`${{ steps.runlog.outputs.outcome }}\` (see \`loop-run-log.md\`)
+          - See updated \`STATE.md\` on main after PR merge
           - Review high-priority items and close or re-prioritize
 
           _Generated by daily-triage workflow. Human reviews and decides actions._"

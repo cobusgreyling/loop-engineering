@@ -54,7 +54,7 @@ See [docs/multi-loop.md](docs/multi-loop.md). Priority: CI Sweeper → PR Babysi
 ## Budget & Observability
 
 - Token caps: `loop-budget.md`
-- Run history: `loop-run-log.md`
+- Run history: `loop-run-log.md` (appended each weekday run by `daily-triage.yml`)
 - Estimate: `npx @cobusgreyling/loop-cost --pattern daily-triage`
 - Kill switch: `loop-pause-all` label or flag in `STATE.md`
 
