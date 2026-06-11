@@ -11,13 +11,15 @@
   <a href="https://github.com/cobusgreyling/loop-engineering/stargazers"><img src="https://img.shields.io/github/stars/cobusgreyling/loop-engineering?style=social" alt="GitHub stars"></a>
   <a href="https://github.com/cobusgreyling/loop-engineering/actions/workflows/audit.yml"><img src="https://img.shields.io/github/actions/workflow/status/cobusgreyling/loop-engineering/audit.yml?label=loop-audit%20dogfood" alt="loop-audit dogfood"></a>
   <a href="https://www.npmjs.com/package/@cobusgreyling/loop-audit"><img src="https://img.shields.io/npm/v/@cobusgreyling/loop-audit?label=loop-audit" alt="loop-audit npm"></a>
+  <a href="https://www.npmjs.com/package/@cobusgreyling/loop-init"><img src="https://img.shields.io/npm/v/@cobusgreyling/loop-init?label=loop-init" alt="loop-init npm"></a>
+  <a href="https://www.npmjs.com/package/@cobusgreyling/loop-cost"><img src="https://img.shields.io/npm/v/@cobusgreyling/loop-cost?label=loop-cost" alt="loop-cost npm"></a>
   <a href="https://github.com/cobusgreyling/loop-engineering/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT"></a>
   <a href="https://cobusgreyling.github.io/loop-engineering/"><img src="https://img.shields.io/badge/GitHub_Pages-live%20%7C%20interactive-3ee8c5" alt="Pages"></a>
 </p>
 
 
 <p align="center">
-  <img src="assets/cobus-greyling.jpg" alt="Cobus Greyling" />
+  <img src="assets/visuals/loop-engineering-logo.jpg" alt="Loop Engineering" width="96" />
 </p>
 
 **Loop engineering is replacing yourself as the person who prompts the agent. You design the system that does it instead.**
@@ -193,3 +195,11 @@ MIT
 ---
 
 *Practical, tool-aware reference for loop engineering — patterns you can clone, checklists you can ship against, and stories that include what broke.*
+
+<p align="center">
+  <a href="https://cobusgreyling.substack.com/p/loop-engineering">Essay</a>
+  ·
+  <a href="https://cobusgreyling.github.io/loop-engineering/">Showcase</a>
+  ·
+  <a href="https://github.com/cobusgreyling">Cobus Greyling</a>
+</p>

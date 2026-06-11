@@ -51,8 +51,8 @@ title: Loop Engineering — Showcase
   </p>
   <img
     class="hero-img"
-    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/cobus-greyling.jpg"
-    alt="Loop Engineering"
+    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-social-banner.jpg"
+    alt="Loop Engineering — Design the system that prompts your agents"
     loading="lazy"
   />
 </header>
@@ -76,6 +76,13 @@ title: Loop Engineering — Showcase
   <p class="section-label">Anatomy</p>
   <h2 class="section-title">What one loop looks like</h2>
   <p class="section-desc">You design it once. You're not prompting every micro-step.</p>
+  <img
+    class="hero-img"
+    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-anatomy.jpg"
+    alt="Anatomy of a loop — schedule, triage, state, worktree, implementer, verifier, MCP, human gate"
+    loading="lazy"
+    style="margin-bottom: 24px;"
+  />
   <div class="flow">
     <span class="flow-step">⏱ Schedule</span>
     <span class="flow-arrow">→</span>
@@ -204,7 +211,18 @@ title: Loop Engineering — Showcase
     </article>
 
     <article class="pattern-card">
-      <span class="tag" style="color:#ffb347;">New · Low risk</span>
+      <span class="tag">Low risk</span>
+      <h3>Issue Triage</h3>
+      <p>Dedupe, score, and label incoming issues. Propose-only week one — pairs well with Daily Triage.</p>
+      <div class="pattern-meta">
+        <span>⏱ 2h–1d</span>
+        <span>◆ Low risk</span>
+      </div>
+      <a class="link" href="https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/issue-triage.md">Read pattern →</a>
+      <a class="link" href="https://github.com/cobusgreyling/loop-engineering/tree/main/starters/minimal-loop" style="margin-left:12px">Starter →</a>
+    </article>
+    <article class="pattern-card">
+      <span class="tag" style="color:#ffb347;">Low risk</span>
       <h3>Changelog Drafter</h3>
       <p>Scan merges &amp; commits, produce polished categorized release notes drafts. Human approves before publish. Huge leverage, tiny risk.</p>
       <div class="pattern-meta">
@@ -217,7 +235,7 @@ title: Loop Engineering — Showcase
   </div>
   <div class="stats">
     <div class="stat">
-      <div class="num">6</div>
+      <div class="num">7</div>
       <div class="label">Patterns</div>
     </div>
     <div class="stat">
@@ -280,6 +298,7 @@ npx @cobusgreyling/loop-audit . --suggest
       <div class="symptom-pill" data-symptom="deps">Dependabot / CVE noise</div>
       <div class="symptom-pill" data-symptom="debt">Merge debt / TODOs piling up</div>
       <div class="symptom-pill" data-symptom="releases">Stale release notes / changelogs</div>
+      <div class="symptom-pill" data-symptom="issues">Noisy issue backlog / duplicates</div>
     </div>
 
     <div id="reco-output" class="reco-card" style="display:none;">
@@ -471,6 +490,14 @@ const PATTERNS = {
     loop: '/loop 1d Run changelog-scan + draft-release-notes. Write RELEASE_NOTES_DRAFT.md. Human review only.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/changelog-drafter.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/changelog-drafter'
+  },
+  issues: {
+    name: 'Issue Triage',
+    meta: '2h–1d • Low risk • Pairs with Daily Triage',
+    npx: 'npx @cobusgreyling/loop-init . --pattern issue-triage --tool grok',
+    loop: '/loop 1d Run issue-triage. Update issue-triage-state.md. Propose labels and priorities only — no auto-close.',
+    patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/issue-triage.md',
+    starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/minimal-loop'
   }
 };
 
