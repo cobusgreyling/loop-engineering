@@ -1,17 +1,18 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-06-09T13:45:00Z (manual improvement batch)
+Last run: 2026-06-11T12:01:04Z (automated daily-triage workflow)
 
 ## High Priority (loop is acting or waiting on human)
 
 - Maintain loop readiness score ≥ 58 (current: **100**, level **L3**).
-- `@cobusgreyling/loop-audit@1.3.0` and `@cobusgreyling/loop-init@1.1.0` are live on npm — revoke any tokens pasted in chat and prefer Trusted Publishing for CI.
+- Keep npm packages current after tool changes (tag `loop-audit-v*`, `loop-init-v*`, `loop-cost-v*` — see docs/RELEASE.md).
+
 
 ## Watch List
 
-- Expand contributor failure stories (dependency sweeper, multi-loop) beyond stories in `stories/`.
+- Expand contributor failure stories (dependency sweeper, multi-loop).
 - Collect a production story for Post-Merge Cleanup.
-- Monitor starter L1 gates in `audit.yml` after the loop-init packaging fix.
+- Validate `loop-init` scaffolds on fresh projects across all patterns.
 
 ## Recent Noise (ignored this run)
 
