@@ -19,6 +19,7 @@ Open a PR that adds a row to the table below:
 | Project | Pattern(s) | Tool | Level | Notes |
 |---------|------------|------|-------|-------|
 | [loop-engineering](https://github.com/cobusgreyling/loop-engineering) (this repo) | Daily Triage, Changelog Drafter, audit dogfood | GitHub Actions + Grok | L3 | Reference implementation — dogfoods `loop-audit` on every PR |
+| [Ariadne Loop](https://github.com/zhangzeyu99-web/ariadne-loop) | Loop Design Checklist, PR Babysitter-inspired verifier gates | Codex + Claude Code + OpenClaw | L1 | Local-first builder for loop contracts, agent packets, verifier gates, and handoff reports |
 
 *Your project here — see [CONTRIBUTING.md](../CONTRIBUTING.md).*
 
