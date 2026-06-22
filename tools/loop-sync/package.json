@@ -1,0 +1,39 @@
+{
+  "name": "@cobusgreyling/loop-sync",
+  "version": "1.0.0",
+  "description": "Detect and sync drift between Loop configuration files (STATE.md ↔ LOOP.md, Skills versions)",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "loop-sync": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node test/sync.test.mjs",
+    "bundle": "node scripts/bundle-assets.mjs"
+  },
+  "keywords": [
+    "loop-engineering",
+    "sync",
+    "drift-detection",
+    "configuration"
+  ],
+  "author": "Cobus Greyling",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cobusgreyling/loop-engineering.git",
+    "directory": "tools/loop-sync"
+  },
+  "homepage": "https://github.com/cobusgreyling/loop-engineering/tree/main/tools/loop-sync#readme",
+  "bugs": {
+    "url": "https://github.com/cobusgreyling/loop-engineering/issues"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
