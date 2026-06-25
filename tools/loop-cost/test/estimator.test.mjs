@@ -48,6 +48,13 @@ test('estimateCost: ci-sweeper 15m L2 warns on high spend', () => {
   assert.ok(r.scenarios.realistic.tokensPerDay < r.scenarios.action.tokensPerDay);
 });
 
+test('estimateCost: rejects an invalid readiness level', () => {
+  assert.throws(
+    () => estimateCost({ pattern: CI_SWEEPER, level: 'L9' }),
+    /Invalid readiness level/,
+  );
+});
+
 test('estimateCost: daily-triage 1d L1 is cheap', () => {
   const r = estimateCost({
     pattern: {

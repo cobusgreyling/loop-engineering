@@ -116,7 +116,12 @@ function formatTokens(n: number): string {
   return String(n);
 }
 
+const VALID_LEVELS: readonly ReadinessLevel[] = ['L1', 'L2', 'L3'];
+
 export function estimateCost(input: EstimateInput): EstimateResult {
+  if (!VALID_LEVELS.includes(input.level)) {
+    throw new Error(`Invalid readiness level: ${input.level}. Expected one of ${VALID_LEVELS.join(', ')}.`);
+  }
   const cadence = input.cadence ?? input.pattern.cadence;
   const runsPerDay = cadenceToRunsPerDay(cadence, input.conservative);
   const { cost, token_cost: tokenCostTier } = input.pattern;
