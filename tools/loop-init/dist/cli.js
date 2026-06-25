@@ -194,6 +194,14 @@ async function scaffoldObservability(pattern, tool, targetDir, templatesRoot, dr
     }
     await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-budget', targetDir, tool, 'loop-budget', dryRun);
 }
+async function scaffoldConstraints(targetDir, templatesRoot, tool, dryRun) {
+    const constraintsPath = path.join(targetDir, 'loop-constraints.md');
+    const constraintsTemplate = path.join(templatesRoot, 'loop-constraints.md');
+    if (!(await exists(constraintsPath)) && (await exists(constraintsTemplate))) {
+        await copyFile(constraintsTemplate, constraintsPath, dryRun);
+    }
+    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-constraints', targetDir, tool, 'loop-constraints', dryRun);
+}
 async function copyFile(src, dest, dryRun) {
     if (!(await exists(src)))
         return false;
@@ -352,6 +360,7 @@ Examples:
     }
     await copyL2Templates(pattern, tool, targetDir, templatesRoot, dryRun);
     await scaffoldObservability(pattern, tool, targetDir, templatesRoot, dryRun);
+    await scaffoldConstraints(targetDir, templatesRoot, tool, dryRun);
     if (!dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
         const agentsTemplate = `# AGENTS.md
 

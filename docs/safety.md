@@ -73,7 +73,6 @@ Always require human for:
 - Do not disable tests to make CI green
 - Do not increase timeouts blindly without root-cause note
 - Quarantine flakes via explicit ticket + human approval
-
 ## Incident Response
 
 If a loop merges bad code:
@@ -94,3 +93,11 @@ Before L3 (unattended):
 - [ ] Kill switch documented ([operating-loops.md](./operating-loops.md))
 
 See also [loop-design-checklist.md](./loop-design-checklist.md).
+
+## Machine-Readable Constraints
+
+For runtime enforcement, define constraints in `loop-constraints.md` at the project root.
+The `loop-constraints` skill reads this file at the start of every loop run and enforces
+every rule. Template: [templates/loop-constraints.md](../templates/loop-constraints.md).
+
+Tool examples: [Grok](../examples/grok/constraints.md) · [Claude Code](../examples/claude-code/constraints.md) · [Codex](../examples/codex/constraints.md)

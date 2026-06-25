@@ -31,6 +31,8 @@ const SCORE_WEIGHTS = {
     runLog: 3,
     loopMdBudget: 2,
     budgetSkill: 2,
+    constraintsFile: 4,
+    constraintsSkill: 2,
     loopActivity: 6,
 };
 const LEVEL_THRESHOLDS = {
@@ -48,7 +50,7 @@ const LOOP_SKILL_NAMES = [
     'dependency-triage',
     'rebase-and-clean',
     'changelog-scan',
-    'draft-release-notes',
+    'loop-constraints',
     'issue-triage',
 ];
 const SAFETY_FILES = ['safety.md', 'docs/safety.md', 'SECURITY.md'];
@@ -209,6 +211,10 @@ export function computeScore(signals) {
         score += w.loopMdBudget;
     if (signals.cost.budgetSkill)
         score += w.budgetSkill;
+    if (signals.constraints.present)
+        score += w.constraintsFile;
+    if (signals.constraints.hasConstraintsSkill)
+        score += w.constraintsSkill;
     if (signals.loopActivity.present)
         score += w.loopActivity;
     score = Math.min(100, Math.max(0, score));
@@ -322,6 +328,20 @@ export async function auditProject(target) {
         }
     }
     const loopActivity = await detectLoopActivity(root);
+    const constraintsFile = await fileExists(path.join(root, 'loop-constraints.md'));
+    const constraintsSkillDirs = [
+        path.join(root, 'skills', 'loop-constraints'),
+        path.join(root, '.grok', 'skills', 'loop-constraints'),
+        path.join(root, '.claude', 'skills', 'loop-constraints'),
+        path.join(root, '.codex', 'skills', 'loop-constraints'),
+    ];
+    let constraintsSkill = false;
+    for (const dir of constraintsSkillDirs) {
+        if (await fileExists(path.join(dir, 'SKILL.md'))) {
+            constraintsSkill = true;
+            break;
+        }
+    }
     const signals = {
         stateFile: { present: statePaths.length > 0, paths: statePaths },
         loopConfig: { present: loopMd, path: loopMd ? 'LOOP.md' : undefined },
@@ -334,6 +354,7 @@ export async function auditProject(target) {
         starters: { used: loopSkills.includes('loop-triage') },
         github: { present: githubDir, workflows: hasWorkflows },
         mcp: { present: mcpPresent },
+        constraints: { present: constraintsFile, hasConstraintsSkill: constraintsSkill },
         worktreeEvidence: { present: worktreeEvidence },
         registry: { present: registryPresent },
         cost: { budgetDoc, runLog, loopMdBudget, budgetSkill },
@@ -378,6 +399,17 @@ export async function auditProject(target) {
     }
     else {
         findings.push({ level: 'ok', message: 'Safety documentation present.' });
+    }
+    if (!signals.constraints.present) {
+        findings.push({ level: 'warn', message: 'No loop-constraints.md — structured constraints file missing.' });
+        recommendations.push('Create loop-constraints.md with denylist paths, push/merge rules, and human gates (see templates/loop-constraints.md)');
+    }
+    else {
+        findings.push({ level: 'ok', message: 'loop-constraints.md present.' });
+    }
+    if (signals.constraints.present && !signals.constraints.hasConstraintsSkill) {
+        findings.push({ level: 'warn', message: 'loop-constraints.md exists but no loop-constraints skill — rules not enforced at runtime.' });
+        recommendations.push('Add loop-constraints skill via loop-init or templates/SKILL.md.loop-constraints');
     }
     if (!signals.github.present) {
         findings.push({ level: 'warn', message: 'No .github/ directory (templates, workflows for dogfooding).' });

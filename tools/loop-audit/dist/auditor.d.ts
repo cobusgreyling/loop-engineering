@@ -49,6 +49,10 @@ export interface LoopSignals {
         loopMdBudget: boolean;
         budgetSkill: boolean;
     };
+    constraints: {
+        present: boolean;
+        hasConstraintsSkill: boolean;
+    };
     loopActivity: {
         present: boolean;
         evidence: string[];

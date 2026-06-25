@@ -22,6 +22,7 @@ function emptySignals() {
     mcp: { present: false },
     worktreeEvidence: { present: false },
     registry: { present: false },
+    constraints: { present: false, hasConstraintsSkill: false },
     cost: { budgetDoc: false, runLog: false, loopMdBudget: false, budgetSkill: false },
     loopActivity: { present: false, evidence: [] },
   };
