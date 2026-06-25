@@ -1,9 +1,25 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { auditProject, computeScore } from '../dist/auditor.js';
+
+/** Initialize a throwaway git repo with one commit. Returns false if git is unavailable. */
+function initGitRepo(dir, commitMessage) {
+  try {
+    const opts = { cwd: dir, stdio: 'ignore' };
+    execFileSync('git', ['init', '-q'], opts);
+    execFileSync('git', ['config', 'user.email', 'test@example.com'], opts);
+    execFileSync('git', ['config', 'user.name', 'Test'], opts);
+    execFileSync('git', ['add', '-A'], opts);
+    execFileSync('git', ['commit', '-q', '-m', commitMessage], opts);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function emptySignals() {
   return {
@@ -149,6 +165,31 @@ test('auditProject: L2 with verifier skill', async () => {
     const result = await auditProject(dir);
     assert.equal(result.level, 'L2');
     assert.ok(result.signals.verifier.present);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('detectLoopActivity: git commit mentioning "triage" is recognized as activity', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-audit-git-'));
+  try {
+    // Only signal is the commit subject — the word "triage" with no other
+    // git-detectable token. Regresses the prior `t riage` (spaced) bug, which
+    // could never match a real commit message.
+    await writeFile(path.join(dir, 'notes.txt'), 'work\n');
+    if (!initGitRepo(dir, 'chore: triage the inbox')) {
+      // git not available in this environment — skip without failing
+      return;
+    }
+    const result = await auditProject(dir);
+    assert.ok(
+      result.signals.loopActivity.present,
+      'expected loop activity to be detected from a triage commit',
+    );
+    assert.ok(
+      result.signals.loopActivity.evidence.some((e) => e.startsWith('git:')),
+      `expected git evidence, got: ${JSON.stringify(result.signals.loopActivity.evidence)}`,
+    );
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
