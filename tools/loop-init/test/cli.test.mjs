@@ -14,6 +14,30 @@ test('loop-init --help exits 0', async () => {
   assert.match(stdout, /changelog-drafter/);
 });
 
+test('loop-init rejects an unknown pattern with a helpful message', async () => {
+  await assert.rejects(
+    exec('node', [CLI, '.', '--pattern', 'not-a-pattern', '--dry-run']),
+    (err) => {
+      assert.equal(err.code, 1);
+      assert.match(err.stderr, /Unknown pattern: not-a-pattern/);
+      assert.match(err.stderr, /Valid patterns:/);
+      return true;
+    },
+  );
+});
+
+test('loop-init rejects an unknown tool with a helpful message', async () => {
+  await assert.rejects(
+    exec('node', [CLI, '.', '--pattern', 'daily-triage', '--tool', 'emacs', '--dry-run']),
+    (err) => {
+      assert.equal(err.code, 1);
+      assert.match(err.stderr, /Unknown tool: emacs/);
+      assert.match(err.stderr, /Valid tools:/);
+      return true;
+    },
+  );
+});
+
 test('loop-init dry-run scaffolds daily-triage', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-'));
   try {
