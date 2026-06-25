@@ -276,6 +276,16 @@ Examples:
         process.exit(0);
     }
     const { pattern, tool, target, dryRun } = args;
+    const validPatterns = Object.keys(PATTERN_STARTERS);
+    if (!validPatterns.includes(pattern)) {
+        console.error(`Unknown pattern: ${pattern}\nValid patterns: ${validPatterns.join(', ')}`);
+        process.exit(1);
+    }
+    const validTools = Object.keys(TOOL_SUFFIX);
+    if (!validTools.includes(tool)) {
+        console.error(`Unknown tool: ${tool}\nValid tools: ${validTools.join(', ')}`);
+        process.exit(1);
+    }
     const targetDir = path.resolve(target);
     const baseStarter = PATTERN_STARTERS[pattern];
     const suffix = TOOL_SUFFIX[tool];
