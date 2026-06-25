@@ -80,6 +80,12 @@ Examples:
     process.exit(0);
   }
 
+  const validLevels: ReadinessLevel[] = ['L1', 'L2', 'L3'];
+  if (!validLevels.includes(args.level)) {
+    console.error(`Unknown level: ${args.level}. Valid levels: ${validLevels.join(', ')}`);
+    process.exit(1);
+  }
+
   const registry = await loadRegistry();
 
   if (args.list) {
