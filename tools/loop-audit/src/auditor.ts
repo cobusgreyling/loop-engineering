@@ -64,6 +64,45 @@ const LOOP_SKILL_NAMES = [
   'issue-triage',
 ];
 
+/**
+ * Score contribution for each readiness signal, out of 100.
+ *
+ * These weights are intentionally centralized (rather than inlined in
+ * `computeScore`) so the rubric is auditable in one place and the
+ * level thresholds below stay meaningful when weights change.
+ * `base` is the floor every project starts from. The remaining weights
+ * sum (with `base`) to 100 when every signal is present.
+ */
+const SCORE_WEIGHTS = {
+  base: 10,
+  stateFile: 18,
+  triage: 14,
+  loopConfig: 9,
+  agentsMd: 9,
+  skillsTwoPlus: 14,
+  skillsOne: 7,
+  verifier: 14,
+  safetyLoopMd: 4,
+  safetyDoc: 4,
+  github: 6,
+  githubWorkflows: 4,
+  mcp: 3,
+  worktree: 3,
+  registry: 2,
+  budgetDoc: 3,
+  runLog: 3,
+  loopMdBudget: 2,
+  budgetSkill: 2,
+  loopActivity: 6,
+} as const;
+
+/** Minimum total score required to reach each readiness level (gated by additional signal requirements in `computeScore`). */
+const LEVEL_THRESHOLDS = {
+  L1: 38,
+  L2: 58,
+  L3: 78,
+} as const;
+
 const SAFETY_FILES = ['safety.md', 'docs/safety.md', 'SECURITY.md'];
 const MCP_FILES = ['.mcp.json', 'mcp.json', '.mcp/config.json'];
 const WORKTREE_HINTS = ['worktree', 'worktrees', 'git worktree'];
@@ -163,7 +202,7 @@ async function detectLoopActivity(root: string): Promise<{ present: boolean; evi
       timeout: 1500,
     });
     const lower = log.toLowerCase();
-    if (/state\.md|loop| t riage |changelog-drafter|post-merge|daily triage|audit/i.test(lower)) {
+    if (/state\.md|loop|triage|changelog-drafter|post-merge|daily triage|audit/i.test(lower)) {
       const firstMatch = log.trim().split('\n')[0] || '';
       evidence.push(`git:${firstMatch.slice(0, 60)}`);
     }
@@ -184,27 +223,28 @@ async function detectLoopActivity(root: string): Promise<{ present: boolean; evi
 }
 
 export function computeScore(signals: LoopSignals): { score: number; level: 'L0' | 'L1' | 'L2' | 'L3'; assessment: string } {
-  let score = 10;
+  const w = SCORE_WEIGHTS;
+  let score: number = w.base;
 
-  if (signals.stateFile.present) score += 18;
-  if (signals.triage.present) score += 14;
-  if (signals.loopConfig.present) score += 9;
-  if (signals.agentsMd.present) score += 9;
-  if (signals.skills.count >= 2) score += 14;
-  else if (signals.skills.count === 1) score += 7;
-  if (signals.verifier.present) score += 14;
-  if (signals.safety.loopMdMentionsSafety) score += 4;
-  if (signals.safety.safetyDocPresent) score += 4;
-  if (signals.github.present) score += 6;
-  if (signals.github.workflows) score += 4;
-  if (signals.mcp.present) score += 3;
-  if (signals.worktreeEvidence.present) score += 3;
-  if (signals.registry.present) score += 2;
-  if (signals.cost.budgetDoc) score += 3;
-  if (signals.cost.runLog) score += 3;
-  if (signals.cost.loopMdBudget) score += 2;
-  if (signals.cost.budgetSkill) score += 2;
-  if (signals.loopActivity.present) score += 6;
+  if (signals.stateFile.present) score += w.stateFile;
+  if (signals.triage.present) score += w.triage;
+  if (signals.loopConfig.present) score += w.loopConfig;
+  if (signals.agentsMd.present) score += w.agentsMd;
+  if (signals.skills.count >= 2) score += w.skillsTwoPlus;
+  else if (signals.skills.count === 1) score += w.skillsOne;
+  if (signals.verifier.present) score += w.verifier;
+  if (signals.safety.loopMdMentionsSafety) score += w.safetyLoopMd;
+  if (signals.safety.safetyDocPresent) score += w.safetyDoc;
+  if (signals.github.present) score += w.github;
+  if (signals.github.workflows) score += w.githubWorkflows;
+  if (signals.mcp.present) score += w.mcp;
+  if (signals.worktreeEvidence.present) score += w.worktree;
+  if (signals.registry.present) score += w.registry;
+  if (signals.cost.budgetDoc) score += w.budgetDoc;
+  if (signals.cost.runLog) score += w.runLog;
+  if (signals.cost.loopMdBudget) score += w.loopMdBudget;
+  if (signals.cost.budgetSkill) score += w.budgetSkill;
+  if (signals.loopActivity.present) score += w.loopActivity;
 
   score = Math.min(100, Math.max(0, score));
 
@@ -216,9 +256,9 @@ export function computeScore(signals: LoopSignals): { score: number; level: 'L0'
   const l3Ready = costReady && hasRealActivity;
 
   let level: 'L0' | 'L1' | 'L2' | 'L3' = 'L0';
-  if (score >= 78 && signals.verifier.present && signals.stateFile.present && l3Ready) level = 'L3';
-  else if (score >= 58 && signals.triage.present) level = 'L2';
-  else if (score >= 38 && signals.stateFile.present) level = 'L1';
+  if (score >= LEVEL_THRESHOLDS.L3 && signals.verifier.present && signals.stateFile.present && l3Ready) level = 'L3';
+  else if (score >= LEVEL_THRESHOLDS.L2 && signals.triage.present) level = 'L2';
+  else if (score >= LEVEL_THRESHOLDS.L1 && signals.stateFile.present) level = 'L1';
   else level = 'L0';
 
   const assessment =
@@ -452,14 +492,14 @@ export async function auditProject(target: string): Promise<AuditResult> {
     signals.cost.runLog &&
     signals.cost.loopMdBudget;
 
-  if (score >= 78 && signals.verifier.present && signals.stateFile.present && !costReady) {
+  if (score >= LEVEL_THRESHOLDS.L3 && signals.verifier.present && signals.stateFile.present && !costReady) {
     findings.push({
       level: 'warn',
       message: 'Score qualifies for L3 but cost observability is incomplete — capped at L2 until budget + run log + LOOP.md budget exist.',
     });
   }
 
-  if (score >= 78 && signals.verifier.present && signals.stateFile.present && costReady && !signals.loopActivity.present) {
+  if (score >= LEVEL_THRESHOLDS.L3 && signals.verifier.present && signals.stateFile.present && costReady && !signals.loopActivity.present) {
     findings.push({
       level: 'warn',
       message: 'Score qualifies for L3 but no proven loop activity yet — capped at L2 until you run and commit at least one loop cycle.',
