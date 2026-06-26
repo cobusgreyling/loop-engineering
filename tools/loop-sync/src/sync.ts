@@ -33,6 +33,8 @@ export interface SyncOptions {
   autoFix: boolean;
   dryRun: boolean;
   verbose: boolean;
+  help?: boolean;
+  json?: boolean;
 }
 
 /**

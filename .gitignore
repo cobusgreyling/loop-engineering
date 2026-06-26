@@ -48,3 +48,4 @@ state.json
 !starters/**/.codex/
 !starters/**/.codex/**
 *.session
+!tools/loop-sync/dist/
