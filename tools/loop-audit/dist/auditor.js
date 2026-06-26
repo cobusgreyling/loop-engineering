@@ -51,6 +51,7 @@ const LOOP_SKILL_NAMES = [
     'rebase-and-clean',
     'changelog-scan',
     'loop-constraints',
+    'draft-release-notes',
     'issue-triage',
 ];
 const SAFETY_FILES = ['safety.md', 'docs/safety.md', 'SECURITY.md'];

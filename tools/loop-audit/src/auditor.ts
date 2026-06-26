@@ -94,6 +94,7 @@ const LOOP_SKILL_NAMES = [
   'rebase-and-clean',
   'changelog-scan',
   'loop-constraints',
+  'draft-release-notes',
   'issue-triage',
 ];
 
