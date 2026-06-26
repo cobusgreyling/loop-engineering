@@ -1,0 +1,23 @@
+# Quant Research Loop — State
+
+Last run provenance: `never`
+
+## Decision this cycle
+
+- Maker target position: —
+- Checker verdict: —
+- Execution: paper only (live not wired)
+- Paper equity: 10000.0
+- Risk: —
+
+## Checker gates (out-of-sample)
+
+- (populated by engine/loop.py each run)
+
+## Human gates (unchanged)
+
+- Paper trading only. Live execution is NOT wired (see LOOP.md).
+- Every appended "lesson" must be re-tested out-of-sample, not patched in.
+
+---
+_State spine. The agent forgets between runs; this file does not._

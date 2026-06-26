@@ -12,6 +12,7 @@ Real-world loop engineering — including failures. Contribute yours via [CONTRI
 | [l1-to-l2-graduation.md](./l1-to-l2-graduation.md) | Daily Triage | Calibration before auto-fix |
 | [changelog-drafter-week-one.md](./changelog-drafter-week-one.md) | Changelog Drafter | Low-risk, high-ROI L1 win |
 | [post-merge-cleanup-honest-win.md](./post-merge-cleanup-honest-win.md) | Post-Merge Cleanup | Off-peak cadence; verifier caught doc/API drift; bot-merge noise |
+| [quant-loop-the-verifier-problem.md](./quant-loop-the-verifier-problem.md) | Quant Research Loop | Maker/checker is worthless unless the checker can't be faked (OOS, not an LLM opinion) |
 
 **Template for new stories:**
 

@@ -26,6 +26,16 @@ npx @cobusgreyling/loop-init . -p pr-babysitter -t claude
 | [changelog-drafter](./changelog-drafter/) | Changelog Drafter | Grok, Claude, Codex | L1 draft → L2 |
 | [issue-triage](./issue-triage/) | Issue Triage | Grok, Claude, Codex | L1 propose-only |
 
+## Domain example (runnable engine)
+
+| Starter | Domain | Stack | Posture |
+|---------|--------|-------|---------|
+| [quant-research-loop](./quant-research-loop/) | Crypto strategy research | Pure-stdlib Python | L1/L2 paper-only, real OOS verifier |
+
+A worked example of the five-stage loop applied to quant trading — built the
+safe way (paper-only, numerical maker/checker that catches overfitting). See
+[stories/quant-loop-the-verifier-problem.md](../stories/quant-loop-the-verifier-problem.md).
+
 After copying:
 
 ```bash
