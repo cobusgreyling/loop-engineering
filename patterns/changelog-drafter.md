@@ -53,6 +53,21 @@ The loop should prune entries once a release is tagged/published and the draft i
    - Tone and project voice
 6. On approval: the loop can open a PR that updates `CHANGELOG.md` (or the GitHub release body), or simply leave the draft in a file for the maintainer to copy.
 7. Record the run + mark items as "published" in state. Prune old entries.
+8. Record post-run critique in state: missed items, false positives, grouping issues, retries, and prompt/policy adjustments for next run.
+
+## Post-Run Critique
+
+After the human reviews the draft, the human reviewer or operator records what the previous run missed or misclassified so the next run improves. This captures review findings from the last draft run.
+
+Record in state under a `## Post-Run Critique` heading:
+
+- **Missed items** — Changes users reported that the draft omitted
+- **False positives** — Items in the draft that should not have been user-facing (chores, infra-only)
+- **Grouping issues** — Items in the wrong section (e.g., a fix in Features)
+- **Retries** — Number of times the draft was revised or regenerated (+ reason)
+- **Prompt/policy adjustments** — 1–2 concrete changes to scan, draft, or verifier skill instructions for the next run
+
+Optional but recommended during L1 dogfood runs. Even occasional critique entries help prevent repeat issues.
 
 ## Verification Strategy
 
@@ -96,6 +111,7 @@ The loop should prune entries once a release is tagged/published and the draft i
 | Overly long / noisy notes | Strict categorization + "user-facing only" rule in the draft skill. Human can trim. |
 | Tone mismatch with project | Provide a short "Release voice" section in AGENTS.md or a project skill that the drafter reads. |
 | Accidentally publishing | Never grant the loop write access to tags or the live CHANGELOG without an explicit human gate + PR. |
+| Stale critique / never reviewed | Add human handoff when critique entries accumulate without resolution across N runs. |
 
 ## Cost Profile
 
