@@ -111,7 +111,7 @@ Optional but recommended during L1 dogfood runs. Even occasional critique entrie
 | Overly long / noisy notes | Strict categorization + "user-facing only" rule in the draft skill. Human can trim. |
 | Tone mismatch with project | Provide a short "Release voice" section in AGENTS.md or a project skill that the drafter reads. |
 | Accidentally publishing | Never grant the loop write access to tags or the live CHANGELOG without an explicit human gate + PR. |
-| Stale critique / never reviewed | Add human handoff when critique entries accumulate without resolution across N runs. |
+| Stale critique / never reviewed | Add a human handoff when critique entries accumulate without resolution across a threshold (e.g., 3 runs). |
 
 ## Cost Profile
 
