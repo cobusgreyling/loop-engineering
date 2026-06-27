@@ -14,11 +14,11 @@ Last release tag: v2.14.0 (2026-06-01)
 - v2.14.0 — published 2026-06-01 (human reviewed draft)
 
 ## Post-Run Critique (from last run)
-- Missed: 0 reported
-- False positives: 2 internal chore PRs — tightened bot filter
-- Grouping: 1 fix in Features — add label check
-- Retries: 0
-- Adjustments: None needed this run
+- **Missed items**: 0 reported
+- **False positives**: 2 internal chore PRs — tightened bot filter
+- **Grouping issues**: 1 fix in Features — add label check
+- **Retries**: 0
+- **Prompt/policy adjustments**: None needed this run
 
 ## Scan Window Notes
 - Ignore Dependabot / Renovate PRs (handled by dependency-sweeper)
