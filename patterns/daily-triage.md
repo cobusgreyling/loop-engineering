@@ -50,6 +50,17 @@ Fields the loop must update every run:
 4. (Phase 2) For small, self-contained failures: open worktree → implementer → verifier.
 5. (Phase 3) Connectors update PRs/tickets; ambiguous items flagged for human.
 6. Prune resolved/merged items from state.
+7. Record post-run critique in state: false positives, repeated items, re-prioritized or dropped items, and one adjustment for next run.
+
+## Post-Run Critique
+
+After each Daily Triage run, record:
+
+- High-noise items.
+- False positives (items incorrectly flagged).
+- Items that should be deprioritized.
+- Any human-review friction.
+- One change to improve the next cycle.
 
 ## Verification Strategy
 
@@ -90,6 +101,7 @@ Fields the loop must update every run:
 | State file grows unbounded | Prune merged/closed items every run |
 | Auto-fix on wrong priority | Start report-only; add explicit effort/risk gates |
 | Missed overnight failures | Add `fireImmediately: true` or run at start of day + mid-day |
+| Stale critique / never reviewed | Add human handoff when critique entries accumulate without resolution across N runs. |
 
 ## Cost Profile
 
