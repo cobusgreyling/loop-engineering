@@ -15,6 +15,7 @@ from engine.split import three_way
 from engine.ledger import ResearchLedger, fingerprint
 from engine.search import grid_search, TrialCounter, expand_grid, DEFAULT_GRID
 from engine.walkforward import walk_forward
+from engine.quarantine import forward_test
 
 
 def approx(a, b, tol=1e-6):
@@ -222,6 +223,38 @@ def test_vol_target_reduces_drawdown_on_real_btc():
         bars, strategy.generate_signals(bars, {**base, "vol_target": True}, periods_per_year=365),
         periods_per_year=365)
     assert vt.max_drawdown < raw.max_drawdown, "vol targeting should cut drawdown"
+
+
+def test_research_budget_halt():
+    led = ResearchLedger(os.path.join(tempfile.mkdtemp(), "l.json"))
+    led.add_trials(120)
+    assert led.budget_exhausted(100) is True
+    assert led.budget_exhausted(200) is False
+    assert led.budget_exhausted(0) is False  # 0 == unlimited
+
+
+def test_forward_quarantine_is_spendable():
+    bars, _ = data.get_ohlcv(seed=3, limit=400)
+    fwd_bars = bars[-150:]
+    led = ResearchLedger(os.path.join(tempfile.mkdtemp(), "l.json"))
+    params = {"entry_lookback": 20, "exit_lookback": 10}
+    for i in range(3):  # max_evals=3 → 4th is blocked
+        r = forward_test(fwd_bars, params, research_sharpe=1.0, ledger=led,
+                         max_evals=3, min_forward_bars=60, periods_per_year=365)
+        assert r.blocked is False
+    blocked = forward_test(fwd_bars, params, research_sharpe=1.0, ledger=led,
+                           max_evals=3, min_forward_bars=60, periods_per_year=365)
+    assert blocked.blocked is True and blocked.passed is False
+
+
+def test_forward_requires_enough_data():
+    bars, _ = data.get_ohlcv(seed=8, limit=300)
+    short_window = bars[-20:]  # below the floor
+    led = ResearchLedger(os.path.join(tempfile.mkdtemp(), "l.json"))
+    r = forward_test(short_window, {"entry_lookback": 20, "exit_lookback": 10},
+                     research_sharpe=1.0, ledger=led, min_forward_bars=60,
+                     periods_per_year=365)
+    assert r.enough_data is False and r.passed is False
 
 
 def _run_all():

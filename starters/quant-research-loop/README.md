@@ -165,8 +165,50 @@ points on the aggregate drawdown cap (28% vs 25%).
 > not your own experimentation. Picking the setting that passes *after* seeing the
 > result is exactly the self-deception this engine guards against, one level up.
 > The only judge that cannot be gamed this way is data none of these experiments
-> touched — i.e. forward testing (roadmap #5). A passing backtest is a hypothesis,
+> touched — i.e. forward testing (below). A passing backtest is a hypothesis,
 > never a verdict.
+
+### Forward quarantine — the one judge you can't game (#5)
+
+`--forward-test` carves the newest slice of history into a **quarantine window**
+that the search, walk-forward, and lockbox never touch. It researches on the
+earlier window, then forward-tests the survivor on the held-out tail. Forward
+performance — not any backtest — gates capital.
+
+```bash
+python3 -m engine.loop --forward-test --csv sample-data/btc_1d_coinmetrics.csv \
+        --timeframe 1d --limit 0 --vol-target --forward-frac 0.2
+```
+
+Real BTC, vol-targeted breakout at the principled 0.40 default:
+
+| Stage | Verdict |
+|---|---|
+| Research (walk-forward, early 80%) | **REJECT** |
+| Forward (out-of-time, last 20%) | **PASS** — Sharpe 1.38, +94%, 18% DD |
+| **Approved for capital** | **NO** |
+
+The forward window — which *cannot* be tuned against — actually validated the
+strategy cleanly. Yet it is **not approved**, because approval requires research
+*and* forward to pass, and honest research (0.40, not the cherry-picked 0.30)
+rejected it. No single lucky result is sufficient. Like the lockbox, each forward
+window is **spent** after a few tests (`--max-forward-evals`) — forward-testing
+100 strategies on the same tail just relocates the multiple-testing problem.
+
+### Research budget + auto-halt (#4)
+
+`--trial-budget N` makes the loop **stop searching** once cumulative trials reach
+N. An autonomous loop that searches forever slowly turns the entire dataset into
+in-sample data; the budget is the alpha-spending cap that forces a stop.
+
+```bash
+python3 -m engine.loop --walkforward --csv sample-data/btc_1d_coinmetrics.csv \
+        --timeframe 1d --limit 0 --trial-budget 100
+# run again → HALTED: "175 trials >= budget 100. Stop searching."
+```
+
+The budget is checked before each run (a single run may overshoot); once spent,
+further searches halt and point you to forward-testing or new data.
 
 ## The five stages (mapped to loop-engineering primitives)
 
@@ -187,8 +229,9 @@ points on the aggregate drawdown cap (28% vs 25%).
 | `engine/verifier.py` | OOS gates + lockbox verdict: deflated Sharpe, PSR, drawdown |
 | `engine/search.py` | Grid search with enforced trial counting |
 | `engine/walkforward.py` | Walk-forward K-of-N rolling out-of-sample validation |
+| `engine/quarantine.py` | Forward out-of-time test; the verdict that gates capital |
 | `engine/split.py` | Three-way train/validation/lockbox split |
-| `engine/ledger.py` | Persistent trial counter + write-once lockbox ledger |
+| `engine/ledger.py` | Trial counter + budget + write-once lockbox/forward ledger |
 | `engine/stats.py` | Overfitting-aware metrics (no numpy/scipy) |
 | `skills/alpha-research/SKILL.md` | Maker procedure manual |
 | `skills/backtest-verifier/SKILL.md` | Checker procedure manual |

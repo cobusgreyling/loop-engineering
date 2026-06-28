@@ -30,6 +30,7 @@ from .ledger import ResearchLedger
 from .split import three_way
 from .search import grid_search, TrialCounter, DEFAULT_GRID
 from .walkforward import walk_forward
+from .quarantine import forward_test
 
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -181,6 +182,9 @@ def run_campaign(args) -> dict:
     """
     ppy = PERIODS_PER_YEAR[args.timeframe]
     ledger = ResearchLedger(LEDGER_PATH)
+    halt = _halt_if_budget_exhausted(args, ledger, "campaign")
+    if halt:
+        return halt
 
     # 1. Ingest + three-way split
     bars, provenance = data_mod.get_ohlcv(
@@ -326,6 +330,9 @@ def run_walkforward(args) -> dict:
     OOS curve to clear the deflated/PSR/drawdown gates."""
     ppy = PERIODS_PER_YEAR[args.timeframe]
     ledger = ResearchLedger(LEDGER_PATH)
+    halt = _halt_if_budget_exhausted(args, ledger, "walkforward")
+    if halt:
+        return halt
 
     bars, provenance = data_mod.get_ohlcv(
         source=args.source, csv_path=args.csv, symbol=args.symbol,
@@ -447,6 +454,168 @@ def write_walkforward_state(r: dict) -> None:
                  f"{r['paper_equity']} | {r['risk']['drawdown']:.2%} |\n")
 
 
+def _halt_if_budget_exhausted(args, ledger, mode: str) -> dict | None:
+    """#4 — refuse to search once the research budget is spent. Returns a halt
+    result (and writes state) if exhausted, else None."""
+    if not ledger.budget_exhausted(getattr(args, "trial_budget", 0)):
+        return None
+    r = {
+        "mode": mode, "halted": True,
+        "reason": (f"research budget exhausted: {ledger.cumulative_trials} trials "
+                   f">= budget {args.trial_budget}. Stop searching — every extra "
+                   f"trial overfits the data further. Forward-test or get new data."),
+        "cumulative_trials": ledger.cumulative_trials,
+        "trial_budget": args.trial_budget,
+    }
+    lines = [
+        "# Quant Research Loop — State (HALTED: research budget exhausted)",
+        "",
+        f"- **{r['reason']}**",
+        "",
+        "No search ran. This is #4 working: a loop that searches forever turns the",
+        "whole dataset into in-sample data. The honest moves now are forward-testing",
+        "a survivor (`--forward-test`) or sourcing genuinely new data.",
+        "",
+        "---",
+        "_Written by engine/loop.py (budget halt)._",
+    ]
+    with open(STATE_MD, "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+    return r
+
+
+def run_forward(args) -> dict:
+    """#5 — research on the earlier window, then forward-test the survivor on a
+    held-out out-of-time window the research never touched. Forward performance
+    gates capital, not the backtest."""
+    ppy = PERIODS_PER_YEAR[args.timeframe]
+    ledger = ResearchLedger(LEDGER_PATH)
+
+    bars, provenance = data_mod.get_ohlcv(
+        source=args.source, csv_path=args.csv, symbol=args.symbol,
+        interval=args.timeframe, limit=args.limit, seed=args.seed)
+
+    boundary = int(len(bars) * (1.0 - args.forward_frac))
+    research_bars, forward_bars = bars[:boundary], bars[boundary:]
+
+    halt = _halt_if_budget_exhausted(args, ledger, "forward")
+    if halt:
+        return halt
+
+    # Research on the EARLIER window only (forward window is never seen here).
+    wf = walk_forward(
+        research_bars, n_folds=args.folds, k_required=args.k_required,
+        rolling_window_folds=(args.rolling_window_folds or None),
+        base_params=_base_params(args), n_trials_so_far=ledger.cumulative_trials,
+        min_aggregate_sharpe=args.min_oos_sharpe, max_aggregate_drawdown=args.max_oos_drawdown,
+        fee_bps=args.fee_bps, slippage_bps=args.slippage_bps, periods_per_year=ppy)
+    ledger.add_trials(wf.trials_this_run)
+    deploy_params = wf.folds[-1].winner_params if wf.folds else _base_params(args)
+
+    # Forward-test the survivor on the untouched window — the real verdict.
+    fwd = forward_test(
+        forward_bars, deploy_params, research_sharpe=wf.aggregate_sharpe,
+        ledger=ledger, max_evals=args.max_forward_evals,
+        min_forward_bars=args.min_forward_bars, max_forward_drawdown=args.max_oos_drawdown,
+        fee_bps=args.fee_bps, slippage_bps=args.slippage_bps, periods_per_year=ppy)
+    ledger.save()
+
+    # "Approved for capital" requires BOTH research and forward to pass.
+    approved = wf.passed and fwd.passed
+
+    broker = PaperBroker(BROKER_STATE, starting_cash=args.capital,
+                         fee_bps=args.fee_bps, slippage_bps=args.slippage_bps)
+    price, ts = bars[-1].close, bars[-1].ts
+    target_now = generate_signals(bars, deploy_params, periods_per_year=ppy)[-1]
+    if approved:
+        fill = broker.rebalance(float(target_now) * args.max_fraction, price, ts)
+        exec_note = f"research PASS + forward PASS → APPROVED → paper {fill['action']}"
+    else:
+        broker.mark(price)
+        why = "research" if not wf.passed else ("forward BLOCKED" if fwd.blocked else "forward")
+        exec_note = f"NOT approved ({why} failed) → no execution"
+    broker.save()
+
+    result = {
+        "mode": "forward",
+        "provenance": provenance,
+        "boundary_index": boundary,
+        "research_bars": len(research_bars),
+        "forward_bars": len(forward_bars),
+        "deploy_params": deploy_params,
+        "research_passed": wf.passed,
+        "research_summary": wf.summary(),
+        "forward_passed": fwd.passed,
+        "forward_blocked": fwd.blocked,
+        "forward_reasons": fwd.reasons(),
+        "forward_summary": fwd.summary(),
+        "approved_for_capital": approved,
+        "cumulative_trials": ledger.cumulative_trials,
+        "target_now": target_now,
+        "paper_equity": round(broker.acct.equity, 2),
+        "exec_note": exec_note,
+    }
+    write_forward_state(result)
+    return result
+
+
+def write_forward_state(r: dict) -> None:
+    synthetic = r["provenance"].upper().startswith("SYNTHETIC")
+    fs = r["forward_summary"]
+    lines = [
+        "# Quant Research Loop — State (forward quarantine mode)",
+        "",
+        f"Last run provenance: `{r['provenance']}`"
+        + ("  ⚠️ SYNTHETIC DATA — not real market behavior" if synthetic else ""),
+        f"Split: {r['research_bars']} research bars | {r['forward_bars']} "
+        f"forward (held-out) bars",
+        "",
+        "## Verdict",
+        "",
+        f"- Research (walk-forward): **{'PASS' if r['research_passed'] else 'REJECT'}**",
+        f"- Forward (out-of-time): **"
+        + ("BLOCKED" if r["forward_blocked"] else ("PASS" if r["forward_passed"] else "REJECT"))
+        + "**",
+        f"- **Approved for capital: {'YES' if r['approved_for_capital'] else 'NO'}**",
+        f"- Execution: {r['exec_note']}",
+        f"- Deploy params: `{r['deploy_params']}`",
+        f"- Cumulative trials (enforced): {r['cumulative_trials']}",
+        "",
+        "## Forward (quarantine) gates",
+        "",
+    ]
+    for reason in r["forward_reasons"]:
+        lines.append(f"- {reason}")
+    lines += [
+        "",
+        f"Forward: Sharpe {fs['forward_sharpe']} · return {fs['forward_return']:.1%} · "
+        f"maxDD {fs['forward_max_drawdown']:.2%} · {fs['forward_trades']} trades "
+        f"(research claimed Sharpe {fs['research_sharpe']})",
+        "",
+        "## Human gates (unchanged)",
+        "",
+        "- Paper trading only. Live execution is NOT wired (see LOOP.md).",
+        "- The forward window is spent once tested. 'Approved' means the survivor",
+        "  held up on data the research never saw — the only verdict that counts.",
+        "",
+        "---",
+        "_Written by engine/loop.py (forward mode). Forward performance gates "
+        "capital, not the backtest._",
+    ]
+    with open(STATE_MD, "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+    header_needed = not os.path.exists(RUN_LOG)
+    with open(RUN_LOG, "a") as fh:
+        if header_needed:
+            fh.write("# Quant Run Log\n\n| provenance | mode | verdict | cum_trials | "
+                     "target | paper_equity | dd |\n|---|---|---|---|---|---|---|\n")
+        v = "APPROVED" if r["approved_for_capital"] else "rejected"
+        fh.write(f"| {r['provenance']} | forward | {v} | {r['cumulative_trials']} | "
+                 f"{r['target_now']} | {r['paper_equity']} | "
+                 f"{fs['forward_max_drawdown']:.2%} |\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Quant research loop — one cycle (paper only).")
     p.add_argument("--once", action="store_true", help="run a single cycle")
@@ -454,6 +623,15 @@ def build_parser() -> argparse.ArgumentParser:
                    help="campaign mode: grid-search with enforced trial counting + lockbox")
     p.add_argument("--walkforward", action="store_true",
                    help="walk-forward mode: K-of-N rolling out-of-sample validation")
+    p.add_argument("--forward-test", action="store_true", dest="forward_test",
+                   help="research on early window, then forward-test survivor on held-out tail (#5)")
+    p.add_argument("--forward-frac", type=float, default=0.2, dest="forward_frac",
+                   help="fraction of newest data reserved as the untouched forward window")
+    p.add_argument("--min-forward-bars", type=int, default=60, dest="min_forward_bars")
+    p.add_argument("--max-forward-evals", type=int, default=5, dest="max_forward_evals",
+                   help="how many strategies may touch one forward window before it is spent")
+    p.add_argument("--trial-budget", type=int, default=0, dest="trial_budget",
+                   help="auto-halt searching once cumulative trials reach this (#4; 0=unlimited)")
     p.add_argument("--folds", type=int, default=5, help="walk-forward fold count")
     p.add_argument("--k-required", type=int, default=None, dest="k_required",
                    help="folds that must pass (default ceil(0.6*folds))")
@@ -495,7 +673,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
-    if args.walkforward:
+    if args.forward_test:
+        result = run_forward(args)
+    elif args.walkforward:
         result = run_walkforward(args)
     elif args.search:
         result = run_campaign(args)

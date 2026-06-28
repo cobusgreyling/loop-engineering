@@ -68,8 +68,18 @@ but still misses the aggregate drawdown cap by 3pts at the principled 0.40
 default. Lower targets pass — but choosing one post-hoc is uncounted multiple
 testing, so the real test is forward data (#5), not a re-run.
 
-Still ahead: cumulative research budget + halt (#4), forward paper-trade
-quarantine (#5).
+4. **Research budget + auto-halt (`--trial-budget`).** `engine/ledger.py` halts
+   searching once cumulative trials reach the budget — the alpha-spending cap that
+   stops a forever-loop from turning all data into in-sample data. (#4 — done.)
+5. **Forward quarantine (`--forward-test`).** `engine/quarantine.py` holds out the
+   newest slice, researches on the earlier window, and forward-tests the survivor
+   on data nothing touched. Approval requires research AND forward to pass; each
+   forward window is spent after a few tests. The only verdict tuning can't game.
+   (#5 — done.)
+
+All five hardening steps are now implemented. The harness is "safe to run
+unattended" in the research/paper sense. Remaining work is strategy research
+(better hypotheses) and, as a separate gated project, live execution.
 
 ## Budget & Observability
 

@@ -30,12 +30,13 @@ def fingerprint(bars: list[Bar]) -> str:
 class ResearchLedger:
     def __init__(self, path: str):
         self.path = path
-        self.data = {"cumulative_trials": 0, "lockbox": {}}
+        self.data = {"cumulative_trials": 0, "lockbox": {}, "quarantine": {}}
         if os.path.exists(path):
             with open(path) as fh:
                 self.data = json.load(fh)
         self.data.setdefault("cumulative_trials", 0)
         self.data.setdefault("lockbox", {})
+        self.data.setdefault("quarantine", {})
 
     # --- trial counting (enforced) ---------------------------------------
     def add_trials(self, n: int) -> None:
@@ -44,6 +45,24 @@ class ResearchLedger:
     @property
     def cumulative_trials(self) -> int:
         return int(self.data["cumulative_trials"])
+
+    def budget_exhausted(self, budget: int) -> bool:
+        """#4 — has the campaign spent its research budget? A loop that searches
+        forever turns the whole dataset into in-sample data; the budget forces a
+        stop. budget <= 0 means unlimited (no auto-halt)."""
+        return budget > 0 and self.cumulative_trials >= budget
+
+    # --- forward quarantine (#5) -----------------------------------------
+    # Each strategy forward-tested on a given out-of-time window spends a little
+    # of that window's power, exactly like the lockbox. Track and cap it.
+    def quarantine_count(self, fp: str) -> int:
+        return len(self.data["quarantine"].get(fp, []))
+
+    def quarantine_can_test(self, fp: str, max_evals: int) -> bool:
+        return self.quarantine_count(fp) < max_evals
+
+    def record_quarantine(self, fp: str, record: dict) -> None:
+        self.data["quarantine"].setdefault(fp, []).append(record)
 
     # --- lockbox write-once ----------------------------------------------
     def openings(self, fp: str) -> list[dict]:
@@ -62,4 +81,4 @@ class ResearchLedger:
     def reset(self) -> None:
         """Wipe the ledger. Honest only when you have genuinely new data — not a
         way to keep re-peeking at the same lockbox until it passes."""
-        self.data = {"cumulative_trials": 0, "lockbox": {}}
+        self.data = {"cumulative_trials": 0, "lockbox": {}, "quarantine": {}}
