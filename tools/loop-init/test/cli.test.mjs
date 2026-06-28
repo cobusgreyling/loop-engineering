@@ -9,6 +9,16 @@ import { promisify } from 'node:util';
 const exec = promisify(execFile);
 const CLI = path.resolve('dist/cli.js');
 
+test('bundle-assets tolerates concurrent rebuilds', async () => {
+  await Promise.all([
+    exec('node', ['scripts/bundle-assets.mjs']),
+    exec('node', ['scripts/bundle-assets.mjs']),
+  ]);
+  await access(path.join('starters', 'issue-triage', 'README.md'));
+  await access(path.join('templates', 'SKILL.md.issue-triage'));
+  await access('registry.yaml');
+});
+
 test('loop-init --help exits 0', async () => {
   const { stdout } = await exec('node', [CLI, '--help']);
   assert.match(stdout, /changelog-drafter/);
