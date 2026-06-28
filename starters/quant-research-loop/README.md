@@ -63,14 +63,15 @@ Three real-data notes:
   even behind a restrictive network policy (`raw.githubusercontent.com`).
 - **`live`** (Binance) gives true OHLCV but is **geo-blocked in the US** — point
   `data.py` at Binance.US or Coinbase (same shape, one-function change).
-- The bundled snapshot `sample-data/btc_1d_coinmetrics.csv` is BTC daily
-  ~2010–2020. Early BTC had tiny prices and violent moves, which flatters returns
-  — a data-quality caveat the verifier's drawdown + deflated gates partly absorb.
+- The bundled snapshot `sample-data/btc_1d_coinmetrics.csv` is BTC daily close
+  **2010–2026** (fetched in chunks via HTTP Range to defeat the egress size cap).
+  Early BTC had tiny prices and violent moves, which flatters returns — a
+  data-quality caveat the verifier's drawdown + deflated gates partly absorb.
 
-**What it teaches on real BTC:** the Turtle 20/10 breakout shows validation
-Sharpe ~2.4 and a +335% lockbox return — yet the lockbox **REJECTS** it, because
-after the 35-config search penalty (deflated Sharpe) and a 47% drawdown it
-doesn't clear the honest bar. A naive backtest ships it; the lockbox doesn't.
+**What it teaches on real BTC:** every simple strategy here either fails honest
+research or, if it passes, fails the true out-of-time test on 2020–2026 — see the
+[capstone](#capstone--the-true-out-of-time-test). A naive backtest ships a +531%
+bull-market ride; the gates see beta with too much drawdown and say no.
 
 ### Be honest about your search
 
@@ -128,18 +129,19 @@ python3 -m engine.loop --walkforward --csv sample-data/btc_1d_coinmetrics.csv \
   curve to beat the deflated benchmark for *all* trials (N folds × grid), clear
   PSR ≥ 0.95, and stay under the drawdown cap.
 
-On real BTC daily this is where the Turtle breakout truly dies — and *why* matters:
+On real BTC daily (2010–2026 snapshot) this is where the Turtle breakout dies:
 
 | | result |
 |---|---|
-| Pooled OOS Sharpe | **1.91** (beats deflated bar 1.14, PSR 1.0) |
-| Consistency | **2/5 folds** passed (need 3) |
+| Pooled OOS Sharpe | 1.24 |
+| Consistency | **1/5 folds** passed (need 3) |
+| Pooled drawdown | **65%** |
 | Verdict | **REJECT** |
 
-The aggregate looks like a winner. But 3 of 5 folds had **36–65% drawdowns** —
-the strategy isn't robust, it's just been lucky in a couple of regimes. An
-aggregate-only test green-lights it; the K-of-N gate vetoes it. That disagreement
-is the point.
+Most folds carry 40–65% drawdowns — the breakout isn't robust, it just rode a
+couple of huge trends. The K-of-N consistency gate vetoes it even where the
+pooled number flatters it. (All real-BTC numbers here use the committed
+`sample-data/btc_1d_coinmetrics.csv`, daily close 2010–2026.)
 
 ### Trying to BEAT the verifier — volatility targeting
 
@@ -150,23 +152,22 @@ so you hold less in violent regimes and more in calm ones (capped at
 
 | | Raw breakout | Vol-targeted (40%) |
 |---|---|---|
-| Consistency | 2/5 folds | **5/5 folds** |
-| Pooled OOS Sharpe | 1.91 | **2.34** |
-| Pooled drawdown | 65% | **28%** |
+| Consistency | 1/5 folds | **3/5 folds** |
+| Pooled OOS Sharpe | 1.24 | 1.30 |
+| Pooled drawdown | 65% | **42%** |
 
-A real, structural win — every fold passes, Sharpe *rises*, worst drawdown halves
-— because lower risk targeting generalizes to any future data, it is not
-curve-fit. Yet at the a-priori default (40%) it is **still REJECTED**, by 3
-points on the aggregate drawdown cap (28% vs 25%).
+A real, structural win — more folds pass and the worst drawdown drops sharply —
+because lower risk targeting generalizes to any future data, it is not curve-fit.
+Yet it is **still REJECTED**: 42% pooled drawdown is far over the 25% cap.
 
-> **The honest trap, on display.** A lower target (`--target-vol 0.30`) *does*
-> pass. But sweeping `target_vol` by hand and reporting the value that clears the
-> gate is **uncounted multiple testing** — the enforced counter tracks the grid,
-> not your own experimentation. Picking the setting that passes *after* seeing the
-> result is exactly the self-deception this engine guards against, one level up.
-> The only judge that cannot be gamed this way is data none of these experiments
-> touched — i.e. forward testing (below). A passing backtest is a hypothesis,
-> never a verdict.
+> **The honest trap.** A lower `--target-vol` cuts drawdown further and a value
+> exists that clears the gate. But sweeping `target_vol` by hand and reporting the
+> one that passes is **uncounted multiple testing** — the enforced counter tracks
+> the grid, not your own experimentation. Picking the setting that passes *after*
+> seeing the result is the self-deception this engine guards against, one level
+> up. The only judge that cannot be gamed this way is data none of these
+> experiments touched — forward testing (below). A passing backtest is a
+> hypothesis, never a verdict.
 
 ### Forward quarantine — the one judge you can't game (#5)
 
@@ -176,24 +177,15 @@ earlier window, then forward-tests the survivor on the held-out tail. Forward
 performance — not any backtest — gates capital.
 
 ```bash
+# research on 2010-2020, forward-test the survivor on UNSEEN 2020-2026:
 python3 -m engine.loop --forward-test --csv sample-data/btc_1d_coinmetrics.csv \
-        --timeframe 1d --limit 0 --vol-target --forward-frac 0.2
+        --timeframe 1d --limit 0 --strategy regime --vol-target --forward-frac 0.4
 ```
 
-Real BTC, vol-targeted breakout at the principled 0.40 default:
-
-| Stage | Verdict |
-|---|---|
-| Research (walk-forward, early 80%) | **REJECT** |
-| Forward (out-of-time, last 20%) | **PASS** — Sharpe 1.38, +94%, 18% DD |
-| **Approved for capital** | **NO** |
-
-The forward window — which *cannot* be tuned against — actually validated the
-strategy cleanly. Yet it is **not approved**, because approval requires research
-*and* forward to pass, and honest research (0.40, not the cherry-picked 0.30)
-rejected it. No single lucky result is sufficient. Like the lockbox, each forward
-window is **spent** after a few tests (`--max-forward-evals`) — forward-testing
-100 strategies on the same tail just relocates the multiple-testing problem.
+Approval requires research *and* forward to pass. Each forward window is **spent**
+after a few tests (`--max-forward-evals`) — forward-testing 100 strategies on the
+same tail just relocates the multiple-testing problem. See the capstone result
+below.
 
 ### Research budget + auto-halt (#4)
 
@@ -236,37 +228,40 @@ further searches halt and point you to forward-testing or new data.
 | `skills/alpha-research/SKILL.md` | Maker procedure manual |
 | `skills/backtest-verifier/SKILL.md` | Checker procedure manual |
 | `quant-state.md.example` | State spine template |
-| `sample-data/btc_1d_coinmetrics.csv` | Real BTC daily snapshot (~2010–2020) for offline runs |
+| `sample-data/btc_1d_coinmetrics.csv` | Real BTC daily snapshot (2010–2026) for offline runs |
 | `LOOP.md` | Cadence, gates, budget, phased rollout |
 | `test_engine.py` | Smoke + correctness tests |
 
-## Strategy bake-off (real BTC, full gauntlet)
+## Capstone — the true out-of-time test
 
-Four hypotheses, each run through walk-forward + forward quarantine with vol
-targeting at the principled 0.40 default (`--strategy {donchian,tsmom,meanrev,regime}`):
+Four hypotheses, each researched on **2010–2020** and then forward-tested on
+**2020–2026, data none of the research, tuning, or bake-off ever touched**
+(`--forward-frac 0.4`, vol-targeted):
 
-| Strategy | Idea | Research | Forward | Approved |
-|---|---|---|---|---|
-| donchian | breakout (trend) | REJECT (DD 37%) | PASS (Sharpe 1.38) | NO |
-| tsmom | price > R-bar mean (trend) | REJECT (DD 38%) | PASS (Sharpe 1.36) | NO |
-| meanrev | buy oversold (counter-trend) | REJECT (1/5, neg) | REJECT (−35%, DD 51%) | NO |
-| **regime** | trend, calm-vol only | REJECT (DD **26%**) | **PASS (Sharpe 1.66, DD 9%)** | NO |
+| Strategy | Research 2010–2020 | Forward 2020–2026 (unseen) | Approved |
+|---|---|---|---|
+| **regime** | **PASS** (5/5, DD 14%) | **REJECT** — Sharpe 0.82, +161%, DD 37% | NO |
+| donchian | REJECT (DD 28%) | REJECT — Sharpe 0.98, +286%, DD 41% | NO |
+| tsmom | REJECT (DD 40%) | REJECT — Sharpe 1.15, **+531%**, DD 39% | NO |
+| meanrev | REJECT (0/5, DD 76%) | REJECT — Sharpe 0.17, +7%, DD 38% | NO |
 
-Reading the results honestly:
+This is the whole project in one table:
 
-- **`meanrev` failed everywhere, as predicted** — buying dips catches falling
-  knives in real crashes (51% forward drawdown). Short-term reversion is not a
-  standalone edge in BTC. The harness was harsh, correctly.
-- **`regime` is the standout**: gating trend by a calm-volatility regime attacked
-  the binding constraint (drawdown 37%→26%) and posted Sharpe 1.66 / 9% drawdown
-  on the untouched forward window — yet still misses honest research approval by
-  **one point** (26% vs the 25% cap).
-- The trend strategies are **correlated** — variations on one bet.
-- **Testing 4 strategies is 4× selection** on top of each grid; the forward window
-  is spent after a few such tests (`--max-forward-evals`). Picking "the best of 4"
-  and tuning it to pass is the same self-deception one level up. The disciplined
-  next step is to pre-register ONE hypothesis and forward-test it on genuinely new
-  data — not to crown a bake-off winner.
+- **`regime` was the first strategy ever to PASS honest research** (5/5 walk-forward
+  folds, 14% pooled drawdown) — and it still **failed on genuinely unseen
+  2020–2026 data** (37% drawdown). *Research success did not survive out-of-time.*
+  That is the single most valuable thing the harness can tell you.
+- **Every strategy made big returns 2020–2026** (tsmom +531%!) — because BTC rose.
+  But all carried 37–41% drawdowns and sub-bar Sharpes. **That's beta to a bull
+  market, not alpha.** A naive backtest sees +531% and bets the house; the gates
+  see leverage on a rising tide and say no.
+- **`meanrev` is dead** — buying dips catches falling knives (as predicted).
+- The trend family is **correlated** — variations on one bet.
+
+The honest verdict: **none of these simple strategies is approvable.** That is not
+failure — it is the harness doing its job, stopping you from deploying beta dressed
+as alpha. Finding real edge is the genuinely hard part; the loop just makes sure
+you don't fool yourself about whether you've found it.
 
 ## What this does NOT do
 

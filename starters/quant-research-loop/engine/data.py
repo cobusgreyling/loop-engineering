@@ -20,6 +20,7 @@ import http.client
 import io
 import json
 import math
+import re
 import urllib.request
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -85,17 +86,42 @@ def from_coinmetrics(asset: str = "btc", timeout: int = 120) -> list[Bar]:
     formed from closes. On your own machine, prefer Binance.US for true OHLCV.
     """
     url = f"https://raw.githubusercontent.com/coinmetrics/data/master/csv/{asset}.csv"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    buf = b""
-    resp = urllib.request.urlopen(req, timeout=timeout)
-    try:  # tolerate the egress size cap — salvage whatever streamed
-        while True:
-            chunk = resp.read(65536)
-            if not chunk:
+
+    def _range(start: int, end: int) -> tuple[bytes, int | None]:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Mozilla/5.0", "Range": f"bytes={start}-{end}"})
+        r = urllib.request.urlopen(req, timeout=timeout)
+        cr = r.headers.get("Content-Range", "")
+        out = b""
+        try:
+            while True:
+                c = r.read(65536)
+                if not c:
+                    break
+                out += c
+        except http.client.IncompleteRead as exc:
+            out += exc.partial
+        m = re.search(r"/(\d+)$", cr)
+        return out, (int(m.group(1)) if m else None)
+
+    # The egress proxy caps a single response (~0.5-1.3MB), truncating the full
+    # ~2.5MB file. HTTP Range lets us fetch and stitch the whole history.
+    _, total = _range(0, 1)
+    if not total:  # server ignored Range — fall back to one (capped) GET
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        resp = urllib.request.urlopen(req, timeout=timeout)
+        try:
+            buf = resp.read()
+        except http.client.IncompleteRead as exc:
+            buf = exc.partial
+    else:
+        chunk, off, buf = 400_000, 0, b""
+        while off < total:
+            part, _ = _range(off, min(off + chunk - 1, total - 1))
+            if not part:
                 break
-            buf += chunk
-    except http.client.IncompleteRead as exc:
-        buf += exc.partial
+            buf += part
+            off += len(part)
 
     rows = list(csv.reader(io.StringIO(buf.decode("utf-8", "replace"))))
     if not rows:

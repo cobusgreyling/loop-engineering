@@ -82,10 +82,13 @@ unattended" in the research/paper sense.
 
 **Strategy library (`--strategy`):** donchian (breakout), tsmom (time-series
 momentum), meanrev (short-term reversion), regime (trend gated by calm vol).
-Bake-off on real BTC: meanrev fails everywhere (falling knives); the trend family
-passes forward but misses research on drawdown; `regime` is the standout (forward
-Sharpe 1.66 / 9% DD) and misses honest research by one point. No tuning to force a
-pass — pre-register one hypothesis and forward-test on new data instead.
+
+**Capstone — true out-of-time test** (research 2010–2020, forward 2020–2026, data
+never touched by research/tuning): `regime` was the first to PASS honest research
+(5/5 folds, 14% DD) but FAILED forward (37% DD). All strategies made big returns
+2020–2026 (tsmom +531%) but with 37–41% drawdowns — beta to a bull market, not
+alpha. Verdict: none approvable. The harness correctly refused to dress beta as
+alpha. Real edge is the hard part; the loop just stops you fooling yourself.
 
 Remaining work is strategy research (better hypotheses) and, as a separate gated
 project, live execution.
