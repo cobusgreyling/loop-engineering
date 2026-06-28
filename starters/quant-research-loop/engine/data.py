@@ -14,11 +14,15 @@ about a strategy from synthetic bars.
 """
 from __future__ import annotations
 
+import calendar
 import csv
+import http.client
+import io
 import json
 import math
 import urllib.request
 from dataclasses import dataclass, asdict
+from datetime import datetime
 
 
 @dataclass
@@ -70,6 +74,47 @@ def from_live(symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 1000) 
     ]
 
 
+def from_coinmetrics(asset: str = "btc", timeout: int = 120) -> list[Bar]:
+    """Real DAILY price history from the Coin Metrics community dataset
+    (raw.githubusercontent.com — a host this environment allows when exchange
+    APIs are blocked).
+
+    Coin Metrics publishes a daily reference price (``PriceUSD``), not OHLC, so we
+    build close-only bars: open=high=low=close=PriceUSD. For a daily Donchian
+    breakout that is the standard 'Donchian on close' variant — the channel is
+    formed from closes. On your own machine, prefer Binance.US for true OHLCV.
+    """
+    url = f"https://raw.githubusercontent.com/coinmetrics/data/master/csv/{asset}.csv"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    buf = b""
+    resp = urllib.request.urlopen(req, timeout=timeout)
+    try:  # tolerate the egress size cap — salvage whatever streamed
+        while True:
+            chunk = resp.read(65536)
+            if not chunk:
+                break
+            buf += chunk
+    except http.client.IncompleteRead as exc:
+        buf += exc.partial
+
+    rows = list(csv.reader(io.StringIO(buf.decode("utf-8", "replace"))))
+    if not rows:
+        return []
+    hdr = rows[0]
+    if len(rows[-1]) != len(hdr):  # drop a truncated final line
+        rows = rows[:-1]
+    ti, pi = hdr.index("time"), hdr.index("PriceUSD")
+    bars: list[Bar] = []
+    for r in rows[1:]:
+        if len(r) <= pi or not r[pi]:
+            continue
+        ts = calendar.timegm(datetime.strptime(r[ti][:10], "%Y-%m-%d").timetuple())
+        price = float(r[pi])
+        bars.append(Bar(ts=ts, open=price, high=price, low=price, close=price, volume=0.0))
+    bars.sort(key=lambda b: b.ts)
+    return bars
+
+
 def synthetic(n: int = 1500, seed: int = 7, start: float = 30000.0,
               drift: float = 0.0001, vol: float = 0.02) -> list[Bar]:
     """Deterministic geometric-random-walk OHLC. Reproducible from seed.
@@ -115,9 +160,28 @@ def get_ohlcv(source: str = "synthetic", *, csv_path: str | None = None,
         try:
             return from_live(symbol, interval, min(limit, 1000)), f"live:binance:{symbol}:{interval}"
         except Exception as exc:  # network blocked / rate limited → fall back loudly
-            bars = synthetic(n=limit, seed=seed)
-            return bars, f"SYNTHETIC(live-failed:{type(exc).__name__})"
+            return synthetic(n=limit, seed=seed), f"SYNTHETIC(live-failed:{type(exc).__name__})"
+    if source == "coinmetrics":
+        # Coin Metrics keys by bare asset ("btc"), not a pair — strip the quote.
+        asset = symbol.lower()
+        for q in ("usdt", "usdc", "usd"):
+            if asset.endswith(q):
+                asset = asset[: -len(q)]
+                break
+        try:
+            bars = from_coinmetrics(asset=asset)
+            return bars[-limit:] if limit else bars, f"coinmetrics:{asset}:daily-close"
+        except Exception as exc:
+            return synthetic(n=limit, seed=seed), f"SYNTHETIC(coinmetrics-failed:{type(exc).__name__})"
     return synthetic(n=limit, seed=seed), f"SYNTHETIC:seed={seed}"
+
+
+def to_csv(bars: list[Bar], path: str) -> None:
+    with open(path, "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["ts", "open", "high", "low", "close", "volume"])
+        for b in bars:
+            w.writerow([b.ts, b.open, b.high, b.low, b.close, b.volume])
 
 
 def closes(bars: list[Bar]) -> list[float]:

@@ -152,6 +152,24 @@ def test_lockbox_rejects_overfit_winner_on_noise():
     assert v.passed is False, "lockbox must reject an overfit winner on no-edge data"
 
 
+def test_real_sample_csv_runs_campaign():
+    here = os.path.dirname(os.path.abspath(__file__))
+    csvp = os.path.join(here, "sample-data", "btc_1d_coinmetrics.csv")
+    if not os.path.exists(csvp):
+        return  # snapshot optional — skip if absent
+    bars = data.from_csv(csvp)
+    assert len(bars) > 1000, "snapshot should hold years of daily bars"
+    s = three_way(bars)
+    counter = TrialCounter()
+    cands = grid_search(s.train, s.validation, counter, periods_per_year=365)
+    led = ResearchLedger(os.path.join(tempfile.mkdtemp(), "l.json"))
+    led.add_trials(counter.n)
+    v = verifier.verify_on_lockbox(s.lockbox, cands[0].params,
+                                   n_trials=led.cumulative_trials, ledger=led,
+                                   periods_per_year=365)
+    assert v.blocked is False and v.lockbox_summary is not None
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

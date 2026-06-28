@@ -317,7 +317,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--validation-frac", type=float, default=0.25, dest="validation_frac")
     p.add_argument("--lockbox-openings", type=int, default=1, dest="lockbox_openings",
                    help="max times a given lockbox may be opened (write-once = 1)")
-    p.add_argument("--source", default="synthetic", choices=["synthetic", "live"])
+    p.add_argument("--source", default="synthetic",
+                   choices=["synthetic", "live", "coinmetrics"],
+                   help="live=Binance OHLCV (US users: see README); "
+                        "coinmetrics=real daily close history (works behind egress policy)")
     p.add_argument("--csv", default=None, help="path to OHLCV csv (overrides --source)")
     p.add_argument("--symbol", default="BTCUSDT", help="e.g. BTCUSDT (spot)")
     p.add_argument("--timeframe", default="1d", choices=list(PERIODS_PER_YEAR),

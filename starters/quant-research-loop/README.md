@@ -46,16 +46,31 @@ the wrong one silently inflates every Sharpe.
 ### Real data
 
 ```bash
-# Live public Binance klines (no key; geo-restricted in the US — see note):
-python3 -m engine.loop --search --source live --symbol BTCUSDT --timeframe 1d
+# Real BTC daily price history (Coin Metrics community data, no key):
+python3 -m engine.loop --search --source coinmetrics --symbol BTCUSDT --timeframe 1d --limit 0
 
-# Or your own CSV (columns: ts,open,high,low,close,volume):
-python3 -m engine.loop --search --csv data/btc_1d.csv --timeframe 1d
+# A committed snapshot also runs offline / in CI:
+python3 -m engine.loop --search --csv sample-data/btc_1d_coinmetrics.csv --timeframe 1d --limit 0
+
+# Full OHLCV from an exchange (on your own machine):
+python3 -m engine.loop --search --source live --symbol BTCUSDT --timeframe 1d
 ```
 
-> **US users:** Binance's public API is geo-blocked in the US. Point `data.py`
-> at Binance.US or Coinbase (same shape, different endpoint) — ask and it's a
-> one-function change.
+Three real-data notes:
+
+- **`coinmetrics`** pulls a daily *reference price* (close), not OHLC, so the
+  breakout runs as **Donchian-on-close** — a standard daily variant. It works
+  even behind a restrictive network policy (`raw.githubusercontent.com`).
+- **`live`** (Binance) gives true OHLCV but is **geo-blocked in the US** — point
+  `data.py` at Binance.US or Coinbase (same shape, one-function change).
+- The bundled snapshot `sample-data/btc_1d_coinmetrics.csv` is BTC daily
+  ~2010–2020. Early BTC had tiny prices and violent moves, which flatters returns
+  — a data-quality caveat the verifier's drawdown + deflated gates partly absorb.
+
+**What it teaches on real BTC:** the Turtle 20/10 breakout shows validation
+Sharpe ~2.4 and a +335% lockbox return — yet the lockbox **REJECTS** it, because
+after the 35-config search penalty (deflated Sharpe) and a 47% drawdown it
+doesn't clear the honest bar. A naive backtest ships it; the lockbox doesn't.
 
 ### Be honest about your search
 
@@ -120,6 +135,7 @@ you from believing it.
 | `skills/alpha-research/SKILL.md` | Maker procedure manual |
 | `skills/backtest-verifier/SKILL.md` | Checker procedure manual |
 | `quant-state.md.example` | State spine template |
+| `sample-data/btc_1d_coinmetrics.csv` | Real BTC daily snapshot (~2010–2020) for offline runs |
 | `LOOP.md` | Cadence, gates, budget, phased rollout |
 | `test_engine.py` | Smoke + correctness tests |
 

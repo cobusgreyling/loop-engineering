@@ -9,6 +9,10 @@ keeps cost assumptions realistic; spot avoids funding/leverage/liquidation; dail
 matches the Donchian 20/55 (Turtle) breakout. `--timeframe` sets bar size AND
 Sharpe annualization together.
 
+**Data sources:** `coinmetrics` (real daily close, works behind egress policy,
+bundled snapshot in `sample-data/`), `live` (Binance OHLCV — US-blocked, use
+Binance.US/Coinbase locally), or `--csv` your own OHLCV.
+
 ## Active Loops
 
 | Stage | Primitive | Cadence | Status | Module |
