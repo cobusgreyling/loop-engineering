@@ -257,6 +257,32 @@ def test_forward_requires_enough_data():
     assert r.enough_data is False and r.passed is False
 
 
+def test_all_strategies_produce_valid_signals():
+    bars, _ = data.get_ohlcv(seed=6, limit=800)
+    for name in strategy.STRATEGY_NAMES:
+        params = {**strategy.default_params(name), "strategy": name}
+        sig = strategy.generate_signals(bars, params)
+        assert len(sig) == len(bars), f"{name}: length mismatch"
+        assert all(s in (0, 1) for s in sig), f"{name}: raw signal must be 0/1"
+        assert sig[0] == 0, f"{name}: must warm up flat"
+
+
+def test_strategy_grids_are_small():
+    # Degrees of freedom discipline: keep each grid modest.
+    for name in strategy.STRATEGY_NAMES:
+        combos = expand_grid(strategy.strategy_grid(name))
+        assert 1 <= len(combos) <= 40, f"{name}: grid too large ({len(combos)})"
+
+
+def test_meanrev_is_anticorrelated_with_trend():
+    # Mean reversion should NOT just replicate the trend strategies — on a strong
+    # uptrend it is often flat/late while tsmom is long.
+    bars, _ = data.get_ohlcv(seed=1, limit=800, )
+    mr = strategy.generate_signals(bars, {"strategy": "meanrev", **strategy.default_params("meanrev")})
+    tm = strategy.generate_signals(bars, {"strategy": "tsmom", **strategy.default_params("tsmom")})
+    assert mr != tm, "meanrev and tsmom must be distinct signals"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

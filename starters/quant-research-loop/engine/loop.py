@@ -22,13 +22,14 @@ import os
 
 from . import data as data_mod
 from . import risk as risk_mod
-from .strategy import generate_signals, DEFAULT_PARAMS
+from .strategy import (generate_signals, DEFAULT_PARAMS, default_params,
+                       strategy_grid, STRATEGY_NAMES)
 from .backtest import run_backtest
 from .verifier import verify, verify_on_lockbox
 from .paper_broker import PaperBroker
 from .ledger import ResearchLedger
 from .split import three_way
-from .search import grid_search, TrialCounter, DEFAULT_GRID
+from .search import grid_search, TrialCounter
 from .walkforward import walk_forward
 from .quarantine import forward_test
 
@@ -46,9 +47,11 @@ PERIODS_PER_YEAR = {"1h": 24 * 365, "4h": 6 * 365, "1d": 365}
 
 
 def _base_params(args) -> dict:
-    """Fixed, non-searched config merged into every candidate. Carries the
-    vol-targeting overlay when --vol-target is on."""
-    p = dict(DEFAULT_PARAMS)
+    """Fixed, non-searched config merged into every candidate: which strategy,
+    its defaults, and the vol-targeting overlay when --vol-target is on."""
+    name = getattr(args, "strategy", "donchian")
+    p = default_params(name)
+    p["strategy"] = name
     if getattr(args, "vol_target", False):
         p.update(vol_target=True, target_vol=args.target_vol,
                  vol_lookback=args.vol_lookback, max_leverage=args.max_leverage)
@@ -195,7 +198,7 @@ def run_campaign(args) -> dict:
     # 2. Search with ENFORCED counting; persist cumulative trials to the ledger.
     counter = TrialCounter()
     candidates = grid_search(split.train, split.validation, counter,
-                             grid=DEFAULT_GRID, base_params=_base_params(args),
+                             grid=strategy_grid(args.strategy), base_params=_base_params(args),
                              fee_bps=args.fee_bps,
                              slippage_bps=args.slippage_bps, periods_per_year=ppy)
     ledger.add_trials(counter.n)
@@ -341,7 +344,7 @@ def run_walkforward(args) -> dict:
     wf = walk_forward(
         bars, n_folds=args.folds, k_required=args.k_required,
         rolling_window_folds=(args.rolling_window_folds or None),
-        base_params=_base_params(args),
+        grid=strategy_grid(args.strategy), base_params=_base_params(args),
         n_trials_so_far=ledger.cumulative_trials,
         min_aggregate_sharpe=args.min_oos_sharpe,
         max_aggregate_drawdown=args.max_oos_drawdown,
@@ -506,6 +509,7 @@ def run_forward(args) -> dict:
     wf = walk_forward(
         research_bars, n_folds=args.folds, k_required=args.k_required,
         rolling_window_folds=(args.rolling_window_folds or None),
+        grid=strategy_grid(args.strategy),
         base_params=_base_params(args), n_trials_so_far=ledger.cumulative_trials,
         min_aggregate_sharpe=args.min_oos_sharpe, max_aggregate_drawdown=args.max_oos_drawdown,
         fee_bps=args.fee_bps, slippage_bps=args.slippage_bps, periods_per_year=ppy)
@@ -641,6 +645,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--validation-frac", type=float, default=0.25, dest="validation_frac")
     p.add_argument("--lockbox-openings", type=int, default=1, dest="lockbox_openings",
                    help="max times a given lockbox may be opened (write-once = 1)")
+    p.add_argument("--strategy", default="donchian", choices=STRATEGY_NAMES,
+                   help="hypothesis to test: donchian | tsmom | meanrev | regime")
     p.add_argument("--source", default="synthetic",
                    choices=["synthetic", "live", "coinmetrics"],
                    help="live=Binance OHLCV (US users: see README); "

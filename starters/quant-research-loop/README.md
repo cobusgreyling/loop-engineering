@@ -240,6 +240,34 @@ further searches halt and point you to forward-testing or new data.
 | `LOOP.md` | Cadence, gates, budget, phased rollout |
 | `test_engine.py` | Smoke + correctness tests |
 
+## Strategy bake-off (real BTC, full gauntlet)
+
+Four hypotheses, each run through walk-forward + forward quarantine with vol
+targeting at the principled 0.40 default (`--strategy {donchian,tsmom,meanrev,regime}`):
+
+| Strategy | Idea | Research | Forward | Approved |
+|---|---|---|---|---|
+| donchian | breakout (trend) | REJECT (DD 37%) | PASS (Sharpe 1.38) | NO |
+| tsmom | price > R-bar mean (trend) | REJECT (DD 38%) | PASS (Sharpe 1.36) | NO |
+| meanrev | buy oversold (counter-trend) | REJECT (1/5, neg) | REJECT (−35%, DD 51%) | NO |
+| **regime** | trend, calm-vol only | REJECT (DD **26%**) | **PASS (Sharpe 1.66, DD 9%)** | NO |
+
+Reading the results honestly:
+
+- **`meanrev` failed everywhere, as predicted** — buying dips catches falling
+  knives in real crashes (51% forward drawdown). Short-term reversion is not a
+  standalone edge in BTC. The harness was harsh, correctly.
+- **`regime` is the standout**: gating trend by a calm-volatility regime attacked
+  the binding constraint (drawdown 37%→26%) and posted Sharpe 1.66 / 9% drawdown
+  on the untouched forward window — yet still misses honest research approval by
+  **one point** (26% vs the 25% cap).
+- The trend strategies are **correlated** — variations on one bet.
+- **Testing 4 strategies is 4× selection** on top of each grid; the forward window
+  is spent after a few such tests (`--max-forward-evals`). Picking "the best of 4"
+  and tuning it to pass is the same self-deception one level up. The disciplined
+  next step is to pre-register ONE hypothesis and forward-test it on genuinely new
+  data — not to crown a bake-off winner.
+
 ## What this does NOT do
 
 - **It does not place real orders.** `paper_broker.py` has no credentials. Going

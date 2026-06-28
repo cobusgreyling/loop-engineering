@@ -78,8 +78,17 @@ testing, so the real test is forward data (#5), not a re-run.
    (#5 — done.)
 
 All five hardening steps are now implemented. The harness is "safe to run
-unattended" in the research/paper sense. Remaining work is strategy research
-(better hypotheses) and, as a separate gated project, live execution.
+unattended" in the research/paper sense.
+
+**Strategy library (`--strategy`):** donchian (breakout), tsmom (time-series
+momentum), meanrev (short-term reversion), regime (trend gated by calm vol).
+Bake-off on real BTC: meanrev fails everywhere (falling knives); the trend family
+passes forward but misses research on drawdown; `regime` is the standout (forward
+Sharpe 1.66 / 9% DD) and misses honest research by one point. No tuning to force a
+pass — pre-register one hypothesis and forward-test on new data instead.
+
+Remaining work is strategy research (better hypotheses) and, as a separate gated
+project, live execution.
 
 ## Budget & Observability
 
