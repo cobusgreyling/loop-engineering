@@ -47,10 +47,14 @@ def expand_grid(grid: dict) -> list[dict]:
 
 def grid_search(train_bars: list[Bar], validation_bars: list[Bar],
                 counter: TrialCounter, *, grid: dict | None = None,
+                base_params: dict | None = None,
                 fee_bps: float = 5.0, slippage_bps: float = 5.0,
                 periods_per_year: float = 24 * 365) -> list[Candidate]:
     """Rank candidates by VALIDATION Sharpe. Train metrics come along for the
     degradation guard. The lockbox is never touched here — that is the point.
+
+    `base_params` (e.g. vol-target config) is merged into every candidate so a
+    fixed overlay applies across the whole search without becoming a searched knob.
 
     Returns candidates sorted best-first. The caller MUST persist `counter.n`
     into the research ledger; that is what makes the trial count enforced.
@@ -59,14 +63,15 @@ def grid_search(train_bars: list[Bar], validation_bars: list[Bar],
     candidates: list[Candidate] = []
     for params in expand_grid(grid):
         counter.tick()  # ENFORCED: one evaluation == one trial, no exceptions
-        tr = run_backtest(train_bars, generate_signals(train_bars, params),
+        full = {**(base_params or {}), **params}
+        tr = run_backtest(train_bars, generate_signals(train_bars, full, periods_per_year=periods_per_year),
                           fee_bps=fee_bps, slippage_bps=slippage_bps,
                           periods_per_year=periods_per_year)
-        va = run_backtest(validation_bars, generate_signals(validation_bars, params),
+        va = run_backtest(validation_bars, generate_signals(validation_bars, full, periods_per_year=periods_per_year),
                           fee_bps=fee_bps, slippage_bps=slippage_bps,
                           periods_per_year=periods_per_year)
         candidates.append(Candidate(
-            params=params,
+            params=full,
             validation_sharpe=va.sharpe,
             train_sharpe=tr.sharpe,
             validation_summary=va.summary(),

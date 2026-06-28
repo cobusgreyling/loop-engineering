@@ -197,6 +197,33 @@ def test_walkforward_trials_raise_deflated_bar():
     assert high.deflated_benchmark > low.deflated_benchmark
 
 
+def test_vol_target_positions_are_fractional_and_bounded():
+    bars, _ = data.get_ohlcv(seed=4, limit=600)
+    base = {"entry_lookback": 20, "exit_lookback": 10}
+    vt = {**base, "vol_target": True, "target_vol": 0.40, "vol_lookback": 30, "max_leverage": 1.0}
+    sig = strategy.generate_signals(bars, vt, periods_per_year=365)
+    assert all(0.0 <= s <= 1.0 for s in sig), "positions bounded by max_leverage"
+    assert any(0.0 < s < 1.0 for s in sig), "some fractional sizing must occur"
+    raw = strategy.generate_signals(bars, base)
+    for r, s in zip(raw, sig):  # vol target never enters when the breakout is flat
+        if r == 0:
+            assert s == 0.0
+
+
+def test_vol_target_reduces_drawdown_on_real_btc():
+    here = os.path.dirname(os.path.abspath(__file__))
+    csvp = os.path.join(here, "sample-data", "btc_1d_coinmetrics.csv")
+    if not os.path.exists(csvp):
+        return
+    bars = data.from_csv(csvp)
+    base = {"entry_lookback": 20, "exit_lookback": 10}
+    raw = backtest.run_backtest(bars, strategy.generate_signals(bars, base), periods_per_year=365)
+    vt = backtest.run_backtest(
+        bars, strategy.generate_signals(bars, {**base, "vol_target": True}, periods_per_year=365),
+        periods_per_year=365)
+    assert vt.max_drawdown < raw.max_drawdown, "vol targeting should cut drawdown"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

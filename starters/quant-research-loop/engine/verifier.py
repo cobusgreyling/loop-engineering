@@ -73,8 +73,8 @@ def verify(bars: list[Bar], params: dict, *,
         ])
 
     # Same params, two disjoint windows. Maker tuned on IS; checker judges OOS.
-    is_sig = generate_signals(is_bars, params)
-    oos_sig = generate_signals(oos_bars, params)
+    is_sig = generate_signals(is_bars, params, periods_per_year=periods_per_year)
+    oos_sig = generate_signals(oos_bars, params, periods_per_year=periods_per_year)
     is_res = run_backtest(is_bars, is_sig, fee_bps=fee_bps,
                           slippage_bps=slippage_bps, periods_per_year=periods_per_year)
     oos_res = run_backtest(oos_bars, oos_sig, fee_bps=fee_bps,
@@ -154,7 +154,7 @@ def verify_on_lockbox(lockbox_bars: list[Bar], params: dict, *,
                     f"Get fresh data or forward-test; do not re-peek."),
         )
 
-    res = run_backtest(lockbox_bars, generate_signals(lockbox_bars, params),
+    res = run_backtest(lockbox_bars, generate_signals(lockbox_bars, params, periods_per_year=periods_per_year),
                        fee_bps=fee_bps, slippage_bps=slippage_bps,
                        periods_per_year=periods_per_year)
     deflated = stats.deflated_benchmark_sharpe(

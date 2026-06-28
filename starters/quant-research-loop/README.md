@@ -141,6 +141,33 @@ the strategy isn't robust, it's just been lucky in a couple of regimes. An
 aggregate-only test green-lights it; the K-of-N gate vetoes it. That disagreement
 is the point.
 
+### Trying to BEAT the verifier — volatility targeting
+
+The breakout fails on *drawdown*, not signal (its OOS Sharpes are strong). The
+classic fix is `--vol-target`: size the position by `target_vol / realized_vol`,
+so you hold less in violent regimes and more in calm ones (capped at
+`--max-leverage`, default 1.0 = spot, no borrow). Walk-forward, real BTC daily:
+
+| | Raw breakout | Vol-targeted (40%) |
+|---|---|---|
+| Consistency | 2/5 folds | **5/5 folds** |
+| Pooled OOS Sharpe | 1.91 | **2.34** |
+| Pooled drawdown | 65% | **28%** |
+
+A real, structural win — every fold passes, Sharpe *rises*, worst drawdown halves
+— because lower risk targeting generalizes to any future data, it is not
+curve-fit. Yet at the a-priori default (40%) it is **still REJECTED**, by 3
+points on the aggregate drawdown cap (28% vs 25%).
+
+> **The honest trap, on display.** A lower target (`--target-vol 0.30`) *does*
+> pass. But sweeping `target_vol` by hand and reporting the value that clears the
+> gate is **uncounted multiple testing** — the enforced counter tracks the grid,
+> not your own experimentation. Picking the setting that passes *after* seeing the
+> result is exactly the self-deception this engine guards against, one level up.
+> The only judge that cannot be gamed this way is data none of these experiments
+> touched — i.e. forward testing (roadmap #5). A passing backtest is a hypothesis,
+> never a verdict.
+
 ## The five stages (mapped to loop-engineering primitives)
 
 | Stage | Primitive | Module |

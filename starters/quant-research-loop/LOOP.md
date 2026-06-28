@@ -61,6 +61,13 @@ tried, two guards do the accounting structurally:
    strategies that only worked in one regime — which a single lockbox can miss.
    (Roadmap #3 — done.)
 
+**Strategy overlay — volatility targeting (`--vol-target`).** Sizes the position
+by target_vol/realized_vol so risk is roughly constant; `engine/strategy.py`.
+Transforms the breakout on real BTC (drawdown 65%→28%, 5/5 walk-forward folds)
+but still misses the aggregate drawdown cap by 3pts at the principled 0.40
+default. Lower targets pass — but choosing one post-hoc is uncounted multiple
+testing, so the real test is forward data (#5), not a re-run.
+
 Still ahead: cumulative research budget + halt (#4), forward paper-trade
 quarantine (#5).
 

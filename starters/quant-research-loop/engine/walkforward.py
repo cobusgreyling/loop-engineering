@@ -99,6 +99,7 @@ def _equity(returns: list[float]) -> list[float]:
 
 def walk_forward(bars: list[Bar], *, n_folds: int = 5, k_required: int | None = None,
                  rolling_window_folds: int | None = None, grid: dict | None = None,
+                 base_params: dict | None = None,
                  min_fold_sharpe: float = 0.5, max_fold_drawdown: float = 0.35,
                  min_aggregate_sharpe: float = 1.0, max_aggregate_drawdown: float = 0.25,
                  min_psr: float = 0.95, n_trials_so_far: int = 0,
@@ -132,13 +133,14 @@ def walk_forward(bars: list[Bar], *, n_folds: int = 5, k_required: int | None = 
         best_params, best_sharpe = None, -1e9
         for params in combos:
             trials += 1  # every in-sample evaluation is a trial
-            r = run_backtest(is_bars, generate_signals(is_bars, params),
+            full = {**(base_params or {}), **params}
+            r = run_backtest(is_bars, generate_signals(is_bars, full, periods_per_year=periods_per_year),
                              fee_bps=fee_bps, slippage_bps=slippage_bps,
                              periods_per_year=periods_per_year)
             if r.sharpe > best_sharpe:
-                best_params, best_sharpe = params, r.sharpe
+                best_params, best_sharpe = full, r.sharpe
 
-        oos = run_backtest(oos_bars, generate_signals(oos_bars, best_params),
+        oos = run_backtest(oos_bars, generate_signals(oos_bars, best_params, periods_per_year=periods_per_year),
                            fee_bps=fee_bps, slippage_bps=slippage_bps,
                            periods_per_year=periods_per_year)
         passed = oos.sharpe >= min_fold_sharpe and oos.max_drawdown <= max_fold_drawdown

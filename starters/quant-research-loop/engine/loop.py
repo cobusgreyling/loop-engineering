@@ -44,9 +44,19 @@ LEDGER_PATH = os.path.join(HERE, "research-ledger.json")
 PERIODS_PER_YEAR = {"1h": 24 * 365, "4h": 6 * 365, "1d": 365}
 
 
+def _base_params(args) -> dict:
+    """Fixed, non-searched config merged into every candidate. Carries the
+    vol-targeting overlay when --vol-target is on."""
+    p = dict(DEFAULT_PARAMS)
+    if getattr(args, "vol_target", False):
+        p.update(vol_target=True, target_vol=args.target_vol,
+                 vol_lookback=args.vol_lookback, max_leverage=args.max_leverage)
+    return p
+
+
 def run_once(args) -> dict:
-    params = dict(DEFAULT_PARAMS)
     ppy = PERIODS_PER_YEAR[args.timeframe]
+    params = _base_params(args)
 
     # 1. Ingest
     bars, provenance = data_mod.get_ohlcv(
@@ -54,7 +64,7 @@ def run_once(args) -> dict:
         interval=args.timeframe, limit=args.limit, seed=args.seed)
 
     # 2. Maker
-    signals = generate_signals(bars, params)
+    signals = generate_signals(bars, params, periods_per_year=ppy)
     target_now = signals[-1]  # position to hold into the next bar
 
     # 3. Full-sample backtest (context only — never the gate)
@@ -181,7 +191,8 @@ def run_campaign(args) -> dict:
     # 2. Search with ENFORCED counting; persist cumulative trials to the ledger.
     counter = TrialCounter()
     candidates = grid_search(split.train, split.validation, counter,
-                             grid=DEFAULT_GRID, fee_bps=args.fee_bps,
+                             grid=DEFAULT_GRID, base_params=_base_params(args),
+                             fee_bps=args.fee_bps,
                              slippage_bps=args.slippage_bps, periods_per_year=ppy)
     ledger.add_trials(counter.n)
     winner = candidates[0]
@@ -198,7 +209,7 @@ def run_campaign(args) -> dict:
     broker = PaperBroker(BROKER_STATE, starting_cash=args.capital,
                          fee_bps=args.fee_bps, slippage_bps=args.slippage_bps)
     price, ts = bars[-1].close, bars[-1].ts
-    target_now = generate_signals(bars, winner.params)[-1]
+    target_now = generate_signals(bars, winner.params, periods_per_year=ppy)[-1]
     if verdict.passed:
         fill = broker.rebalance(float(target_now) * args.max_fraction, price, ts)
         exec_note = f"lockbox PASS → paper {fill['action']}"
@@ -323,6 +334,7 @@ def run_walkforward(args) -> dict:
     wf = walk_forward(
         bars, n_folds=args.folds, k_required=args.k_required,
         rolling_window_folds=(args.rolling_window_folds or None),
+        base_params=_base_params(args),
         n_trials_so_far=ledger.cumulative_trials,
         min_aggregate_sharpe=args.min_oos_sharpe,
         max_aggregate_drawdown=args.max_oos_drawdown,
@@ -335,7 +347,7 @@ def run_walkforward(args) -> dict:
                          fee_bps=args.fee_bps, slippage_bps=args.slippage_bps)
     price, ts = bars[-1].close, bars[-1].ts
     recent_params = wf.folds[-1].winner_params if wf.folds else DEFAULT_PARAMS
-    target_now = generate_signals(bars, recent_params)[-1]
+    target_now = generate_signals(bars, recent_params, periods_per_year=ppy)[-1]
     if wf.passed:
         fill = broker.rebalance(float(target_now) * args.max_fraction, price, ts)
         exec_note = f"walk-forward PASS → paper {fill['action']}"
@@ -467,6 +479,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--slippage-bps", type=float, default=5.0, dest="slippage_bps")
     p.add_argument("--n-trials", type=int, default=1, dest="n_trials",
                    help="how many param sets you searched (be honest — inflates the bar)")
+    p.add_argument("--vol-target", action="store_true", dest="vol_target",
+                   help="size position by target_vol/realized_vol to flatten drawdowns")
+    p.add_argument("--target-vol", type=float, default=0.40, dest="target_vol",
+                   help="annualized volatility target (default 0.40)")
+    p.add_argument("--vol-lookback", type=int, default=30, dest="vol_lookback",
+                   help="bars of realized-vol estimation (default 30)")
+    p.add_argument("--max-leverage", type=float, default=1.0, dest="max_leverage",
+                   help="cap on position fraction (1.0 = spot, no borrow)")
     p.add_argument("--min-oos-sharpe", type=float, default=1.0, dest="min_oos_sharpe")
     p.add_argument("--max-oos-drawdown", type=float, default=0.25, dest="max_oos_drawdown")
     p.add_argument("--kill-drawdown", type=float, default=0.10, dest="kill_drawdown")
