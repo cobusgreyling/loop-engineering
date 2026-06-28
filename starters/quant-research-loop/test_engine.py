@@ -14,6 +14,7 @@ from engine.paper_broker import PaperBroker
 from engine.split import three_way
 from engine.ledger import ResearchLedger, fingerprint
 from engine.search import grid_search, TrialCounter, expand_grid, DEFAULT_GRID
+from engine.walkforward import walk_forward
 
 
 def approx(a, b, tol=1e-6):
@@ -168,6 +169,32 @@ def test_real_sample_csv_runs_campaign():
                                    n_trials=led.cumulative_trials, ledger=led,
                                    periods_per_year=365)
     assert v.blocked is False and v.lockbox_summary is not None
+
+
+def test_walkforward_structure_and_trial_count():
+    bars, _ = data.get_ohlcv(seed=5, limit=1500)
+    n_folds = 5
+    wf = walk_forward(bars, n_folds=n_folds, periods_per_year=365)
+    assert len(wf.folds) == n_folds
+    # every fold re-searches the whole grid -> trials == folds * grid size
+    assert wf.trials_this_run == n_folds * len(expand_grid(DEFAULT_GRID))
+    assert wf.k_required == 3  # ceil(0.6 * 5)
+    assert 0 <= wf.passes <= n_folds
+    # in-sample (anchored) grows fold over fold
+    assert wf.folds[0].is_bars < wf.folds[-1].is_bars
+
+
+def test_walkforward_rejects_noise():
+    bars, _ = data.get_ohlcv(seed=7, limit=1500)
+    wf = walk_forward(bars, n_folds=5, periods_per_year=365)
+    assert wf.passed is False, "walk-forward must reject a no-edge random walk"
+
+
+def test_walkforward_trials_raise_deflated_bar():
+    bars, _ = data.get_ohlcv(seed=9, limit=1500)
+    low = walk_forward(bars, n_folds=5, n_trials_so_far=0, periods_per_year=365)
+    high = walk_forward(bars, n_folds=5, n_trials_so_far=10_000, periods_per_year=365)
+    assert high.deflated_benchmark > low.deflated_benchmark
 
 
 def _run_all():

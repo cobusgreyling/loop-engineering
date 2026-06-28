@@ -55,8 +55,14 @@ tried, two guards do the accounting structurally:
    BLOCKS any re-open. A BLOCKED verdict means "get fresh data or forward-test."
    (Roadmap #2 — done.)
 
-Still ahead: walk-forward K-of-N (#3), cumulative research budget + halt (#4),
-forward paper-trade quarantine (#5).
+3. **Walk-forward K-of-N (`--walkforward`).** `engine/walkforward.py` re-optimizes
+   on a rolling in-sample window and scores each next OOS fold; requires K-of-N
+   folds to pass AND the pooled OOS curve to clear deflated/PSR/drawdown. Catches
+   strategies that only worked in one regime — which a single lockbox can miss.
+   (Roadmap #3 — done.)
+
+Still ahead: cumulative research budget + halt (#4), forward paper-trade
+quarantine (#5).
 
 ## Budget & Observability
 

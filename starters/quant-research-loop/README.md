@@ -111,6 +111,36 @@ What that looks like across three cycles on synthetic (no-edge) data:
 The search *will* find a beautiful in-sample winner. The lockbox is what stops
 you from believing it.
 
+### Walk-forward mode — does it generalize across regimes?
+
+`--walkforward` is the stronger #3 test. Instead of one holdout, it re-optimizes
+on a rolling in-sample window and scores each *next* out-of-sample fold, across
+the whole history. A strategy must clear **two** gates:
+
+```bash
+python3 -m engine.loop --walkforward --csv sample-data/btc_1d_coinmetrics.csv \
+        --timeframe 1d --limit 0 --folds 5
+```
+
+- **Consistency (K-of-N):** at least K folds clear a per-fold gate (Sharpe floor +
+  drawdown cap). A strategy that only worked in 2017 fails here.
+- **Aggregate honesty:** pool every fold's OOS returns and require the combined
+  curve to beat the deflated benchmark for *all* trials (N folds × grid), clear
+  PSR ≥ 0.95, and stay under the drawdown cap.
+
+On real BTC daily this is where the Turtle breakout truly dies — and *why* matters:
+
+| | result |
+|---|---|
+| Pooled OOS Sharpe | **1.91** (beats deflated bar 1.14, PSR 1.0) |
+| Consistency | **2/5 folds** passed (need 3) |
+| Verdict | **REJECT** |
+
+The aggregate looks like a winner. But 3 of 5 folds had **36–65% drawdowns** —
+the strategy isn't robust, it's just been lucky in a couple of regimes. An
+aggregate-only test green-lights it; the K-of-N gate vetoes it. That disagreement
+is the point.
+
 ## The five stages (mapped to loop-engineering primitives)
 
 | Stage | Primitive | Module |
@@ -129,6 +159,7 @@ you from believing it.
 | `engine/` | Runnable five-stage loop (stdlib only) |
 | `engine/verifier.py` | OOS gates + lockbox verdict: deflated Sharpe, PSR, drawdown |
 | `engine/search.py` | Grid search with enforced trial counting |
+| `engine/walkforward.py` | Walk-forward K-of-N rolling out-of-sample validation |
 | `engine/split.py` | Three-way train/validation/lockbox split |
 | `engine/ledger.py` | Persistent trial counter + write-once lockbox ledger |
 | `engine/stats.py` | Overfitting-aware metrics (no numpy/scipy) |

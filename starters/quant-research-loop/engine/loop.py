@@ -29,6 +29,7 @@ from .paper_broker import PaperBroker
 from .ledger import ResearchLedger
 from .split import three_way
 from .search import grid_search, TrialCounter, DEFAULT_GRID
+from .walkforward import walk_forward
 
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -308,11 +309,144 @@ def write_campaign_state(r: dict) -> None:
                  f"{r['paper_equity']} | {r['risk']['drawdown']:.2%} |\n")
 
 
+def run_walkforward(args) -> dict:
+    """Walk-forward mode (#3). Re-optimizes on a rolling in-sample window and
+    scores each out-of-sample fold; requires K-of-N folds to pass AND the pooled
+    OOS curve to clear the deflated/PSR/drawdown gates."""
+    ppy = PERIODS_PER_YEAR[args.timeframe]
+    ledger = ResearchLedger(LEDGER_PATH)
+
+    bars, provenance = data_mod.get_ohlcv(
+        source=args.source, csv_path=args.csv, symbol=args.symbol,
+        interval=args.timeframe, limit=args.limit, seed=args.seed)
+
+    wf = walk_forward(
+        bars, n_folds=args.folds, k_required=args.k_required,
+        rolling_window_folds=(args.rolling_window_folds or None),
+        n_trials_so_far=ledger.cumulative_trials,
+        min_aggregate_sharpe=args.min_oos_sharpe,
+        max_aggregate_drawdown=args.max_oos_drawdown,
+        fee_bps=args.fee_bps, slippage_bps=args.slippage_bps, periods_per_year=ppy)
+    ledger.add_trials(wf.trials_this_run)
+    ledger.save()
+
+    # Paper-execute the most-recent fold's winner only if the whole WF passed.
+    broker = PaperBroker(BROKER_STATE, starting_cash=args.capital,
+                         fee_bps=args.fee_bps, slippage_bps=args.slippage_bps)
+    price, ts = bars[-1].close, bars[-1].ts
+    recent_params = wf.folds[-1].winner_params if wf.folds else DEFAULT_PARAMS
+    target_now = generate_signals(bars, recent_params)[-1]
+    if wf.passed:
+        fill = broker.rebalance(float(target_now) * args.max_fraction, price, ts)
+        exec_note = f"walk-forward PASS → paper {fill['action']}"
+    else:
+        broker.mark(price)
+        exec_note = "walk-forward REJECT → no execution (correct default)"
+    equity_curve = [h["equity"] for h in broker.acct.history] or [broker.acct.equity]
+    rv = risk_mod.check(equity_curve, max_drawdown=args.kill_drawdown)
+    if rv.breached:
+        broker.flatten(price, ts, reason=rv.reason)
+        exec_note += f" | KILL SWITCH: {rv.reason}"
+    broker.save()
+
+    result = {
+        "mode": "walkforward",
+        "provenance": provenance,
+        "anchored": not (args.rolling_window_folds or 0),
+        "walkforward": wf.summary(),
+        "folds": [{
+            "fold": f.index, "is_bars": f.is_bars, "oos_bars": f.oos_bars,
+            "params": f.winner_params, "is_sharpe": f.is_sharpe,
+            "oos_sharpe": f.oos_sharpe, "oos_maxDD": f.oos_max_drawdown,
+            "oos_trades": f.oos_trades, "passed": f.passed,
+        } for f in wf.folds],
+        "verdict_reasons": wf.reasons(),
+        "cumulative_trials": ledger.cumulative_trials,
+        "target_now": target_now,
+        "verdict_passed": wf.passed,
+        "paper_equity": round(broker.acct.equity, 2),
+        "risk": {"breached": rv.breached, "reason": rv.reason, "drawdown": round(rv.drawdown, 4)},
+        "exec_note": exec_note,
+    }
+    write_walkforward_state(result)
+    return result
+
+
+def write_walkforward_state(r: dict) -> None:
+    synthetic = r["provenance"].upper().startswith("SYNTHETIC")
+    wf = r["walkforward"]
+    lines = [
+        "# Quant Research Loop — State (walk-forward mode)",
+        "",
+        f"Last run provenance: `{r['provenance']}`"
+        + ("  ⚠️ SYNTHETIC DATA — not real market behavior" if synthetic else ""),
+        f"Scheme: {'anchored' if r['anchored'] else 'rolling'} walk-forward",
+        "",
+        "## Verdict",
+        "",
+        f"- **{'PASS' if r['verdict_passed'] else 'REJECT'}** "
+        f"({wf['passes']}/{wf['n_folds']} folds, need {wf['k_required']})",
+        f"- Cumulative trials (enforced): **{r['cumulative_trials']}**",
+        f"- Execution: {r['exec_note']}",
+        f"- Paper equity: **{r['paper_equity']}**",
+        "",
+        "## Gates",
+        "",
+    ]
+    for reason in r["verdict_reasons"]:
+        lines.append(f"- {reason}")
+    lines += [
+        "",
+        "## Per-fold out-of-sample results",
+        "",
+        "| fold | IS bars | OOS bars | params | IS Sharpe | OOS Sharpe | OOS maxDD | pass |",
+        "|------|---------|----------|--------|-----------|------------|-----------|------|",
+    ]
+    for f in r["folds"]:
+        lines.append(
+            f"| {f['fold']} | {f['is_bars']} | {f['oos_bars']} | "
+            f"`{f['params']}` | {f['is_sharpe']} | {f['oos_sharpe']} | "
+            f"{f['oos_maxDD']:.2%} | {'✓' if f['passed'] else '✗'} |")
+    lines += [
+        "",
+        f"Pooled OOS: Sharpe {wf['aggregate_sharpe']} · PSR {wf['aggregate_psr']} · "
+        f"maxDD {wf['aggregate_max_drawdown']:.2%} · deflated bar {wf['deflated_benchmark']}",
+        "",
+        "## Human gates (unchanged)",
+        "",
+        "- Paper trading only. Live execution is NOT wired (see LOOP.md).",
+        "- A PASS here means the *selection process* generalized across regimes —",
+        "  it is the green light to forward-test, not to deploy capital.",
+        "",
+        "---",
+        "_Written by engine/loop.py (walk-forward mode)._",
+    ]
+    with open(STATE_MD, "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+    header_needed = not os.path.exists(RUN_LOG)
+    with open(RUN_LOG, "a") as fh:
+        if header_needed:
+            fh.write("# Quant Run Log\n\n| provenance | mode | verdict | cum_trials | "
+                     "target | paper_equity | dd |\n|---|---|---|---|---|---|---|\n")
+        fh.write(f"| {r['provenance']} | walkforward | "
+                 f"{'PASS' if r['verdict_passed'] else 'REJECT'} | "
+                 f"{r['cumulative_trials']} | {r['target_now']} | "
+                 f"{r['paper_equity']} | {r['risk']['drawdown']:.2%} |\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Quant research loop — one cycle (paper only).")
     p.add_argument("--once", action="store_true", help="run a single cycle")
     p.add_argument("--search", action="store_true",
                    help="campaign mode: grid-search with enforced trial counting + lockbox")
+    p.add_argument("--walkforward", action="store_true",
+                   help="walk-forward mode: K-of-N rolling out-of-sample validation")
+    p.add_argument("--folds", type=int, default=5, help="walk-forward fold count")
+    p.add_argument("--k-required", type=int, default=None, dest="k_required",
+                   help="folds that must pass (default ceil(0.6*folds))")
+    p.add_argument("--rolling-window-folds", type=int, default=0, dest="rolling_window_folds",
+                   help="0 = anchored (in-sample grows); >0 = fixed sliding window of N folds")
     p.add_argument("--train-frac", type=float, default=0.5, dest="train_frac")
     p.add_argument("--validation-frac", type=float, default=0.25, dest="validation_frac")
     p.add_argument("--lockbox-openings", type=int, default=1, dest="lockbox_openings",
@@ -341,7 +475,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
-    result = run_campaign(args) if args.search else run_once(args)
+    if args.walkforward:
+        result = run_walkforward(args)
+    elif args.search:
+        result = run_campaign(args)
+    else:
+        result = run_once(args)
     print(json.dumps(result, indent=2))
     print(f"\nState written to {STATE_MD}")
     return 0
