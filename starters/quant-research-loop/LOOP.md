@@ -4,6 +4,11 @@ The five-stage trading loop from the viral "loop engineering for quant" article,
 rebuilt the way this repo insists: **report-first, paper-only, with a real
 numerical checker** instead of an LLM that opines on backtests.
 
+**Trading target:** BTC/USDT · spot · daily (1d) bars. Single most-liquid pair
+keeps cost assumptions realistic; spot avoids funding/leverage/liquidation; daily
+matches the Donchian 20/55 (Turtle) breakout. `--timeframe` sets bar size AND
+Sharpe annualization together.
+
 ## Active Loops
 
 | Stage | Primitive | Cadence | Status | Module |

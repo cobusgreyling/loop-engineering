@@ -37,15 +37,20 @@ RUN_LOG = os.path.join(HERE, "quant-run-log.md")
 BROKER_STATE = os.path.join(HERE, "paper-account.json")
 LEDGER_PATH = os.path.join(HERE, "research-ledger.json")
 
+# Bars-per-year by timeframe. Annualization MUST match the bar size or every
+# Sharpe is silently scaled wrong (hourly annualization on daily bars inflates
+# Sharpe ~5x — exactly the kind of self-deception this engine exists to prevent).
+PERIODS_PER_YEAR = {"1h": 24 * 365, "4h": 6 * 365, "1d": 365}
+
 
 def run_once(args) -> dict:
     params = dict(DEFAULT_PARAMS)
-    ppy = 24 * 365  # hourly bars
+    ppy = PERIODS_PER_YEAR[args.timeframe]
 
     # 1. Ingest
     bars, provenance = data_mod.get_ohlcv(
         source=args.source, csv_path=args.csv, symbol=args.symbol,
-        interval=args.interval, limit=args.limit, seed=args.seed)
+        interval=args.timeframe, limit=args.limit, seed=args.seed)
 
     # 2. Maker
     signals = generate_signals(bars, params)
@@ -163,13 +168,13 @@ def run_campaign(args) -> dict:
     valid  -> candidates ranked here (used up by design)
     lockbox-> opened ONCE on the winner; deflated by CUMULATIVE trials
     """
-    ppy = 24 * 365
+    ppy = PERIODS_PER_YEAR[args.timeframe]
     ledger = ResearchLedger(LEDGER_PATH)
 
     # 1. Ingest + three-way split
     bars, provenance = data_mod.get_ohlcv(
         source=args.source, csv_path=args.csv, symbol=args.symbol,
-        interval=args.interval, limit=args.limit, seed=args.seed)
+        interval=args.timeframe, limit=args.limit, seed=args.seed)
     split = three_way(bars, train_frac=args.train_frac, validation_frac=args.validation_frac)
 
     # 2. Search with ENFORCED counting; persist cumulative trials to the ledger.
@@ -314,8 +319,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="max times a given lockbox may be opened (write-once = 1)")
     p.add_argument("--source", default="synthetic", choices=["synthetic", "live"])
     p.add_argument("--csv", default=None, help="path to OHLCV csv (overrides --source)")
-    p.add_argument("--symbol", default="BTCUSDT")
-    p.add_argument("--interval", default="1h")
+    p.add_argument("--symbol", default="BTCUSDT", help="e.g. BTCUSDT (spot)")
+    p.add_argument("--timeframe", default="1d", choices=list(PERIODS_PER_YEAR),
+                   help="bar size; also sets Sharpe annualization. Default 1d.")
     p.add_argument("--limit", type=int, default=1500)
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--capital", type=float, default=10_000.0)

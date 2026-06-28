@@ -29,15 +29,33 @@ You'll see the maker propose a position, the checker judge it **out-of-sample**,
 and — on random-walk synthetic data — correctly **REJECT and refuse to trade**.
 That refusal is the feature.
 
+### What we trade
+
+Starting target: **BTC/USDT · spot · daily (1d) bars.**
+
+- **BTC/USDT** — deepest liquidity, so the 5bps fee + 5bps slippage assumption is
+  realistic, not optimistic; most free history for the lockbox.
+- **Spot** — no funding, leverage, or liquidation. The example strategy is
+  long/flat only, so perps add risk and buy nothing yet.
+- **Daily bars** — the Donchian 20/55 breakout *is* the classic Turtle system,
+  designed for daily. On 1h a "55" channel is ~2 days of noise.
+
+`--timeframe` also sets Sharpe annualization (1d→365, 4h→2190, 1h→8760); using
+the wrong one silently inflates every Sharpe.
+
 ### Real data
 
 ```bash
-# Live public Binance klines (no key; may be blocked by your network):
-python3 -m engine.loop --once --source live --symbol BTCUSDT --interval 1h
+# Live public Binance klines (no key; geo-restricted in the US — see note):
+python3 -m engine.loop --search --source live --symbol BTCUSDT --timeframe 1d
 
 # Or your own CSV (columns: ts,open,high,low,close,volume):
-python3 -m engine.loop --once --csv data/btc_1h.csv
+python3 -m engine.loop --search --csv data/btc_1d.csv --timeframe 1d
 ```
+
+> **US users:** Binance's public API is geo-blocked in the US. Point `data.py`
+> at Binance.US or Coinbase (same shape, different endpoint) — ask and it's a
+> one-function change.
 
 ### Be honest about your search
 
