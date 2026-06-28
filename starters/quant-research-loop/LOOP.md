@@ -32,6 +32,23 @@ numerical checker** instead of an LLM that opines on backtests.
 - Every "lesson learned" appended to a skill is a **hypothesis to re-test**, not
   an in-sample patch. Self-improving must not become self-overfitting.
 
+### Campaign mode (`--search`) — automated search, kept honest
+
+Because an auto-search loop can no longer rely on you to count how many ideas it
+tried, two guards do the accounting structurally:
+
+1. **Enforced trial counting.** `engine/search.py` ticks a counter per candidate;
+   `engine/ledger.py` persists it in `research-ledger.json` and accumulates it
+   across cycles. The deflated Sharpe gate consumes the cumulative count — the bar
+   rises with everything ever searched. (Roadmap #1 — done.)
+2. **Write-once lockbox.** `engine/split.py` splits train/validation/lockbox; the
+   lockbox is opened once on the winner only. The ledger fingerprints it and
+   BLOCKS any re-open. A BLOCKED verdict means "get fresh data or forward-test."
+   (Roadmap #2 — done.)
+
+Still ahead: walk-forward K-of-N (#3), cumulative research budget + halt (#4),
+forward paper-trade quarantine (#5).
+
 ## Budget & Observability
 
 - Run log: `quant-run-log.md` (appended each cycle)

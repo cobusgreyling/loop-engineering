@@ -2,6 +2,7 @@
 paper-account.json
 quant-run-log.md
 quant-state.md
+research-ledger.json
 __pycache__/
 *.pyc
 data/*.csv

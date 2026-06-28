@@ -24,14 +24,18 @@ from . import data as data_mod
 from . import risk as risk_mod
 from .strategy import generate_signals, DEFAULT_PARAMS
 from .backtest import run_backtest
-from .verifier import verify
+from .verifier import verify, verify_on_lockbox
 from .paper_broker import PaperBroker
+from .ledger import ResearchLedger
+from .split import three_way
+from .search import grid_search, TrialCounter, DEFAULT_GRID
 
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_MD = os.path.join(HERE, "quant-state.md")
 RUN_LOG = os.path.join(HERE, "quant-run-log.md")
 BROKER_STATE = os.path.join(HERE, "paper-account.json")
+LEDGER_PATH = os.path.join(HERE, "research-ledger.json")
 
 
 def run_once(args) -> dict:
@@ -152,9 +156,162 @@ def write_state(r: dict) -> None:
                  f"{r['target_now']} | {r['paper_equity']} | {r['risk']['drawdown']:.2%} |\n")
 
 
+def run_campaign(args) -> dict:
+    """Search mode (#1 enforced trial counting + #2 lockbox).
+
+    train  -> search optimizes here
+    valid  -> candidates ranked here (used up by design)
+    lockbox-> opened ONCE on the winner; deflated by CUMULATIVE trials
+    """
+    ppy = 24 * 365
+    ledger = ResearchLedger(LEDGER_PATH)
+
+    # 1. Ingest + three-way split
+    bars, provenance = data_mod.get_ohlcv(
+        source=args.source, csv_path=args.csv, symbol=args.symbol,
+        interval=args.interval, limit=args.limit, seed=args.seed)
+    split = three_way(bars, train_frac=args.train_frac, validation_frac=args.validation_frac)
+
+    # 2. Search with ENFORCED counting; persist cumulative trials to the ledger.
+    counter = TrialCounter()
+    candidates = grid_search(split.train, split.validation, counter,
+                             grid=DEFAULT_GRID, fee_bps=args.fee_bps,
+                             slippage_bps=args.slippage_bps, periods_per_year=ppy)
+    ledger.add_trials(counter.n)
+    winner = candidates[0]
+
+    # 3. Open the lockbox ONCE on the winner. Deflated by everything ever searched.
+    verdict = verify_on_lockbox(
+        split.lockbox, winner.params, n_trials=ledger.cumulative_trials,
+        ledger=ledger, max_openings=args.lockbox_openings,
+        min_lockbox_sharpe=args.min_oos_sharpe,
+        max_lockbox_drawdown=args.max_oos_drawdown,
+        fee_bps=args.fee_bps, slippage_bps=args.slippage_bps, periods_per_year=ppy)
+
+    # 4. Paper execution — only if the lockbox passed (never if blocked).
+    broker = PaperBroker(BROKER_STATE, starting_cash=args.capital,
+                         fee_bps=args.fee_bps, slippage_bps=args.slippage_bps)
+    price, ts = bars[-1].close, bars[-1].ts
+    target_now = generate_signals(bars, winner.params)[-1]
+    if verdict.passed:
+        fill = broker.rebalance(float(target_now) * args.max_fraction, price, ts)
+        exec_note = f"lockbox PASS → paper {fill['action']}"
+    elif verdict.blocked:
+        broker.mark(price)
+        exec_note = "lockbox BLOCKED (already spent) → no execution"
+    else:
+        broker.mark(price)
+        exec_note = "lockbox REJECT → no execution (correct default)"
+
+    # 5. Risk kill-switch on realized paper equity.
+    equity_curve = [h["equity"] for h in broker.acct.history] or [broker.acct.equity]
+    rv = risk_mod.check(equity_curve, max_drawdown=args.kill_drawdown)
+    if rv.breached:
+        broker.flatten(price, ts, reason=rv.reason)
+        exec_note += f" | KILL SWITCH: {rv.reason}"
+    broker.save()
+    ledger.save()
+
+    result = {
+        "mode": "campaign",
+        "provenance": provenance,
+        "split": split.summary(),
+        "candidates_searched_this_cycle": counter.n,
+        "cumulative_trials": ledger.cumulative_trials,
+        "winner_params": winner.params,
+        "winner_validation_sharpe": round(winner.validation_sharpe, 3),
+        "winner_train_sharpe": round(winner.train_sharpe, 3),
+        "target_now": target_now,
+        "verdict_passed": verdict.passed,
+        "verdict_blocked": verdict.blocked,
+        "verdict_reasons": verdict.reasons(),
+        "lockbox": verdict.lockbox_summary,
+        "lockbox_fingerprint": verdict.fingerprint,
+        "paper_equity": round(broker.acct.equity, 2),
+        "risk": {"breached": rv.breached, "reason": rv.reason, "drawdown": round(rv.drawdown, 4)},
+        "exec_note": exec_note,
+    }
+    write_campaign_state(result)
+    return result
+
+
+def write_campaign_state(r: dict) -> None:
+    synthetic = r["provenance"].upper().startswith("SYNTHETIC")
+    if r["verdict_blocked"]:
+        verdict_str = "BLOCKED (lockbox already spent)"
+    else:
+        verdict_str = "PASS" if r["verdict_passed"] else "REJECT"
+    lines = [
+        "# Quant Research Loop — State (campaign / search mode)",
+        "",
+        f"Last run provenance: `{r['provenance']}`"
+        + ("  ⚠️ SYNTHETIC DATA — not real market behavior" if synthetic else ""),
+        f"Lockbox fingerprint: `{r['lockbox_fingerprint']}`",
+        "",
+        "## Search accounting (the anti-self-deception spine)",
+        "",
+        f"- Candidates searched **this cycle**: {r['candidates_searched_this_cycle']}",
+        f"- **Cumulative trials (all cycles, enforced): {r['cumulative_trials']}**",
+        f"- Winner params: `{r['winner_params']}`",
+        f"- Winner validation Sharpe: {r['winner_validation_sharpe']} "
+        f"(train {r['winner_train_sharpe']})",
+        "",
+        "## Decision this cycle",
+        "",
+        f"- Maker target position: **{r['target_now']}** (1=long, 0=flat)",
+        f"- Lockbox verdict: **{verdict_str}**",
+        f"- Execution: {r['exec_note']}",
+        f"- Paper equity: **{r['paper_equity']}**",
+        f"- Risk: drawdown {r['risk']['drawdown']:.2%} — "
+        + ("**BREACHED**" if r["risk"]["breached"] else "within cap"),
+        "",
+        "## Lockbox gates (opened once, deflated by cumulative trials)",
+        "",
+    ]
+    for reason in r["verdict_reasons"]:
+        lines.append(f"- {reason}")
+    m = r.get("lockbox") or {}
+    lines += [
+        "",
+        "## Lockbox metrics",
+        "",
+        "| sharpe | maxDD | trades | total_return |",
+        "|--------|-------|--------|--------------|",
+        f"| {m.get('sharpe','—')} | {m.get('max_drawdown','—')} | "
+        f"{m.get('n_trades','—')} | {m.get('total_return','—')} |",
+        "",
+        "## Human gates (unchanged)",
+        "",
+        "- Paper trading only. Live execution is NOT wired (see LOOP.md).",
+        "- Lockbox is write-once per dataset. A BLOCKED verdict means: get fresh",
+        "  data or forward-test. Do not reset the ledger to re-peek.",
+        "",
+        "---",
+        "_Written by engine/loop.py (campaign mode). The lockbox decides; the "
+        "deflated benchmark rises with every trial ever run._",
+    ]
+    with open(STATE_MD, "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+    header_needed = not os.path.exists(RUN_LOG)
+    with open(RUN_LOG, "a") as fh:
+        if header_needed:
+            fh.write("# Quant Run Log\n\n| provenance | mode | verdict | cum_trials | "
+                     "target | paper_equity | dd |\n|---|---|---|---|---|---|---|\n")
+        fh.write(f"| {r['provenance']} | campaign | {verdict_str} | "
+                 f"{r['cumulative_trials']} | {r['target_now']} | "
+                 f"{r['paper_equity']} | {r['risk']['drawdown']:.2%} |\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Quant research loop — one cycle (paper only).")
     p.add_argument("--once", action="store_true", help="run a single cycle")
+    p.add_argument("--search", action="store_true",
+                   help="campaign mode: grid-search with enforced trial counting + lockbox")
+    p.add_argument("--train-frac", type=float, default=0.5, dest="train_frac")
+    p.add_argument("--validation-frac", type=float, default=0.25, dest="validation_frac")
+    p.add_argument("--lockbox-openings", type=int, default=1, dest="lockbox_openings",
+                   help="max times a given lockbox may be opened (write-once = 1)")
     p.add_argument("--source", default="synthetic", choices=["synthetic", "live"])
     p.add_argument("--csv", default=None, help="path to OHLCV csv (overrides --source)")
     p.add_argument("--symbol", default="BTCUSDT")
@@ -175,7 +332,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
-    result = run_once(args)
+    result = run_campaign(args) if args.search else run_once(args)
     print(json.dumps(result, indent=2))
     print(f"\nState written to {STATE_MD}")
     return 0

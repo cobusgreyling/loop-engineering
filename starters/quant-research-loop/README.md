@@ -46,6 +46,38 @@ python3 -m engine.loop --once --csv data/btc_1h.csv
 python3 -m engine.loop --once --n-trials 200
 ```
 
+### Campaign mode — automated search you can't fool yourself with
+
+`--search` turns "find a strategy" into a loop. It is built so that being *less
+in the loop* does not mean *less honest*. Two structural guards do the accounting
+you can no longer do by hand:
+
+```bash
+python3 -m engine.loop --search          # grid-search + lockbox, one campaign cycle
+```
+
+1. **Enforced trial counting (`engine/search.py` + `ledger.py`).** Every candidate
+   the grid evaluates ticks a counter. That count is persisted in
+   `research-ledger.json` and *accumulates across cycles*, then feeds the deflated
+   Sharpe gate. You cannot search 1,000 configs and claim you tried one — the loop
+   counts for you, forever.
+2. **Three-way split + write-once lockbox (`engine/split.py` + `ledger.py`).**
+   Data is split `train` / `validation` / `lockbox`. The search optimizes on
+   train, ranks on validation, and the **lockbox is opened exactly once, on the
+   winner only.** A second peek at the same lockbox is BLOCKED — re-peeking is
+   self-deception, so the loop refuses.
+
+What that looks like across three cycles on synthetic (no-edge) data:
+
+| Cycle | Data | Validation Sharpe | Lockbox verdict |
+|-------|------|-------------------|-----------------|
+| 1 | seed 7 | **6.27** (overfit!) | **REJECT** (lockbox Sharpe −9.22) |
+| 2 | seed 7 (same) | — | **BLOCKED** (lockbox already spent) |
+| 3 | seed 42 (fresh) | … | REJECT (deflated bar now higher — 105 cumulative trials) |
+
+The search *will* find a beautiful in-sample winner. The lockbox is what stops
+you from believing it.
+
 ## The five stages (mapped to loop-engineering primitives)
 
 | Stage | Primitive | Module |
@@ -62,7 +94,10 @@ python3 -m engine.loop --once --n-trials 200
 | File | Purpose |
 |------|---------|
 | `engine/` | Runnable five-stage loop (stdlib only) |
-| `engine/verifier.py` | OOS gates: deflated Sharpe, PSR, drawdown, degradation |
+| `engine/verifier.py` | OOS gates + lockbox verdict: deflated Sharpe, PSR, drawdown |
+| `engine/search.py` | Grid search with enforced trial counting |
+| `engine/split.py` | Three-way train/validation/lockbox split |
+| `engine/ledger.py` | Persistent trial counter + write-once lockbox ledger |
 | `engine/stats.py` | Overfitting-aware metrics (no numpy/scipy) |
 | `skills/alpha-research/SKILL.md` | Maker procedure manual |
 | `skills/backtest-verifier/SKILL.md` | Checker procedure manual |
