@@ -43,6 +43,25 @@ test('loop-init dry-run scaffolds daily-triage', async () => {
   }
 });
 
+test('loop-init prints Loop Ready score after scaffold', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-audit-'));
+  try {
+    const { stdout } = await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'daily-triage',
+      '--tool',
+      'grok',
+    ]);
+    assert.match(stdout, /Loop Ready:/);
+    assert.match(stdout, /\/100/);
+    assert.match(stdout, /--badge/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('loop-init scaffolds issue-triage with bundled assets', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-'));
   try {

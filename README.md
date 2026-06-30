@@ -25,26 +25,36 @@
   </a>
 </p>
 
+> **Stop prompting. Design the loop. Get a score.**
+
+```bash
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
+```
+
+`loop-init` scaffolds your loop and prints your **Loop Ready** score. Paste the badge when you're proud of it:
+
+```bash
+npx @cobusgreyling/loop-audit . --badge
+```
+
 <p align="center">
-  <img src="assets/visuals/LE5.jpeg" alt="Loop Engineering — design the system that prompts your agents" width="100%" />
+  <a href="docs/QUICKSTART.md">
+    <img src="assets/visuals/loop-audit-demo.gif" alt="Loop Ready score climbs from 10 to 100 in 15 seconds" width="100%" />
+  </a>
 </p>
 
-**Loop engineering is replacing yourself as the person who prompts the agent. You design the system that does it instead.**
+Loop engineering replaces you as the person who prompts the agent — you design the system that does it instead.
 
 **New here?** [Quickstart (5 min)](docs/QUICKSTART.md) · [Interactive picker](https://cobusgreyling.github.io/loop-engineering/#interactive)
 
 For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agents.
 
-A loop is a recursive goal: you define a purpose and the AI iterates (often with sub-agents, verification, and external state) until the goal is complete or the loop decides to hand off to you.
-
-
-
 <p align="center">
   <strong><a href="https://cobusgreyling.github.io/loop-engineering/">→ Interactive showcase + pattern picker</a></strong>
-  <br>
-  <strong><a href="https://cobusgreyling.substack.com/p/loop-engineering">→ Loop Engineering essay (Substack)</a></strong>
-  <br>
-  <a href="https://addyosmani.com/blog/loop-engineering/">Canonical essay by Addy Osmani</a>
+  ·
+  <a href="https://cobusgreyling.substack.com/p/loop-engineering">Essay</a>
+  ·
+  <a href="https://addyosmani.com/blog/loop-engineering/">Addy Osmani</a>
 </p>
 
 ## Contents
@@ -167,13 +177,13 @@ Machine-readable index: [patterns/registry.yaml](patterns/registry.yaml) (7 patt
 ## Getting Started (5 minutes)
 
 ```bash
-# 1. Scaffold a starter (or copy manually — see starters/)
+# 1. Scaffold + get your Loop Ready score (printed automatically)
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
 
 # 2. Estimate token spend for your cadence
 npx @cobusgreyling/loop-cost --pattern daily-triage --level L1
 
-# 3. Audit readiness (budget + run-log now scored)
+# 3. Re-audit after improvements
 npx @cobusgreyling/loop-audit . --suggest
 
 # Optional: paste Loop Ready badge into your README

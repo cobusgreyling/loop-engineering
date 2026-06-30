@@ -5,6 +5,14 @@ const LEVEL_BADGE_COLORS = {
     L3: '3ee8c5',
 };
 const SHOWCASE_URL = 'https://cobusgreyling.github.io/loop-engineering/';
+/** ASCII progress bar for terminal + demo GIFs. */
+export function formatScoreBar(score, width = 20) {
+    const filled = Math.max(0, Math.min(width, Math.round((score / 100) * width)));
+    return `${'█'.repeat(filled)}${'░'.repeat(width - filled)}  ${score}/100`;
+}
+function auditTargetArg(target) {
+    return target.includes(' ') ? `"${target}"` : target;
+}
 /** Markdown badge for README — paste output from `loop-audit . --badge`. */
 export function formatBadge(r) {
     const color = LEVEL_BADGE_COLORS[r.level];
@@ -18,6 +26,7 @@ export function formatHuman(r) {
     lines.push(`Loop Readiness Audit — ${r.target}`);
     lines.push('═'.repeat(50));
     lines.push(`Score: ${r.score}/100  Level: ${r.level}`);
+    lines.push(formatScoreBar(r.score));
     lines.push(r.assessment);
     lines.push('');
     lines.push('Findings:');
@@ -33,6 +42,7 @@ export function formatHuman(r) {
         }
     }
     lines.push('');
+    lines.push(`Share: npx @cobusgreyling/loop-audit ${auditTargetArg(r.target)} --badge`);
     lines.push('Docs: docs/loop-design-checklist.md');
     lines.push('Tip: rerun with --suggest for ready-to-paste copy commands from templates/starters.');
     lines.push('');

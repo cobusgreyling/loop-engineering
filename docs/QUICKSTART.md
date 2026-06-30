@@ -1,5 +1,9 @@
 # Quickstart — 5 minutes to your first loop
 
+> **Stop prompting. Design the loop. Get a score.**
+
+Watch the score climb: [loop-audit-demo.gif](../assets/visuals/loop-audit-demo.gif) (10 → 70 → 100 in ~15s).
+
 Landed from [X](https://x.com), the [showcase](https://cobusgreyling.github.io/loop-engineering/), or a friend's README? This is the shortest path from zero to a running loop.
 
 **Week one rule:** report only. No auto-fix, no auto-merge. Read what the loop writes before you let it act.
@@ -20,7 +24,7 @@ npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
 
 Swap `--tool grok` for `claude` or `codex` if needed. Swap `--pattern` for any pattern from [patterns/registry.yaml](../patterns/registry.yaml).
 
-`loop-init` copies the starter kit, creates `STATE.md`, `LOOP.md`, `loop-budget.md`, and `loop-run-log.md`, then prints your first command.
+`loop-init` copies the starter kit, creates `STATE.md`, `LOOP.md`, `loop-budget.md`, and `loop-run-log.md`, then **prints your Loop Ready score** and first command.
 
 ## 3. Check cost before you schedule (30 seconds)
 

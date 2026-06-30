@@ -12,6 +12,17 @@ if [[ ! -f "$AUDIT" ]]; then
   (cd "$ROOT/tools/loop-audit" && npm ci --silent && npm run build --silent)
 fi
 
+score_bar() {
+  local score="$1"
+  local width=20
+  local filled=$(( (score * width + 50) / 100 ))
+  local bar=""
+  local i
+  for ((i=0; i<filled; i++)); do bar+="█"; done
+  for ((i=filled; i<width; i++)); do bar+="░"; done
+  echo "$bar  ${score}/100"
+}
+
 run_audit() {
   local label="$1"
   local path="$2"
@@ -20,6 +31,16 @@ run_audit() {
   echo "$label"
   echo "══════════════════════════════════════════════════"
   node "$AUDIT" "$path" || true
+  local json
+  json="$(node "$AUDIT" "$path" --json 2>/dev/null || true)"
+  if [[ -n "$json" ]]; then
+    local score level
+    score="$(python3 -c "import json,sys; print(json.load(sys.stdin)['score'])" <<<"$json")"
+    level="$(python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" <<<"$json")"
+    echo ""
+    echo "▸ Loop Ready: ${score}/100 (${level})"
+    score_bar "$score"
+  fi
 }
 
 echo "Loop Readiness — before/after demo"

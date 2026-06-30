@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawn } from 'node:child_process';
 import { cp, mkdir, readFile, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -254,6 +255,57 @@ function firstLoopCommand(pattern, tool) {
     };
     return cmds[pattern][tool];
 }
+async function resolveAuditCli() {
+    const monorepo = path.resolve(PACKAGE_ROOT, '../loop-audit/dist/cli.js');
+    if (await exists(monorepo))
+        return monorepo;
+    try {
+        const { createRequire } = await import('node:module');
+        const require = createRequire(import.meta.url);
+        const pkg = require.resolve('@cobusgreyling/loop-audit/package.json');
+        return path.join(path.dirname(pkg), 'dist/cli.js');
+    }
+    catch {
+        return null;
+    }
+}
+async function runAuditJson(cli, targetDir) {
+    return new Promise((resolve, reject) => {
+        const child = spawn('node', [cli, targetDir, '--json'], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        let stdout = '';
+        child.stdout.on('data', (chunk) => {
+            stdout += chunk.toString();
+        });
+        child.on('error', reject);
+        child.on('close', () => {
+            if (stdout.trim())
+                resolve(stdout);
+            else
+                reject(new Error('loop-audit produced no output'));
+        });
+    });
+}
+async function runAuditSummary(targetDir) {
+    const cli = await resolveAuditCli();
+    if (!cli)
+        return null;
+    try {
+        const stdout = await runAuditJson(cli, targetDir);
+        return JSON.parse(stdout);
+    }
+    catch {
+        return null;
+    }
+}
+function formatScoreBar(score, width = 20) {
+    const filled = Math.max(0, Math.min(width, Math.round((score / 100) * width)));
+    return `${'█'.repeat(filled)}${'░'.repeat(width - filled)}  ${score}/100`;
+}
+function auditTargetArg(target, targetDir) {
+    return target === '.' ? '.' : targetDir;
+}
 async function main() {
     const args = parseArgs(process.argv.slice(2));
     if (args.help) {
@@ -375,10 +427,29 @@ npm run lint
         await writeFile(path.join(targetDir, 'AGENTS.md'), agentsTemplate);
         console.log('  created: AGENTS.md (template)');
     }
-    console.log('\n=== Next steps ===');
-    console.log(`  npx @cobusgreyling/loop-audit ${target === '.' ? '.' : target} --suggest`);
-    console.log(`  npx @cobusgreyling/loop-cost --pattern ${pattern}`);
-    console.log(`  First loop command (${tool}):\n  ${firstLoopCommand(pattern, tool)}\n`);
+    const auditArg = auditTargetArg(target, targetDir);
+    if (!dryRun) {
+        const audit = await runAuditSummary(targetDir);
+        if (audit) {
+            console.log('');
+            console.log(`✓ Loop Ready: ${audit.score}/100 (${audit.level})`);
+            console.log(`  ${formatScoreBar(audit.score)}`);
+            console.log(`  ${audit.assessment}`);
+            console.log('');
+            console.log('Paste badge in README:');
+            console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --badge`);
+        }
+        else {
+            console.log('\n=== Loop Ready score ===');
+            console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --suggest`);
+        }
+    }
+    console.log('');
+    console.log(`First loop (${tool}):`);
+    console.log(`  ${firstLoopCommand(pattern, tool)}`);
+    console.log('');
+    console.log(`Estimate cost: npx @cobusgreyling/loop-cost --pattern ${pattern} --level L1`);
+    console.log('');
 }
 async function readDirNames(dir) {
     const { readdir } = await import('node:fs/promises');
