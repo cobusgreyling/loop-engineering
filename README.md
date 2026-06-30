@@ -27,6 +27,10 @@
 
 > **Stop prompting. Design the loop. Get a score.**
 
+<p align="center">
+  <img src="assets/visuals/LE5.jpeg" alt="Loop Engineering — design the system that prompts your agents" width="100%" />
+</p>
+
 ```bash
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
 ```
