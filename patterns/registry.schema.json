@@ -49,7 +49,7 @@
             "minItems": 1,
             "items": {
               "type": "string",
-              "enum": ["grok", "claude-code", "codex", "github-actions", "cursor", "windsurf", "aider"]
+              "enum": ["grok", "claude-code", "codex", "opencode", "openclaw", "github-actions", "cursor", "windsurf", "aider"]
             }
           },
           "skills": {

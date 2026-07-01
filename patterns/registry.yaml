@@ -8,7 +8,7 @@ patterns:
     goal: Shepherd PRs through review, CI, rebase, and merge
     cadence: 5m-15m
     risk: medium
-    tools: [grok, claude-code, codex, github-actions]
+    tools: [grok, claude-code, codex, openclaw, github-actions]
     skills: [pr-review-triage, minimal-fix, rebase-and-clean]
     state: pr-babysitter-state.md
     phases: [discover, triage, fix, verify, notify]
@@ -29,7 +29,7 @@ patterns:
     goal: Prioritized morning scan of CI, issues, commits, and chat
     cadence: 1d-2h
     risk: low
-    tools: [grok, claude-code, codex, github-actions]
+    tools: [grok, claude-code, codex, openclaw, github-actions]
     skills: [loop-triage, minimal-fix]
     state: STATE.md
     phases: [report, act-small-wins, escalate]
@@ -50,7 +50,7 @@ patterns:
     goal: React to failing CI with minimal fixes and escalation
     cadence: 5m-15m
     risk: medium
-    tools: [grok, claude-code, codex, github-actions]
+    tools: [grok, claude-code, codex, openclaw, github-actions]
     skills: [ci-triage, minimal-fix]
     state: ci-sweeper-state.md
     phases: [detect, classify, fix, verify, escalate]
@@ -71,7 +71,7 @@ patterns:
     goal: Follow-up tech debt and cleanup after merges to main
     cadence: 1d-6h
     risk: low
-    tools: [grok, claude-code, codex, github-actions]
+    tools: [grok, claude-code, codex, openclaw, github-actions]
     skills: [post-merge-scan, minimal-fix]
     state: post-merge-state.md
     phases: [scan-merges, prioritize, fix-small, ticket-large]
@@ -92,7 +92,7 @@ patterns:
     goal: Discover, safely apply, and verify dependency + vulnerability updates with human gates on risky changes
     cadence: 6h-1d
     risk: medium
-    tools: [grok, claude-code, codex, github-actions]
+    tools: [grok, claude-code, codex, openclaw, github-actions]
     skills: [dependency-triage, minimal-fix, loop-verifier]
     state: dependency-sweeper-state.md
     phases: [scan, triage-risk, patch-safe, verify-worktree, escalate-risky]
@@ -113,7 +113,7 @@ patterns:
     goal: Scan merged PRs and commits, draft categorized high-quality release notes or CHANGELOG entries for human review
     cadence: 1d
     risk: low
-    tools: [grok, claude-code, codex, github-actions]
+    tools: [grok, claude-code, codex, openclaw, github-actions]
     skills: [changelog-scan, draft-release-notes, loop-verifier]
     state: changelog-drafter-state.md
     phases: [scan-merges, categorize, draft, review, publish]
@@ -134,7 +134,7 @@ patterns:
     goal: Discover, deduplicate, prioritize and label incoming issues/discussions so the team always has a clean actionable queue. Excellent low-risk companion to Daily Triage.
     cadence: 2h-1d
     risk: low
-    tools: [grok, claude-code, codex, github-actions]
+    tools: [grok, claude-code, codex, openclaw, github-actions]
     skills: [issue-triage, loop-verifier]
     state: issue-triage-state.md
     phases: [discover, dedupe, score, propose-labels, human-review]
