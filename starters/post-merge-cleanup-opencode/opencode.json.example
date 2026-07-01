@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "post-merge-scan": {
+      "name": "post-merge-scan",
+      "description": "Post-merge scan loop. Reads post-merge-state.md, scans recent merges, and proposes small cleanup fixes.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, post-merge-state.md, and skills/post-merge-scan/SKILL.md. Scan merges to main in the last 48h. Propose small doc/lint/comment fixes. Ticket architectural debt. Do not edit code in L1 mode.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "implementer": {
+      "name": "implementer",
+      "description": "L2 implementer for small cleanup fixes inside an isolated worktree.",
+      "mode": "subagent",
+      "prompt": "Implement only the requested single-file cleanup inside the supplied worktree. Run tests. Never touch denylist paths. Output the diff.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "verifier": {
+      "name": "verifier",
+      "description": "Checker agent for cleanup diffs. APPROVE or REJECT only.",
+      "mode": "subagent",
+      "prompt": "Review the cleanup diff against project rules. Verify scope is small and doesn't touch denylisted paths. Do not edit files. APPROVE or REJECT.",
+      "permission": {
+        "bash": "ask",
+        "edit": "deny"
+      }
+    }
+  }
+}

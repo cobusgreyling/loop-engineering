@@ -1,0 +1,11 @@
+# Dependency Sweeper State
+Last run: 2026-06-20 09:00 UTC
+Outdated packages: 0
+Attempt counts: {}
+Auto-PRs today: 0
+
+## Denylist (never touch)
+- <!-- Add packages the loop must never update -->
+
+## Escalated to Human
+- <!-- Major bumps and high-sev CVEs -->

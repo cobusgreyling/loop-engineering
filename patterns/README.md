@@ -8,7 +8,7 @@ Each pattern answers:
 - Required skills / state shape
 - Verification approach
 - Human hand-off strategy
-- Tool-specific notes (Grok, Claude Code, Codex, GitHub Actions)
+- Tool-specific notes (Grok, Claude Code, Codex, Opencode, GitHub Actions)
 
 ## Pattern Registry
 
@@ -27,7 +27,7 @@ Machine-readable index: [registry.yaml](./registry.yaml)
 ## How to Use a Pattern
 
 1. Pick a pattern: [pattern-picker.md](../docs/pattern-picker.md)
-2. Scaffold with `npx @cobusgreyling/loop-init . --pattern <name> --tool grok` or copy from `starters/`
+2. Scaffold with `npx @cobusgreyling/loop-init . --pattern <name> --tool grok` (or `--tool opencode` / `--tool claude`) or copy from `starters/`
 3. Copy skills from `templates/` if customizing beyond the starter
 4. Set up scheduling (`/loop`, `scheduler_create`, GitHub Action, Codex Automation)
 5. Run week one in **L1 report-only** mode before enabling fixes

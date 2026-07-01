@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "issue-triage": {
+      "name": "issue-triage",
+      "description": "Issue triage loop. Reads issue-triage-state.md, scans open issues, and proposes labels and priorities. Propose-only in L1 mode.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, issue-triage-state.md, and skills/issue-triage/SKILL.md. Scan open issues since last run. Update state with top 5, proposed labels, and needs-human bucket. Propose only — do not apply labels or close issues.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "implementer": {
+      "name": "implementer",
+      "description": "L2 implementer for auto-labeling allowlisted labels.",
+      "mode": "subagent",
+      "prompt": "Apply only allowlisted labels (area:*, needs-repro, needs-info, duplicate?) after verifier passes. Never auto-apply P0, P1, security, or breaking-change labels. Never close or comment without human approval.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "verifier": {
+      "name": "verifier",
+      "description": "Checker agent for issue label proposals. APPROVE or REJECT only.",
+      "mode": "subagent",
+      "prompt": "Verify proposed labels are in the allowlist. Confirm no P0/P1/security labels are being auto-applied. Do not edit. APPROVE or REJECT.",
+      "permission": {
+        "bash": "ask",
+        "edit": "deny"
+      }
+    }
+  }
+}
