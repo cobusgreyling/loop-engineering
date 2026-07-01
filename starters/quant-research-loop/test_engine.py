@@ -340,6 +340,23 @@ def test_xsectional_vol_target_changes_returns():
     assert raw != vt, "vol targeting must change the portfolio return stream"
 
 
+def test_xsectional_overlays_change_returns():
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(here, "sample-data", "crypto_panel.csv")
+    if not os.path.exists(p):
+        return
+    from engine import multi_data as md
+    from engine import xsectional as xs
+    dates, series, assets = md.panel_from_csv(p)
+    cols = md.as_matrix(dates, series, assets)
+    base = {"lookback": 60, "top_k": 3, "rebalance": 30}
+    plain = xs.portfolio_returns(dates, cols, base)
+    mkt = xs.portfolio_returns(dates, cols, {**base, "market_filter": True})
+    ls = xs.portfolio_returns(dates, cols, {**base, "long_short": True})
+    assert plain != mkt, "market-trend risk-off filter must change returns"
+    assert plain != ls, "long/short leg must change returns"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

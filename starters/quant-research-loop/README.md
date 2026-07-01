@@ -319,6 +319,28 @@ over the 25% cap.
 >    after seeing the result, is goalpost-moving. That call belongs to a
 >    pre-registered mandate, not to hindsight.
 
+#### Refining the cross-sectional signal (40% mandate)
+
+With the drawdown cap pre-registered at **40%**, two refinements were tested:
+
+- **Market-neutral long/short** (short the weakest coins): **backfired hard** —
+  Sharpe 0.96 → 0.07, forward −62%. Crypto's short leg is toxic: the weakest
+  coins violently short-squeeze. Momentum's edge is asymmetric, living entirely
+  in the long winners. A reasonable idea the data killed.
+- **Market-trend risk-off** (go to cash when BTC is below its trend SMA):
+  **helped a lot** — drawdown 68% → 44-47%, walk-forward Sharpe up to ~1.2, PSR
+  1.0. Out-of-time it posted Sharpe ~1.1 / 36% DD on 2020-2026, but ~43-47% DD
+  across a modern-era study — **just over the 40% mandate.**
+
+**Honest landing:** cross-sectional momentum + market risk-off + vol targeting is
+the first thing with real, repeatable edge (PSR 1.0, beats the deflated bar), and
+it lands *close to* a 40% drawdown mandate but does not cleanly clear it out-of-
+sample. Continuing to tweak knobs until one clears 40% would be uncounted
+multiple testing — the trap this whole engine exists to expose. The disciplined
+next steps are not more in-sample tuning: **(a) fix survivorship** (the result is
+an upper bound), and **(b) forward paper-trade this one pre-registered strategy on
+genuinely new data.** Real edge found; a clean approval not yet earned.
+
 ## What this does NOT do
 
 - **It does not place real orders.** `paper_broker.py` has no credentials. Going

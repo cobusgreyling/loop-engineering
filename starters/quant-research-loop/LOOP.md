@@ -89,10 +89,15 @@ not evidence).
 
 **Multi-asset (`engine/xsectional.py` + `multi_data.py`):** cross-sectional
 momentum over a 12-coin panel — the FIRST hypothesis with genuine statistical
-signal (beats deflated Sharpe, PSR 1.0). Still REJECTED on drawdown (77% even
-vol-targeted). Two caveats dominate: survivorship bias (universe = survivors,
-inflates results, unfixable by the time split) and the 25% drawdown cap being a
-risk preference. Real edge found; approvable strategy not yet.
+signal (beats deflated Sharpe, PSR 1.0). Real, repeatable edge (PSR 1.0, beats deflated bar). Refinements under a
+pre-registered 40% drawdown mandate: market-neutral long/short BACKFIRED (crypto
+short leg is toxic — squeezes; momentum edge is long-only asymmetric); market-
+trend risk-off (cash when BTC below trend) HELPED (drawdown 68%->44-47%, Sharpe
+~1.2). Lands close to the 40% mandate (~43-47% DD out-of-sample) but does not
+cleanly clear it. Stopped tweaking to avoid uncounted multiple testing. Honest
+next steps: fix survivorship (results are an upper bound) and forward paper-trade
+the one pre-registered strategy on new data. Real edge found; clean approval not
+yet earned.
 
 **Capstone — true out-of-time test** (research 2010–2020, forward 2020–2026, data
 never touched by research/tuning): `regime` was the first to PASS honest research

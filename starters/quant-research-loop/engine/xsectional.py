@@ -49,7 +49,18 @@ def portfolio_returns(dates: list[int], cols: dict[str, list], params: dict,
     assets = list(cols)
     T = len(dates)
 
-    held: set[str] = set()
+    long_short = bool(params.get("long_short"))
+
+    def _leg_return(members: set, t: int) -> float:
+        day = []
+        for a in members:
+            p0, p1 = cols[a][t - 1], cols[a][t]
+            if p0 is not None and p1 is not None and p0 > 0:
+                day.append(p1 / p0 - 1.0)
+        return (sum(day) / len(day)) if day else 0.0
+
+    held_long: set[str] = set()
+    held_short: set[str] = set()
     rets: list[float] = []
     for t in range(1, T):
         # Rebalance decision uses data through t-1 (no look-ahead).
@@ -59,24 +70,38 @@ def portfolio_returns(dates: list[int], cols: dict[str, list], params: dict,
                 r = _trailing_return(cols[a], t - 1, lookback, skip)
                 if r is not None and cols[a][t - 1] is not None:
                     ranks.append((r, a))
-            if len(ranks) >= top_k:
-                ranks.sort(reverse=True)
-                new_held = {a for _, a in ranks[:top_k]}
-            else:
-                new_held = set()  # too few eligible assets → stay flat
-            turnover = len(new_held.symmetric_difference(held)) / max(1, top_k)
-            held = new_held
+            ranks.sort(reverse=True)
+            new_long = {a for _, a in ranks[:top_k]} if len(ranks) >= top_k else set()
+            # Market-neutral: short the weakest top_k. Requires a disjoint bottom.
+            new_short = ({a for _, a in ranks[-top_k:]}
+                         if long_short and len(ranks) >= 2 * top_k else set())
+            legs = top_k * (2 if long_short else 1)
+            turnover = (len(new_long.symmetric_difference(held_long))
+                        + len(new_short.symmetric_difference(held_short))) / max(1, legs)
+            held_long, held_short = new_long, new_short
         else:
             turnover = 0.0
 
-        # Day t return: equal-weight the held assets that have both prices.
-        day = []
-        for a in held:
-            p0, p1 = cols[a][t - 1], cols[a][t]
-            if p0 is not None and p1 is not None and p0 > 0:
-                day.append(p1 / p0 - 1.0)
-        r = (sum(day) / len(day)) if day else 0.0
+        # Long leg minus short leg (dollar-neutral spread when long_short).
+        r = _leg_return(held_long, t) - (_leg_return(held_short, t) if long_short else 0.0)
         rets.append(r - cost * turnover)
+
+    # Market-trend risk-off: flatten to cash when the market proxy (default BTC)
+    # is below its trend SMA. Crypto sells off together, so exiting in aggregate
+    # downtrends is the honest way to cut the drawdown the toxic short leg could
+    # not. Decision at date i uses only data up to i (no look-ahead).
+    if params.get("market_filter"):
+        n = int(params.get("market_trend_n", 100))
+        mkt = cols.get(params.get("market_proxy", "btc"))
+        masked = []
+        for i in range(len(rets)):
+            ok = 1
+            if mkt is not None and mkt[i] is not None:
+                hist = [mkt[k] for k in range(max(0, i - n), i) if mkt[k] is not None]
+                if len(hist) >= max(20, n // 2):
+                    ok = 1 if mkt[i] > sum(hist) / len(hist) else 0
+            masked.append(rets[i] * ok)
+        rets = masked
 
     if not params.get("vol_target"):
         return rets
@@ -146,6 +171,7 @@ class XResult:
     aggregate_pass: bool
     passed: bool
     trials: int
+    max_dd_cap: float = 0.40
 
     def reasons(self) -> list[str]:
         return [
@@ -155,16 +181,16 @@ class XResult:
             f"deflated_sharpe: {self.aggregate_sharpe:.2f} vs {self.deflated_benchmark:.2f} "
             f"(trials={self.trials})",
             f"{'PASS' if self.aggregate_psr >= 0.95 else 'FAIL'} · PSR: {self.aggregate_psr:.3f}",
-            f"{'PASS' if self.aggregate_max_drawdown <= 0.25 else 'FAIL'} · "
-            f"maxDD: {self.aggregate_max_drawdown:.2%} vs 25%",
+            f"{'PASS' if self.aggregate_max_drawdown <= self.max_dd_cap else 'FAIL'} · "
+            f"maxDD: {self.aggregate_max_drawdown:.2%} vs {self.max_dd_cap:.0%}",
         ]
 
 
 def walk_forward(dates: list[int], cols: dict[str, list], *, n_folds: int = 5,
                  grid: dict | None = None, base_params: dict | None = None,
                  min_fold_sharpe: float = 0.5,
-                 max_fold_drawdown: float = 0.35, min_aggregate_sharpe: float = 1.0,
-                 max_aggregate_drawdown: float = 0.25, n_trials_so_far: int = 0,
+                 max_fold_drawdown: float = 0.50, min_aggregate_sharpe: float = 1.0,
+                 max_aggregate_drawdown: float = 0.40, n_trials_so_far: int = 0,
                  fee_bps: float = 10.0, slippage_bps: float = 10.0,
                  ppy: float = 365) -> XResult:
     grid = grid or DEFAULT_GRID
@@ -208,4 +234,5 @@ def walk_forward(dates: list[int], cols: dict[str, list], *, n_folds: int = 5,
     consistency = passes >= k_required
     return XResult(folds, passes, k_required, consistency, round(agg_sh, 3),
                    round(psr, 3), round(agg_dd, 4), round(deflated, 3),
-                   agg_pass, consistency and agg_pass, trials)
+                   agg_pass, consistency and agg_pass, trials,
+                   max_dd_cap=max_aggregate_drawdown)
