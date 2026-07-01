@@ -94,10 +94,15 @@ pre-registered 40% drawdown mandate: market-neutral long/short BACKFIRED (crypto
 short leg is toxic — squeezes; momentum edge is long-only asymmetric); market-
 trend risk-off (cash when BTC below trend) HELPED (drawdown 68%->44-47%, Sharpe
 ~1.2). Lands close to the 40% mandate (~43-47% DD out-of-sample) but does not
-cleanly clear it. Stopped tweaking to avoid uncounted multiple testing. Honest
-next steps: fix survivorship (results are an upper bound) and forward paper-trade
-the one pre-registered strategy on new data. Real edge found; clean approval not
-yet earned.
+cleanly clear it. Stopped tweaking to avoid uncounted multiple testing.
+
+**Survivorship correction:** expanded the 12 hand-picked survivors to a 32-coin
+universe including real collapses (FTT/BTG/BSV/XVG, point-in-time eligibility).
+Same strategy deflates: out-of-time Sharpe 1.09->0.78, drawdown 36%->51%, return
++691%->+304%. Survivorship inflated Sharpe ~30-40% and hid ~15pts of drawdown.
+PSR stays 1.0 (signal is real) but it is a 51%-DD reject on a realistic universe —
+and still an upper bound (truly delisted coins excluded). Real edge, honestly
+deflated, not approvable.
 
 **Capstone — true out-of-time test** (research 2010–2020, forward 2020–2026, data
 never touched by research/tuning): `regime` was the first to PASS honest research

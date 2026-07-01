@@ -357,6 +357,23 @@ def test_xsectional_overlays_change_returns():
     assert plain != ls, "long/short leg must change returns"
 
 
+def test_expanded_panel_includes_collapses():
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(here, "sample-data", "crypto_panel_expanded.csv")
+    if not os.path.exists(p):
+        return
+    from engine import multi_data as md
+    dates, series, assets = md.panel_from_csv(p)
+    assert len(assets) >= 25, "expanded universe should be much larger than the 12 survivors"
+    # A survivorship-relevant coin (FTT) must show a real collapse in the data.
+    ftt = series.get("ftt", {})
+    if ftt:
+        items = sorted(ftt.items())
+        peak = max(v for _, v in items)
+        last = items[-1][1]
+        assert peak / last > 10, "FTT must show its collapse (peak >> last)"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

@@ -142,6 +142,8 @@ def from_coinmetrics(asset: str = "btc", timeout: int = 120) -> list[Bar]:
     hdr = rows[0]
     if len(rows[-1]) != len(hdr):  # drop a truncated final line
         rows = rows[:-1]
+    if "time" not in hdr or "PriceUSD" not in hdr:
+        return []  # some community assets lack a USD reference price — skip them
     ti, pi = hdr.index("time"), hdr.index("PriceUSD")
     # Optional on-chain features, mapped to short names. Absent columns are skipped.
     feat_cols = {"mvrv": "CapMVRVCur", "adract": "AdrActCnt", "txcnt": "TxCnt"}

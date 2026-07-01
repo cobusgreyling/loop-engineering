@@ -336,10 +336,30 @@ With the drawdown cap pre-registered at **40%**, two refinements were tested:
 the first thing with real, repeatable edge (PSR 1.0, beats the deflated bar), and
 it lands *close to* a 40% drawdown mandate but does not cleanly clear it out-of-
 sample. Continuing to tweak knobs until one clears 40% would be uncounted
-multiple testing — the trap this whole engine exists to expose. The disciplined
-next steps are not more in-sample tuning: **(a) fix survivorship** (the result is
-an upper bound), and **(b) forward paper-trade this one pre-registered strategy on
-genuinely new data.** Real edge found; a clean approval not yet earned.
+multiple testing — the trap this whole engine exists to expose.
+
+#### Survivorship, corrected (the result deflates)
+
+The 12-coin universe was hand-picked survivors. The honest fix: expand to a
+32-coin universe including coins that pumped and **collapsed** — FTT (−100% in the
+FTX blowup), BTG (−100%), BSV (−97%), XVG (−99%) — with point-in-time eligibility
+(a coin is only rankable on days it has a price). Same strategy, both universes:
+
+| | Survivor-12 (flattered) | Expanded-32 (corrected) |
+|---|---|---|
+| Walk-forward Sharpe | 1.28 | **0.94** |
+| Consistency | 4/5 | **2/5** |
+| Out-of-time Sharpe | 1.09 | **0.78** |
+| Out-of-time drawdown | 36% | **51%** |
+| Out-of-time return | +691% | +304% |
+
+Survivorship inflated Sharpe ~30-40% and hid ~15 points of drawdown. Momentum
+*did* buy the collapses and eat them. The strategy that looked borderline on a 40%
+mandate is, on a realistic universe, a **51%-drawdown reject.** PSR stays 1.0 —
+the relative-strength signal is still real — but weaker and riskier than the
+survivor-only backtest claimed. Even the 32-coin set still excludes truly delisted
+coins, so this remains an upper bound. **Real edge, honestly deflated, not
+approvable.** Panels: `sample-data/crypto_panel{,_expanded}.csv`.
 
 ## What this does NOT do
 

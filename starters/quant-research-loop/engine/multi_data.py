@@ -29,8 +29,9 @@ def fetch_panel(assets: list[str] | None = None) -> tuple[list[int], dict[str, d
     series: dict[str, dict[int, float]] = {}
     for a in assets:
         bars = data_mod.from_coinmetrics(asset=a)
-        series[a] = {b.ts: b.close for b in bars}
-    all_dates = sorted(set().union(*[set(s) for s in series.values()]))
+        if bars:  # skip assets with no usable price series
+            series[a] = {b.ts: b.close for b in bars}
+    all_dates = sorted(set().union(*[set(s) for s in series.values()])) if series else []
     return all_dates, series
 
 
