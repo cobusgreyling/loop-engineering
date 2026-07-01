@@ -304,6 +304,40 @@ def test_mvrv_brake_changes_trend_signal():
     assert reg != tv, "the MVRV euphoria brake must actually change the signal"
 
 
+def test_xsectional_panel_and_walkforward():
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(here, "sample-data", "crypto_panel.csv")
+    if not os.path.exists(p):
+        return
+    from engine import multi_data as md
+    from engine import xsectional as xs
+    dates, series, assets = md.panel_from_csv(p)
+    assert len(assets) >= 8 and len(dates) > 2000
+    cols = md.as_matrix(dates, series, assets)
+    rets = xs.portfolio_returns(dates, cols, xs.DEFAULT_PARAMS)
+    assert len(rets) == len(dates) - 1
+    r = xs.walk_forward(dates, cols, n_folds=5)
+    assert len(r.folds) == 5
+    assert r.trials == 5 * len(xs.expand_grid(xs.DEFAULT_GRID)), "trials must be counted"
+
+
+def test_xsectional_vol_target_changes_returns():
+    import math
+    from engine import xsectional as xs
+    dates = list(range(1_600_000_000, 1_600_000_000 + 400 * 86400, 86400))
+
+    def path(drift, amp):
+        p = [100.0]
+        for i in range(1, len(dates)):
+            p.append(p[-1] * (1.0 + drift + amp * math.sin(i)))  # trend + real variance
+        return p
+    cols = {"a": path(0.01, 0.03), "b": path(0.0, 0.02), "c": path(-0.005, 0.02)}
+    base = {"lookback": 30, "top_k": 1, "rebalance": 30}
+    raw = xs.portfolio_returns(dates, cols, base)
+    vt = xs.portfolio_returns(dates, cols, {**base, "vol_target": True, "target_vol": 0.5})
+    assert raw != vt, "vol targeting must change the portfolio return stream"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

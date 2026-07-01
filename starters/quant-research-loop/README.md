@@ -286,6 +286,39 @@ is exactly why the harness exists — a compelling narrative is not evidence. (N
 this is now 6 strategies tested; chasing MVRV variants until one passes would be
 the same multiple-testing trap, one level up.)
 
+### Cross-sectional momentum (multi-asset — first REAL signal)
+
+Everything above is single-asset (long-biased beta). Cross-sectional momentum is
+different: rank a 12-coin universe by trailing return, hold the top-K equally
+weighted, rebalance. It is a bet on *relative* strength — orthogonal to market
+direction. Code: `engine/multi_data.py` (panel loader) + `engine/xsectional.py`
+(portfolio + its own walk-forward), data `sample-data/crypto_panel.csv`.
+
+| | Raw | + vol target (50%) |
+|---|---|---|
+| Pooled OOS Sharpe | 0.99 | 0.93 |
+| Beats deflated bar? | **yes** (0.99 > 0.79) | **yes** |
+| PSR | **1.00** | **1.00** |
+| Pooled drawdown | 93% | 77% |
+| Verdict | REJECT | REJECT |
+
+**This is the first hypothesis with genuine statistical signal** — it clears the
+deflated-Sharpe and PSR gates that every trend/on-chain strategy failed. Cross-
+sectional momentum *has edge*. But it is rejected on **drawdown**: even vol-
+targeted, momentum crashes (winners reverse together) drive 42–77% drawdowns, far
+over the 25% cap.
+
+> **Two honest caveats that matter more than the Sharpe.**
+> 1. **Survivorship bias.** The universe is coins that *survived* to 2026. Every
+>    dead coin and −99% rug is absent, and a real strategy would have bought some.
+>    This inflates the result and the forward test *cannot* fix it (it is baked
+>    into the universe, not the time split). Treat the numbers as an upper bound.
+> 2. **The 25% drawdown cap is a risk preference, not a law.** Buy-and-hold BTC
+>    draws down 80%+. A crypto strategy at ~45% drawdown and Sharpe ~1 may be
+>    genuinely good *by crypto standards* — but relaxing the cap to force a pass,
+>    after seeing the result, is goalpost-moving. That call belongs to a
+>    pre-registered mandate, not to hindsight.
+
 ## What this does NOT do
 
 - **It does not place real orders.** `paper_broker.py` has no credentials. Going

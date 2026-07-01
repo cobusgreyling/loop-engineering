@@ -87,6 +87,13 @@ On-chain investigation: neither MVRV formulation cleared the bar or improved the
 best price strategy out-of-time — an honest negative (a compelling narrative is
 not evidence).
 
+**Multi-asset (`engine/xsectional.py` + `multi_data.py`):** cross-sectional
+momentum over a 12-coin panel — the FIRST hypothesis with genuine statistical
+signal (beats deflated Sharpe, PSR 1.0). Still REJECTED on drawdown (77% even
+vol-targeted). Two caveats dominate: survivorship bias (universe = survivors,
+inflates results, unfixable by the time split) and the 25% drawdown cap being a
+risk preference. Real edge found; approvable strategy not yet.
+
 **Capstone — true out-of-time test** (research 2010–2020, forward 2020–2026, data
 never touched by research/tuning): `regime` was the first to PASS honest research
 (5/5 folds, 14% DD) but FAILED forward (37% DD). All strategies made big returns
