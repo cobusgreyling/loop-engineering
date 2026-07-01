@@ -334,7 +334,9 @@ def test_xsectional_vol_target_changes_returns():
     cols = {"a": path(0.01, 0.03), "b": path(0.0, 0.02), "c": path(-0.005, 0.02)}
     base = {"lookback": 30, "top_k": 1, "rebalance": 30}
     raw = xs.portfolio_returns(dates, cols, base)
-    vt = xs.portfolio_returns(dates, cols, {**base, "vol_target": True, "target_vol": 0.5})
+    # A tight target (0.1) is well below the basket's realized vol, so the overlay
+    # must scale exposure below 1.0 and change the stream.
+    vt = xs.portfolio_returns(dates, cols, {**base, "vol_target": True, "target_vol": 0.1})
     assert raw != vt, "vol targeting must change the portfolio return stream"
 
 
