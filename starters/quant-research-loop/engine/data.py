@@ -22,7 +22,7 @@ import json
 import math
 import re
 import urllib.request
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 
 
@@ -34,12 +34,24 @@ class Bar:
     low: float
     close: float
     volume: float
+    features: dict = field(default_factory=dict)  # optional on-chain columns (e.g. mvrv)
+
+
+_STD_COLS = {"ts", "open", "high", "low", "close", "volume"}
 
 
 def from_csv(path: str) -> list[Bar]:
     bars: list[Bar] = []
     with open(path, newline="") as fh:
         for row in csv.DictReader(fh):
+            # Any non-standard column becomes a numeric feature (e.g. mvrv, adract).
+            feats = {}
+            for k, v in row.items():
+                if k not in _STD_COLS and v not in (None, ""):
+                    try:
+                        feats[k] = float(v)
+                    except ValueError:
+                        pass
             bars.append(
                 Bar(
                     ts=int(float(row["ts"])),
@@ -48,6 +60,7 @@ def from_csv(path: str) -> list[Bar]:
                     low=float(row["low"]),
                     close=float(row["close"]),
                     volume=float(row.get("volume", 0) or 0),
+                    features=feats,
                 )
             )
     bars.sort(key=lambda b: b.ts)
@@ -130,13 +143,24 @@ def from_coinmetrics(asset: str = "btc", timeout: int = 120) -> list[Bar]:
     if len(rows[-1]) != len(hdr):  # drop a truncated final line
         rows = rows[:-1]
     ti, pi = hdr.index("time"), hdr.index("PriceUSD")
+    # Optional on-chain features, mapped to short names. Absent columns are skipped.
+    feat_cols = {"mvrv": "CapMVRVCur", "adract": "AdrActCnt", "txcnt": "TxCnt"}
+    feat_idx = {name: hdr.index(col) for name, col in feat_cols.items() if col in hdr}
     bars: list[Bar] = []
     for r in rows[1:]:
         if len(r) <= pi or not r[pi]:
             continue
         ts = calendar.timegm(datetime.strptime(r[ti][:10], "%Y-%m-%d").timetuple())
         price = float(r[pi])
-        bars.append(Bar(ts=ts, open=price, high=price, low=price, close=price, volume=0.0))
+        feats = {}
+        for name, ci in feat_idx.items():
+            if len(r) > ci and r[ci]:
+                try:
+                    feats[name] = float(r[ci])
+                except ValueError:
+                    pass
+        bars.append(Bar(ts=ts, open=price, high=price, low=price, close=price,
+                        volume=0.0, features=feats))
     bars.sort(key=lambda b: b.ts)
     return bars
 
@@ -203,11 +227,13 @@ def get_ohlcv(source: str = "synthetic", *, csv_path: str | None = None,
 
 
 def to_csv(bars: list[Bar], path: str) -> None:
+    feat_keys = sorted({k for b in bars for k in b.features})
     with open(path, "w", newline="") as fh:
         w = csv.writer(fh)
-        w.writerow(["ts", "open", "high", "low", "close", "volume"])
+        w.writerow(["ts", "open", "high", "low", "close", "volume", *feat_keys])
         for b in bars:
-            w.writerow([b.ts, b.open, b.high, b.low, b.close, b.volume])
+            w.writerow([b.ts, b.open, b.high, b.low, b.close, b.volume,
+                        *[b.features.get(k, "") for k in feat_keys]])
 
 
 def closes(bars: list[Bar]) -> list[float]:

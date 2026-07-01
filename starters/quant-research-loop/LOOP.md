@@ -81,7 +81,11 @@ All five hardening steps are now implemented. The harness is "safe to run
 unattended" in the research/paper sense.
 
 **Strategy library (`--strategy`):** donchian (breakout), tsmom (time-series
-momentum), meanrev (short-term reversion), regime (trend gated by calm vol).
+momentum), meanrev (short-term reversion), regime (trend gated by calm vol),
+mvrv (on-chain valuation contrarian), trendval (regime + MVRV euphoria brake).
+On-chain investigation: neither MVRV formulation cleared the bar or improved the
+best price strategy out-of-time — an honest negative (a compelling narrative is
+not evidence).
 
 **Capstone — true out-of-time test** (research 2010–2020, forward 2020–2026, data
 never touched by research/tuning): `regime` was the first to PASS honest research

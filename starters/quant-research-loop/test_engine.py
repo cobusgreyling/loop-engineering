@@ -283,6 +283,27 @@ def test_meanrev_is_anticorrelated_with_trend():
     assert mr != tm, "meanrev and tsmom must be distinct signals"
 
 
+def test_onchain_features_flow_through_csv():
+    here = os.path.dirname(os.path.abspath(__file__))
+    csvp = os.path.join(here, "sample-data", "btc_1d_coinmetrics.csv")
+    if not os.path.exists(csvp):
+        return
+    bars = data.from_csv(csvp)
+    assert any("mvrv" in b.features for b in bars), "on-chain MVRV must load from CSV"
+
+
+def test_mvrv_brake_changes_trend_signal():
+    here = os.path.dirname(os.path.abspath(__file__))
+    csvp = os.path.join(here, "sample-data", "btc_1d_coinmetrics.csv")
+    if not os.path.exists(csvp):
+        return
+    bars = data.from_csv(csvp)
+    base = {"trend_lookback": 100, "vol_regime_lookback": 30}
+    reg = strategy.generate_signals(bars, {"strategy": "regime", **base})
+    tv = strategy.generate_signals(bars, {"strategy": "trendval", **base, "mvrv_ceiling": 2.5})
+    assert reg != tv, "the MVRV euphoria brake must actually change the signal"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

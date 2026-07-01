@@ -85,6 +85,38 @@ def _meanrev(bars: list[Bar], p: dict) -> list[int]:
     return out
 
 
+def _mvrv(bars: list[Bar], p: dict) -> list[int]:
+    """On-chain valuation timing (ORTHOGONAL to price trend). MVRV = market value
+    / realized value = how far the price sits above the network's aggregate cost
+    basis. Historically a mean-reverting oscillator: cheap near bottoms, euphoric
+    near tops. Contrarian rule, adaptive to regime:
+
+      long  when MVRV falls below `entry_k` x its trailing median (undervalued)
+      exit  when MVRV rises above `exit_k`  x its trailing median (overvalued)
+
+    Requires bars to carry features['mvrv'] (Coin Metrics CapMVRVCur). If the
+    feature is absent (e.g. synthetic data), the strategy stays flat."""
+    look = int(p["mvrv_lookback"])
+    entry_k, exit_k = float(p["entry_k"]), float(p["exit_k"])
+    mvrv = [b.features.get("mvrv") for b in bars]
+    pos, out = 0, []
+    for t in range(len(bars)):
+        window = [m for m in mvrv[max(0, t - look):t] if m is not None]
+        if mvrv[t] is None or len(window) < max(30, look // 4):
+            out.append(pos if mvrv[t] is not None else 0)
+            continue
+        med = stats.median(window)
+        if med <= 0:
+            out.append(pos)
+            continue
+        if pos == 0 and mvrv[t] < entry_k * med:
+            pos = 1
+        elif pos == 1 and mvrv[t] > exit_k * med:
+            pos = 0
+        out.append(pos)
+    return out
+
+
 def _regime(bars: list[Bar], p: dict) -> list[int]:
     """Trend, gated by a calm-volatility regime: long only when price is above its
     long SMA AND short-horizon realized vol is below its longer-horizon level."""
@@ -105,6 +137,32 @@ def _regime(bars: list[Bar], p: dict) -> list[int]:
     return out
 
 
+def _trendval(bars: list[Bar], p: dict) -> list[int]:
+    """Trend + calm-vol regime, PLUS an on-chain euphoria brake: step aside when
+    MVRV is above `mvrv_ceiling` (network euphorically overvalued = top risk). The
+    idea is to use genuinely orthogonal on-chain information to sidestep the big
+    drawdowns that pure price trend cannot see coming. If MVRV is missing, the
+    brake simply does not fire (degrades to plain regime trend)."""
+    trend_n, vol_n = int(p["trend_lookback"]), int(p["vol_regime_lookback"])
+    ceil = float(p["mvrv_ceiling"])
+    long_vol_n = vol_n * 4
+    closes = [b.close for b in bars]
+    mvrv = [b.features.get("mvrv") for b in bars]
+    rets = [0.0] + [closes[i] / closes[i - 1] - 1.0 for i in range(1, len(closes))]
+    need = max(trend_n, long_vol_n) + 1
+    out = []
+    for t in range(len(bars)):
+        if t < need:
+            out.append(0)
+            continue
+        sma = sum(closes[t - trend_n:t]) / trend_n
+        short_vol = stats.stdev(rets[t - vol_n:t])
+        long_vol = stats.stdev(rets[t - long_vol_n:t])
+        not_euphoric = (mvrv[t] is None) or (mvrv[t] < ceil)
+        out.append(1 if (closes[t] > sma and short_vol < long_vol and not_euphoric) else 0)
+    return out
+
+
 # ---- registry -------------------------------------------------------------
 
 STRATEGIES = {
@@ -121,6 +179,13 @@ STRATEGIES = {
     "regime": {"fn": _regime,
                "params": {"trend_lookback": 100, "vol_regime_lookback": 30},
                "grid": {"trend_lookback": [50, 100, 200], "vol_regime_lookback": [30, 60]}},
+    "mvrv": {"fn": _mvrv,
+             "params": {"mvrv_lookback": 365, "entry_k": 0.8, "exit_k": 1.5},
+             "grid": {"mvrv_lookback": [180, 365], "entry_k": [0.8, 0.9], "exit_k": [1.3, 1.6]}},
+    "trendval": {"fn": _trendval,
+                 "params": {"trend_lookback": 100, "vol_regime_lookback": 30, "mvrv_ceiling": 3.0},
+                 "grid": {"trend_lookback": [50, 100, 200], "vol_regime_lookback": [30, 60],
+                          "mvrv_ceiling": [2.5, 3.5]}},
 }
 
 STRATEGY_NAMES = list(STRATEGIES)

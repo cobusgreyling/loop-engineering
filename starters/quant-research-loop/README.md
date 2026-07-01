@@ -263,6 +263,29 @@ failure — it is the harness doing its job, stopping you from deploying beta dr
 as alpha. Finding real edge is the genuinely hard part; the loop just makes sure
 you don't fool yourself about whether you've found it.
 
+### On-chain investigation (orthogonal to price)
+
+Everything above is price/trend. The natural next step is a *genuinely orthogonal*
+signal — on-chain valuation. The data layer carries Coin Metrics features
+(`mvrv`, `adract`, `txcnt`) alongside price, and two hypotheses use MVRV
+(market value ÷ realized value = price vs the network's aggregate cost basis):
+
+- **`mvrv`** — contrarian valuation timing (long when cheap vs its trailing
+  median, exit when rich). **Result: bad.** 0/5 walk-forward, 65–81% drawdowns —
+  "cheap" MVRV in a crash gets cheaper, so it buys falling knives and holds down.
+  Real information, used badly.
+- **`trendval`** — trend + calm-vol regime, PLUS an MVRV *euphoria brake* (step
+  aside when MVRV > ceiling = top risk). This is the principled use: orthogonal
+  info attacking the drawdown constraint. The brake is wired and fires on ~18% of
+  days — but out-of-time it produced **the same 37% drawdown as plain regime.**
+  The on-chain signal did not add measurable edge in the true test.
+
+Honest negative result: on-chain valuation *sounds* like it must help, but neither
+formulation cleared the bar or improved the best price strategy out-of-time. That
+is exactly why the harness exists — a compelling narrative is not evidence. (Note:
+this is now 6 strategies tested; chasing MVRV variants until one passes would be
+the same multiple-testing trap, one level up.)
+
 ## What this does NOT do
 
 - **It does not place real orders.** `paper_broker.py` has no credentials. Going

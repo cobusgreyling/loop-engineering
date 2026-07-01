@@ -646,7 +646,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--lockbox-openings", type=int, default=1, dest="lockbox_openings",
                    help="max times a given lockbox may be opened (write-once = 1)")
     p.add_argument("--strategy", default="donchian", choices=STRATEGY_NAMES,
-                   help="hypothesis to test: donchian | tsmom | meanrev | regime")
+                   help="hypothesis: donchian|tsmom|meanrev|regime|mvrv|trendval")
     p.add_argument("--source", default="synthetic",
                    choices=["synthetic", "live", "coinmetrics"],
                    help="live=Binance OHLCV (US users: see README); "
