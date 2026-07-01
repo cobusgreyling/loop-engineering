@@ -8,7 +8,7 @@ Each pattern answers:
 - Required skills / state shape
 - Verification approach
 - Human hand-off strategy
-- Tool-specific notes (Grok, Claude Code, Codex, Opencode, GitHub Actions)
+- Tool-specific notes (Grok, Claude Code, Codex, OpenClaw, Opencode, GitHub Actions)
 
 ## Pattern Registry
 
