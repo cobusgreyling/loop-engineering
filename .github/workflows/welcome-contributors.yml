@@ -1,0 +1,42 @@
+name: Welcome contributors
+
+on:
+  pull_request:
+    types: [opened]
+    paths:
+      - 'stories/**'
+      - 'docs/adopters.md'
+
+permissions:
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const isStory = pr.title.toLowerCase().includes('story') ||
+              pr.body?.toLowerCase().includes('stories/');
+            const opener = pr.user.login;
+
+            const body = [
+              `Thanks @${opener} for contributing${isStory ? ' a production story' : ''} — failures and honest wins are first-class here.`,
+              '',
+              '**What happens next**',
+              '- Maintainer aims for **same-day review** on story and adopter PRs (see [CONTRIBUTING.md — Maintainer response](https://github.com/cobusgreyling/loop-engineering/blob/main/CONTRIBUTING.md#maintainer-response-adopters--stories)).',
+              '- Small fixes may be merged quickly; larger asks get one focused review round.',
+              '',
+              '**Want a follow-up?** Comment if you would like help turning this into a tool example or a `good first issue` for someone else.',
+              '',
+              '— loop-engineering maintainers'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body
+            });

@@ -13,6 +13,19 @@ This repo is a **practical engineering reference**, not a hype collection. We we
 | Starter kit | `starters/` |
 | Doc improvement | `docs/` |
 
+## Contribution ladder
+
+Start small — every merged PR counts.
+
+| Step | Time | What to contribute |
+|------|------|-------------------|
+| **1** | ~15 min | Typo fix, adopters row, primitives-matrix row, or `examples/README.md` link |
+| **2** | ~1 hr | Production story in `stories/` or tool example in `examples/{tool}/` |
+| **3** | Half day | New starter, skill template, or MCP cookbook entry |
+| **4** | Full day | Full pattern in `patterns/` + `patterns/registry.yaml` entry |
+
+**Fastest paths:** [Add your project to adopters](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) · [Share a story issue](https://github.com/cobusgreyling/loop-engineering/issues/new?template=share-story.yml) · [`good first issue` backlog](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+
 ## Pattern Requirements
 
 Every new pattern must include all sections from [templates/pattern-template.md](./templates/pattern-template.md):
@@ -49,6 +62,16 @@ Also add an entry to `patterns/registry.yaml`.
 - Engineering over hype
 - Failures are first-class content
 - Tool-agnostic by default; tool-specific in labeled sections
+
+## Maintainer response (adopters & stories)
+
+PRs that only touch `stories/`, `docs/adopters.md`, or the [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) template get **same-day review** when possible:
+
+1. Maintainer merges or requests one small fix within 24 hours
+2. Public thank-you on the PR or issue (`@mention` the contributor)
+3. Optional follow-up issue if the contributor wants a second PR (e.g. expand story → pattern example)
+
+Automation posts a welcome comment on new story/adopter PRs (see `.github/workflows/welcome-contributors.yml`).
 
 ## Community
 
