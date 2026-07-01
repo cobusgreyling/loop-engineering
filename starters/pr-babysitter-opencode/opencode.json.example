@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "pr-babysitter": {
+      "name": "pr-babysitter",
+      "description": "PR-focused triage loop. Reads pr-babysitter-state.md, watches open PRs, and reports blockers without editing code.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, pr-babysitter-state.md, and skills/pr-review-triage/SKILL.md. Watch open PRs, check CI status, review staleness, and surface blockers. Do not edit source code unless L2 is explicitly enabled.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "implementer": {
+      "name": "implementer",
+      "description": "L2 implementer for minimal PR fixes inside an isolated worktree.",
+      "mode": "subagent",
+      "prompt": "Implement only the requested minimal fix inside the supplied worktree. Respect AGENTS.md and LOOP.md. Run documented tests. Never force-push. Draft PR by default.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "verifier": {
+      "name": "verifier",
+      "description": "Checker agent for PR fix diffs. APPROVE or REJECT only.",
+      "mode": "subagent",
+      "prompt": "Review the supplied diff against project rules, tests, and docs/safety.md. Do not edit files. Respond with APPROVE or REJECT and concise evidence.",
+      "permission": {
+        "bash": "ask",
+        "edit": "deny"
+      }
+    }
+  }
+}

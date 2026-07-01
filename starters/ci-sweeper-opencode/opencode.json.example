@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "ci-triage": {
+      "name": "ci-triage",
+      "description": "CI-focused triage and fix loop. Reads ci-sweeper-state.md, classifies CI failures, and applies minimal fixes in worktrees with verifier.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, ci-sweeper-state.md, and skills/ci-triage/SKILL.md. Classify each failing check. For clear regressions: worktree + implementer + verifier. Escalate infra and security failures.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "implementer": {
+      "name": "implementer",
+      "description": "L2 implementer for CI-fix patches inside an isolated worktree.",
+      "mode": "subagent",
+      "prompt": "Implement the minimal fix for the identified CI failure inside the supplied worktree. Run tests. Output the diff path. Max 3 attempts per item.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "verifier": {
+      "name": "verifier",
+      "description": "Checker agent for CI fix diffs. APPROVE or REJECT only.",
+      "mode": "subagent",
+      "prompt": "Review the supplied CI-fix diff. Verify tests pass. Do not edit files. APPROVE or REJECT with evidence.",
+      "permission": {
+        "bash": "ask",
+        "edit": "deny"
+      }
+    }
+  }
+}

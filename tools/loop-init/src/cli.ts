@@ -427,7 +427,7 @@ Examples:
   const targetDir = path.resolve(target);
   const baseStarter = PATTERN_STARTERS[pattern];
   const suffix = TOOL_SUFFIX[tool];
-  const starterName = pattern === 'daily-triage' ? `minimal-loop${suffix}` : baseStarter;
+  const starterName = `${baseStarter}${suffix}`;
   const startersRoot = await resolveBundledOrMonorepo('starters');
   const templatesRoot = await resolveBundledOrMonorepo('templates');
   const starterRoot = path.join(startersRoot, starterName);

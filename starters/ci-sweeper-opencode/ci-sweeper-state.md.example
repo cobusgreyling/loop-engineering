@@ -1,0 +1,10 @@
+# CI Sweeper State
+Last run: 2026-06-20 09:00 UTC
+Active failures: 0
+Attempt counts: {}
+
+## Failures
+- <!-- Add failing checks here -->
+
+## Escalated
+- <!-- Infra/security failures escalated to human -->

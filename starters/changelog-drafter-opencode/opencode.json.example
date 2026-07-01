@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "changelog-scan": {
+      "name": "changelog-scan",
+      "description": "Changelog drafting loop. Reads changelog-drafter-state.md, scans merges, and produces categorized release notes.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, changelog-drafter-state.md, and skills/changelog-scan/SKILL.md. Scan merges since last tag. Produce categorized draft in RELEASE_NOTES_DRAFT.md. Never publish or tag without human approval.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "implementer": {
+      "name": "implementer",
+      "description": "L2 implementer for creating changelog PRs.",
+      "mode": "subagent",
+      "prompt": "Commit the approved release notes to a new branch and open a draft PR. Flag breaking changes and security items explicitly in the PR body. Do not merge.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "verifier": {
+      "name": "verifier",
+      "description": "Checker agent for draft release notes. APPROVE or REJECT only.",
+      "mode": "subagent",
+      "prompt": "Review the draft notes for completeness, categorization, and correct date range. Flag missing sections. Do not edit. APPROVE or REJECT.",
+      "permission": {
+        "bash": "ask",
+        "edit": "deny"
+      }
+    }
+  }
+}

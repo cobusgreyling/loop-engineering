@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "dependency-triage": {
+      "name": "dependency-triage",
+      "description": "Dependency-focused triage loop. Reads dependency-sweeper-state.md, scans manifests, and applies patch-only upgrades with verifier.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, dependency-sweeper-state.md, and skills/dependency-triage/SKILL.md. Scan manifests for outdated and vulnerable deps. Patch-only auto-fix in worktree. Escalate majors and denylisted packages.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "implementer": {
+      "name": "implementer",
+      "description": "L2 implementer for patch-only dependency upgrades in a worktree.",
+      "mode": "subagent",
+      "prompt": "Apply the identified patch-only upgrade inside the supplied worktree. Run npm ci && npm test. Never touch denylisted packages. Output the diff.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "verifier": {
+      "name": "verifier",
+      "description": "Checker agent for dependency upgrade diffs. APPROVE or REJECT only.",
+      "mode": "subagent",
+      "prompt": "Verify the dependency patch passes tests and touches no denylisted packages. Do not edit files. APPROVE or REJECT with evidence.",
+      "permission": {
+        "bash": "ask",
+        "edit": "deny"
+      }
+    }
+  }
+}
