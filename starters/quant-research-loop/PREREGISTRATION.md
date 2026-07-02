@@ -6,13 +6,21 @@ survivorship to a ~51% drawdown. Rather than keep tuning until a backtest looks
 good — the trap this whole project exists to expose — we FREEZE it here and let
 forward time judge it.
 
-## The frozen strategy
+## The frozen strategies
 
-- **Signal:** long-only top-K cross-sectional momentum over a 32-coin universe
-  (survivorship-corrected — includes FTT/BTG/BSV/XVG collapses).
-- **Risk-off:** go to cash when BTC is below its 100-day trend.
-- **Sizing:** portfolio volatility targeting at 40% annualized, no leverage.
-- **Exact config & universe:** `forward-registration.json` (machine-readable, written once).
+Two earned a forward test, registered write-once in `forward-registration.json`:
+
+1. **`xsectional-momentum-riskoff`** — long-only top-K cross-sectional momentum over
+   a 32-coin survivorship-corrected universe (incl. FTT/BTG/BSV/XVG collapses),
+   with a BTC-trend risk-off to cash and 40% vol targeting. The signal with the
+   highest raw edge (PSR 1.0) — but a ~51% corrected drawdown.
+2. **`regime-trend`** — the humble single-asset BTC trend gated by a calm-vol
+   regime, 40% vol targeting. Once survivorship is honestly accounted, it is the
+   better RISK bet (~37% drawdown; on a 2024–25 illustrative replay it returned
+   +48% at 27% drawdown while cross-sectional lost 15% at 48%).
+
+Both are paper-traded forward in parallel; forward data decides which — if either —
+holds up. Exact configs are in `forward-registration.json` (written once).
 
 ## The rules
 
@@ -34,7 +42,7 @@ regimes have been hard for momentum. Forward trading tells the truth either way.
 ## Run it
 
 ```bash
-python3 -m engine.forward_paper --register     # freeze (already done; write-once)
-python3 -m engine.forward_paper --run          # mark to market (schedule this)
-python3 -m engine.forward_paper --since 2024-01-01   # illustrative replay (NOT the live record)
+python3 -m engine.forward_paper --register --strategy regime-trend   # freeze (write-once)
+python3 -m engine.forward_paper --run                                # mark ALL to market (schedule this)
+python3 -m engine.forward_paper --since 2024-01-01                   # illustrative replay (NOT the live record)
 ```

@@ -383,9 +383,13 @@ python3 -m engine.forward_paper --since 2024-01-01   # ILLUSTRATIVE replay (not 
   the verdict, not any backtest.
 - The committed data ends 2026-05-23, so a today-dated registration is correctly
   **"awaiting forward data"** until a live feed adds new bars.
-- **Sobering illustrative check:** replaying the frozen config on 2024–2025 lost
-  money (≈0.85× equity, negative Sharpe, ~48% drawdown). Recent regimes have been
-  hard for momentum — which is precisely why forward, not backtest, decides.
+- **Two strategies are registered in parallel** — `xsectional-momentum-riskoff`
+  (highest raw edge) and `regime-trend` (the humble single-asset trend that, once
+  survivorship is honest, is the better risk bet). Forward data decides which holds.
+- **Sobering illustrative check** on 2024–2025 (NOT the live record) shows exactly
+  why: cross-sectional lost money (≈0.85×, −0.02 Sharpe, 48% DD, mandate breached)
+  while regime-trend returned +48% (0.79 Sharpe, 27% DD, within mandate). The
+  simple strategy won on recent unseen data — but only forward time settles it.
 
 ## What this does NOT do
 

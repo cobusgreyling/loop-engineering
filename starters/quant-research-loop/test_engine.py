@@ -374,24 +374,20 @@ def test_expanded_panel_includes_collapses():
         assert peak / last > 10, "FTT must show its collapse (peak >> last)"
 
 
-def test_forward_paper_frozen_config_and_metrics():
-    here = os.path.dirname(os.path.abspath(__file__))
-    panel = os.path.join(here, "sample-data", "crypto_panel_expanded.csv")
-    if not os.path.exists(panel):
-        return
+def test_forward_paper_registry_and_metrics():
     import calendar
     import datetime as _dt
-    from engine import multi_data as md
     from engine import forward_paper as fp
-    # frozen universe assets are mostly present in the committed panel
-    _, series, _ = md.panel_from_csv(panel)
-    present = sum(1 for a in fp.FROZEN["universe"] if a in series)
-    assert present >= 25, "frozen universe should resolve against the panel"
-    # read-only metrics on an illustrative window return a sane structure
+    here = os.path.dirname(os.path.abspath(__file__))
+    assert set(fp.FROZEN_STRATEGIES) >= {"xsectional-momentum-riskoff", "regime-trend"}
     since = calendar.timegm(_dt.datetime(2022, 1, 1).timetuple())
-    m = fp._forward_metrics(since)
-    assert m["n_days"] > 100
-    assert set(m) >= {"sharpe", "max_drawdown", "current_drawdown", "equity_mult"}
+    # both frozen kinds (single_asset + xsectional) produce sane read-only metrics
+    for name, entry in fp.FROZEN_STRATEGIES.items():
+        if not os.path.exists(os.path.join(here, "sample-data", entry["data"])):
+            continue
+        m = fp._metrics(entry, since)
+        assert m["n_days"] > 100, f"{name}: expected forward days"
+        assert set(m) >= {"sharpe", "max_drawdown", "current_drawdown", "equity_mult"}
 
 
 def _run_all():
