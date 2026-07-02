@@ -8,6 +8,7 @@ Same patterns, different tools. Skills and state schemas are shared; only schedu
 | Claude Code | [claude-code/](./claude-code/) |
 | Codex App | [codex/](./codex/) |
 | OpenClaw | [openclaw/](./openclaw/) |
+| Windsurf | [windsurf/](./windsurf/) |
 | Opencode | [opencode/](./opencode/) |
 | GitHub Actions | [github-actions/](./github-actions/) |
 | MCP connectors | [mcp/](./mcp/) — config example; reference server in [tools/mcp-server/](../tools/mcp-server/) |

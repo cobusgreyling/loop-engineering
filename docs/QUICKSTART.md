@@ -82,9 +82,13 @@ opencode run "Run loop-triage. Read STATE.md first. Update High Priority and Wat
 
 See [examples/opencode/daily-triage.md](../examples/opencode/daily-triage.md) for worktree + verifier patterns (L2+).
 
-### Cursor or Windsurf
+### Cursor
 
-No `loop-init --tool cursor` yet — copy skills and state from any starter, then map scheduling to editor Automations or Workflows. See the [Opencode, Cursor & Windsurf appendix](./primitives-matrix.md#appendix-editor-transfer-recipes-opencode-cursor--windsurf) in the primitives matrix.
+No `loop-init --tool cursor` yet — copy skills and state from any starter, then map scheduling to editor Automations. See the [Opencode, Cursor & Windsurf appendix](./primitives-matrix.md#appendix-editor-transfer-recipes-opencode-cursor--windsurf) in the primitives matrix.
+
+### Windsurf
+
+No `loop-init --tool windsurf` yet — copy skills and state from any starter, then map scheduling to a Cascade Workflow. See [examples/windsurf/daily-triage.md](../examples/windsurf/daily-triage.md).
 
 ### GitHub Actions only
 
