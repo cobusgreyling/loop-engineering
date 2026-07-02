@@ -361,6 +361,32 @@ survivor-only backtest claimed. Even the 32-coin set still excludes truly delist
 coins, so this remains an upper bound. **Real edge, honestly deflated, not
 approvable.** Panels: `sample-data/crypto_panel{,_expanded}.csv`.
 
+### Forward paper trade (the honest end of the road)
+
+The research is over. Cross-sectional momentum + risk-off is the one signal with
+real edge, and it does not clean-pass a crypto-realistic mandate on a
+survivorship-corrected universe. The disciplined move is not more tuning — it is to
+**freeze the strategy and let forward time judge it.** `engine/forward_paper.py`
+does exactly that, and it is a proper loop-engineering loop (scheduled, stateful,
+paper-only):
+
+```bash
+python3 -m engine.forward_paper --register   # write-once freeze (config in forward-registration.json)
+python3 -m engine.forward_paper --run        # mark the frozen strategy to market; writes STATE
+python3 -m engine.forward_paper --since 2024-01-01   # ILLUSTRATIVE replay (not the live record)
+```
+
+- **Pre-registration is write-once** — `--register` refuses to overwrite; changing
+  the strategy means a NEW hypothesis with a NEW start date. See
+  [PREREGISTRATION.md](PREREGISTRATION.md).
+- **No re-optimization** — `--run` only marks to market. Forward paper equity is
+  the verdict, not any backtest.
+- The committed data ends 2026-05-23, so a today-dated registration is correctly
+  **"awaiting forward data"** until a live feed adds new bars.
+- **Sobering illustrative check:** replaying the frozen config on 2024–2025 lost
+  money (≈0.85× equity, negative Sharpe, ~48% drawdown). Recent regimes have been
+  hard for momentum — which is precisely why forward, not backtest, decides.
+
 ## What this does NOT do
 
 - **It does not place real orders.** `paper_broker.py` has no credentials. Going

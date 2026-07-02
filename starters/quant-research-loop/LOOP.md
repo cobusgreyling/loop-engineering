@@ -104,6 +104,13 @@ PSR stays 1.0 (signal is real) but it is a 51%-DD reject on a realistic universe
 and still an upper bound (truly delisted coins excluded). Real edge, honestly
 deflated, not approvable.
 
+**Forward paper trade (`engine/forward_paper.py`, pre-registered):** research is
+over; the one real signal is FROZEN (write-once `forward-registration.json`) and
+paper-traded forward — no re-optimization, forward equity is the verdict. A proper
+loop: schedule `--run` against a live feed. Committed data ends 2026-05-23 so the
+live record is "awaiting data"; an illustrative 2024–2025 replay lost money (~0.85x,
+48% DD), which is exactly why forward — not backtest — decides. See PREREGISTRATION.md.
+
 **Capstone — true out-of-time test** (research 2010–2020, forward 2020–2026, data
 never touched by research/tuning): `regime` was the first to PASS honest research
 (5/5 folds, 14% DD) but FAILED forward (37% DD). All strategies made big returns
