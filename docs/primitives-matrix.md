@@ -102,6 +102,36 @@ Transfer recipes map the same loop shape onto each host:
 | 4. Verification | Create a verifier named agent with `opencode agent`; invoke via `opencode run "Verify diff" --agent verifier --file diff.patch` | `.cursor/agents/loop-verifier.md` from `templates/SKILL.md.verifier` | Add review step at end of workflow; human gate on denylist paths |
 | 5. Connectors | Configure MCP or CLI bridges in `opencode.json` | Enable GitHub MCP read-only for issue/PR discovery | Configure GitHub MCP in Cascade settings |
 
-**Aider** (CLI-only): use `--watch` or scripted sessions; state in `STATE.md`; reviewer = second terminal session.
+## Appendix: Aider CLI
 
-Transfer recipe: copy the tool-agnostic `SKILL.md` + state schema from this repo; map scheduling to your editor's automation surface.
+Aider is CLI-first rather than a loop host with native schedulers, so map the same primitives from [Choosing a Tool](#choosing-a-tool) onto shell scripts, cron, and git branches.
+
+| Primitive | Aider mapping |
+|-----------|---------------|
+| Scheduling | Run one-shot scripted sessions from cron/systemd/GitHub Actions with `aider --message` or `aider --message-file`, or use `--watch-files` for comment-triggered work. |
+| Skills | Load loop instructions as read-only context with `--read templates/SKILL.md.loop-triage` or a project-specific conventions file. |
+| State | Keep `STATE.md` at the repo root and pass it as the editable file for triage loops; use pattern-specific state files such as `pr-babysitter-state.md` for specialized loops. |
+| Maker/checker split | Run the implementer in one Aider session/branch, then run a second read-only reviewer session over `git diff` or `diff.patch` before any commit/PR. |
+| Connectors | Prefer CLI tools or MCP sidecars called from scripts; keep credentials out of prompts and state files. |
+
+Week-one Daily Triage command (report-only, state updates only):
+
+```bash
+aider STATE.md \
+  --read templates/SKILL.md.loop-triage \
+  --no-auto-commits \
+  --no-dirty-commits \
+  --message "Run loop-triage. Update STATE.md with High Priority and Watch List only. Do not edit source code in week one."
+```
+
+Verifier pass for later L2 work:
+
+```bash
+git diff > diff.patch
+aider --read diff.patch --read STATE.md \
+  --no-auto-commits \
+  --no-dirty-commits \
+  --message "Act as loop-verifier. Review the diff against STATE.md goals. Report PASS/FAIL and do not edit files."
+```
+
+Transfer recipe: copy the tool-agnostic `SKILL.md` + state schema from this repo; map scheduling to cron, systemd, or CI until Aider is wrapped by a richer loop scheduler.

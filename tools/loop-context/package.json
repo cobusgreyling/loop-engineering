@@ -1,0 +1,55 @@
+{
+  "name": "@cobusgreyling/loop-context",
+  "version": "1.0.0",
+  "description": "Stateful memory manager for agent loops — summarize, prune, and inject context, with a circuit breaker that escalates stagnant or no-progress runs instead of burning tokens.",
+  "type": "module",
+  "main": "dist/context-manager.js",
+  "exports": {
+    ".": "./dist/context-manager.js"
+  },
+  "bin": {
+    "loop-context": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js",
+    "test": "npm run build && node --test test/context-manager.test.mjs",
+    "prepublishOnly": "npm test",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "loop-engineering",
+    "ai-agents",
+    "coding-agents",
+    "context-management",
+    "circuit-breaker",
+    "memory",
+    "claude-code",
+    "grok",
+    "devtools"
+  ],
+  "author": "Cobus Greyling",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cobusgreyling/loop-engineering.git",
+    "directory": "tools/loop-context"
+  },
+  "homepage": "https://cobusgreyling.github.io/loop-engineering/",
+  "bugs": {
+    "url": "https://github.com/cobusgreyling/loop-engineering/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -6,6 +6,8 @@ on:
     paths:
       - 'stories/**'
       - 'docs/adopters.md'
+      - 'examples/**'
+      - 'docs/**'
 
 permissions:
   pull-requests: write
@@ -18,18 +20,35 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const isStory = pr.title.toLowerCase().includes('story') ||
-              pr.body?.toLowerCase().includes('stories/');
             const opener = pr.user.login;
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number, per_page: 100 }
+            );
+            const paths = files.map((f) => f.filename);
+            const isStory = pr.title.toLowerCase().includes('story') ||
+              pr.body?.toLowerCase().includes('stories/') ||
+              paths.some((p) => p.startsWith('stories/'));
+            const isAdopter = paths.some((p) => p === 'docs/adopters.md');
+            const isExample = paths.some((p) => p.startsWith('examples/'));
+            const isDocs = paths.some((p) => p.startsWith('docs/'));
+
+            let kind = 'a contribution';
+            if (isStory) kind = 'a production story';
+            else if (isAdopter) kind = 'an adopter listing';
+            else if (isExample) kind = 'a tool example';
+            else if (isDocs) kind = 'a docs improvement';
 
             const body = [
-              `Thanks @${opener} for contributing${isStory ? ' a production story' : ''} — failures and honest wins are first-class here.`,
+              `Thanks @${opener} for contributing ${kind} — visible, reviewable PRs like this grow the reference for everyone.`,
               '',
               '**What happens next**',
-              '- Maintainer aims for **same-day review** on story and adopter PRs (see [CONTRIBUTING.md — Maintainer response](https://github.com/cobusgreyling/loop-engineering/blob/main/CONTRIBUTING.md#maintainer-response-adopters--stories)).',
-              '- Small fixes may be merged quickly; larger asks get one focused review round.',
+              '- Maintainer aims for **same-day review** on story, adopter, and scoped docs/example PRs ([CONTRIBUTING.md](https://github.com/cobusgreyling/loop-engineering/blob/main/CONTRIBUTING.md#maintainer-response-adopters--stories)).',
+              '- `good first issue` PRs: comment on the linked issue so we can assign and close on merge.',
               '',
-              '**Want a follow-up?** Comment if you would like help turning this into a tool example or a `good first issue` for someone else.',
+              '**More ways to help**',
+              '- [Contributor quickstart + open issues](https://github.com/cobusgreyling/loop-engineering/discussions/123)',
+              '- [Good first issue backlog](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)',
               '',
               '— loop-engineering maintainers'
             ].join('\n');

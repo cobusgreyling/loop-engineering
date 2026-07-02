@@ -1,0 +1,47 @@
+name: Release loop-context
+
+on:
+  push:
+    tags:
+      - 'loop-context-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. loop-context-v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', github.event.inputs.tag) || github.ref }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: tools/loop-context/package-lock.json
+
+      - name: Ensure npm supports trusted publishing (OIDC)
+        run: npm install -g npm@latest
+
+      - name: Install, build, test
+        working-directory: tools/loop-context
+        run: |
+          npm ci
+          npm run build
+          npm test
+
+      - name: Publish to npm
+        working-directory: tools/loop-context
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

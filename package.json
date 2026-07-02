@@ -9,9 +9,10 @@
     "test:loop-init": "cd tools/loop-init && npm test",
     "test:loop-cost": "cd tools/loop-cost && npm test",
     "test:loop-sync": "cd tools/loop-sync && npm test",
+    "test:loop-context": "cd tools/loop-context && npm test",
     "test:mcp-server": "cd tools/mcp-server && npm test",
-    "test:tools": "npm run test:loop-audit && npm run test:loop-init && npm run test:loop-cost && npm run test:loop-sync && npm run test:mcp-server",
-    "build:tools": "cd tools/loop-audit && npm run build && cd ../loop-init && npm run build && cd ../loop-cost && npm run build && cd ../loop-sync && npm run build && cd ../mcp-server && npm run build"
+    "test:tools": "npm run test:loop-audit && npm run test:loop-init && npm run test:loop-cost && npm run test:loop-sync && npm run test:loop-context && npm run test:mcp-server",
+    "build:tools": "cd tools/loop-audit && npm run build && cd ../loop-init && npm run build && cd ../loop-cost && npm run build && cd ../loop-sync && npm run build && cd ../loop-context && npm run build && cd ../mcp-server && npm run build"
   },
   "devDependencies": {
     "ajv": "^8.17.1",

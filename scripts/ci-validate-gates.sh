@@ -39,6 +39,11 @@ cd ../loop-sync
 npm ci
 npm test
 
+echo "Building and testing loop-context…"
+cd ../loop-context
+npm ci
+npm test
+
 echo "Building and testing mcp-server…"
 cd ../mcp-server
 npm ci

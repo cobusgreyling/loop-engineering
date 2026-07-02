@@ -31,6 +31,7 @@ build/
 !tools/loop-cost/dist/
 !tools/loop-init/dist/
 !tools/mcp-server/dist/
+!tools/loop-context/dist/
 !tools/goal-audit/dist/
 *.egg-info/
 

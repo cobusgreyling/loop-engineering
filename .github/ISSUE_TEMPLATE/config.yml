@@ -9,6 +9,9 @@ contact_links:
   - name: "\ud83c\udf10 Add my project to Adopters"
     url: https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml
     about: "List your loop on the showcase adopters wall and docs/adopters.md."
+  - name: "\ud83c\udf31 Good first issues (contributor quickstart)"
+    url: https://github.com/cobusgreyling/loop-engineering/discussions/123
+    about: "Scoped ~10 min–1 hr tasks. Comment I'll take this on an issue to get assigned."
 
 labels:
   - name: "pattern-request"
