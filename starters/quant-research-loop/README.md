@@ -222,6 +222,7 @@ further searches halt and point you to forward-testing or new data.
 | `engine/search.py` | Grid search with enforced trial counting |
 | `engine/walkforward.py` | Walk-forward K-of-N rolling out-of-sample validation |
 | `engine/quarantine.py` | Forward out-of-time test; the verdict that gates capital |
+| `engine/blotter.py` | Per-trade blotter (single-asset) — round-trip PnL + win/loss stats |
 | `engine/split.py` | Three-way train/validation/lockbox split |
 | `engine/ledger.py` | Trial counter + budget + write-once lockbox/forward ledger |
 | `engine/stats.py` | Overfitting-aware metrics (no numpy/scipy) |
@@ -360,6 +361,23 @@ the relative-strength signal is still real — but weaker and riskier than the
 survivor-only backtest claimed. Even the 32-coin set still excludes truly delisted
 coins, so this remains an upper bound. **Real edge, honestly deflated, not
 approvable.** Panels: `sample-data/crypto_panel{,_expanded}.csv`.
+
+### Trade blotter — which trades made the money
+
+The equity curve tells you *if* a strategy is profitable; the blotter tells you
+*which trades* made or lost it. `engine/blotter.py` slices the exact daily returns
+into round-trips (no re-simulation — it reconciles to the backtest equity to 1e-9):
+
+```bash
+python3 -m engine.blotter --strategy regime-trend                 # full history
+python3 -m engine.blotter --strategy regime-trend --since 2024-01-01
+```
+
+On `regime-trend` it exposes the classic trend-follower profile the curve hides:
+**33% win rate, but profit factor 1.82** — avg win +17.5% vs avg loss −4.75%, best
++71%. A handful of big BTC trends carry it; the majority of trades are small
+scratches. You would need the discipline to be *wrong two times out of three* and
+still hold. (Cross-sectional per-coin blotter is the next addition.)
 
 ### Forward paper trade (the honest end of the road)
 

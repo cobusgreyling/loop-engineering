@@ -4,6 +4,7 @@ quant-run-log.md
 quant-state.md
 quant-forward-state.md
 quant-forward-log.md
+quant-blotter-*.md
 research-ledger.json
 __pycache__/
 *.pyc

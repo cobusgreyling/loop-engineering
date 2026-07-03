@@ -390,6 +390,43 @@ def test_forward_paper_registry_and_metrics():
         assert set(m) >= {"sharpe", "max_drawdown", "current_drawdown", "equity_mult"}
 
 
+def test_blotter_reconciles_to_backtest_equity():
+    from engine import blotter
+    bars, _ = data.get_ohlcv(seed=5, limit=800)
+    sig = strategy.generate_signals(bars, {"entry_lookback": 20, "exit_lookback": 10})
+    res = backtest.run_backtest(bars, sig, periods_per_year=365)
+    trades = blotter.extract_trades(bars, sig)
+    prod = 1.0
+    for t in trades:
+        prod *= (1.0 + t.net_return)  # full precision
+    assert abs(prod - res.equity[-1]) < 1e-9, "trade PnLs must reconcile to backtest equity"
+
+
+def test_blotter_detects_one_round_trip():
+    from engine import blotter
+    from engine.data import Bar
+    # flat, then a clean long span (up 20%), then flat again
+    prices = [100, 100, 100, 110, 121, 121]  # entry at idx2 close, exit at idx4->flat
+    bars = [Bar(ts=1_600_000_000 + i * 86400, open=p, high=p, low=p, close=p, volume=0)
+            for i, p in enumerate(prices)]
+    sig = [0, 0, 1, 1, 0, 0]
+    trades = blotter.extract_trades(bars, sig, fee_bps=0, slippage_bps=0)
+    closed = [t for t in trades if t.status == "closed"]
+    assert len(closed) == 1
+    assert closed[0].net_return > 0.19  # ~ (110->121) held, ~21% ish, positive
+
+
+def test_blotter_marks_open_trade():
+    from engine import blotter
+    from engine.data import Bar
+    prices = [100, 100, 110, 120]
+    bars = [Bar(ts=1_600_000_000 + i * 86400, open=p, high=p, low=p, close=p, volume=0)
+            for i, p in enumerate(prices)]
+    sig = [0, 1, 1, 1]  # never returns to flat
+    trades = blotter.extract_trades(bars, sig, fee_bps=0, slippage_bps=0)
+    assert trades[-1].status == "open"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0
