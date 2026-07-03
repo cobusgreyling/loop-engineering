@@ -23,6 +23,17 @@ Binance.US/Coinbase locally), or `--csv` your own OHLCV.
 | Execute | Connector | per verified signal | **L1 paper-only** | `engine/paper_broker.py` |
 | Risk | Kill switch | every cycle | always on | `engine/risk.py` |
 
+## Primitives
+
+- **Worktrees:** research experiments that mutate files (new strategy variants,
+  parameter studies) run in an isolated git worktree per attempt, discarded on reject —
+  so parallel experiments never collide. The frozen forward strategies are never edited
+  in place (write-once registration).
+- **MCP / connectors:** not required for this loop — data comes from read-only public
+  price feeds (Coinbase, Coin Metrics). Any future connector is scoped read-only until trusted.
+- **Safety & budget:** see [docs/safety.md](docs/safety.md) and `loop-budget.md`
+  (token/compute caps, kill switches, trial-budget auto-halt).
+
 ## Human Gates
 
 - **Live trading is NOT wired and will not be added without explicit sign-off.**
