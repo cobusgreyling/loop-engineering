@@ -2,10 +2,10 @@
 paper-account.json
 quant-run-log.md
 quant-state.md
-quant-forward-state.md
-quant-forward-log.md
 quant-blotter-*.md
 research-ledger.json
+# forward-track record (quant-forward-state.md / quant-forward-log.md) IS committed
+# so the scheduled loop builds a durable P&L history in git
 __pycache__/
 *.pyc
 data/*.csv

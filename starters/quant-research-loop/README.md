@@ -416,6 +416,20 @@ python3 -m engine.forward_paper --since 2024-01-01   # ILLUSTRATIVE replay (not 
   while regime-trend returned +48% (0.79 Sharpe, 27% DD, within mandate). The
   simple strategy won on recent unseen data — but only forward time settles it.
 
+**Run it on a schedule.** `--refresh` pulls the latest prices before evaluating,
+so the loop actually "checks prices on a cadence" and records whether the frozen
+strategies make money from registration onward:
+
+```bash
+python3 -m engine.forward_paper --run --refresh   # fetch latest → mark to market → write record
+```
+
+`.github/workflows/quant-forward-track.yml` runs this **daily** and commits the
+forward P&L record (`quant-forward-state.md` / `quant-forward-log.md`) — a durable,
+in-git track record. It self-suppresses until new price data exists. (In a network
+that blocks exchange APIs, point `data.py`/`multi_data.py` at Coin Metrics, as it
+does by default, or a reachable feed.)
+
 ## What this does NOT do
 
 - **It does not place real orders.** `paper_broker.py` has no credentials. Going

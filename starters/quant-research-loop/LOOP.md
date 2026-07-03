@@ -107,9 +107,12 @@ deflated, not approvable.
 **Forward paper trade (`engine/forward_paper.py`, pre-registered):** research is
 over; the one real signal is FROZEN (write-once `forward-registration.json`) and
 paper-traded forward — no re-optimization, forward equity is the verdict. A proper
-loop: schedule `--run` against a live feed. Committed data ends 2026-05-23 so the
-live record is "awaiting data"; an illustrative 2024–2025 replay lost money (~0.85x,
-48% DD), which is exactly why forward — not backtest — decides. See PREREGISTRATION.md.
+loop: `--run --refresh` pulls latest prices and marks to market; the daily
+`.github/workflows/quant-forward-track.yml` cron commits the forward P&L record.
+Committed + live data both end 2026-05-23 so the record is "awaiting data" until
+the source publishes new bars; an illustrative 2024–2025 replay lost money on
+cross-sectional (~0.85x) but made +48% on regime — which is exactly why forward,
+not backtest, decides. See PREREGISTRATION.md.
 
 **Capstone — true out-of-time test** (research 2010–2020, forward 2020–2026, data
 never touched by research/tuning): `regime` was the first to PASS honest research

@@ -102,28 +102,49 @@ def register(name: str, as_of: str, force: bool = False) -> None:
     print(f"Registered '{name}' as of {as_of}.")
 
 
-def _forward_pairs(entry: dict) -> list[tuple[int, float]]:
+def _refresh_data(entry: dict) -> str:
+    """Pull the latest prices from the live source into a gitignored data/ cache
+    and return its path. Lets the forward loop 'check prices on a schedule'
+    without churning the committed snapshots. Falls back to the snapshot on error."""
+    cache_dir = os.path.join(HERE, "data")
+    os.makedirs(cache_dir, exist_ok=True)
+    snapshot = os.path.join(HERE, "sample-data", entry["data"])
+    try:
+        if entry["kind"] == "xsectional":
+            path = os.path.join(cache_dir, "panel_live.csv")
+            dates, series = md.fetch_panel(entry["universe"])
+            md.panel_to_csv(dates, series, [a for a in entry["universe"] if a in series], path)
+        else:
+            path = os.path.join(cache_dir, "btc_live.csv")
+            bars = data_mod.from_coinmetrics(asset="btc")
+            data_mod.to_csv(bars, path)
+        return path
+    except Exception as exc:  # network blocked / source down → use the snapshot
+        print(f"[refresh] live fetch failed ({type(exc).__name__}); using snapshot")
+        return snapshot
+
+
+def _forward_pairs(entry: dict, data_path: str | None = None) -> list[tuple[int, float]]:
     """Return [(realized_ts, daily_return)] for the frozen strategy over ALL data."""
     cfg = entry["config"]
+    path = data_path or os.path.join(HERE, "sample-data", entry["data"])
     if entry["kind"] == "xsectional":
-        path = os.path.join(HERE, "sample-data", entry["data"])
         dates, series, _ = md.panel_from_csv(path)
         universe = [a for a in entry["universe"] if a in series]
         cols = md.as_matrix(dates, series, universe)
         rets = xs.portfolio_returns(dates, cols, cfg)  # rets[i] realized on dates[i+1]
         return [(dates[i + 1], rets[i]) for i in range(len(rets))]
     # single-asset
-    path = os.path.join(HERE, "sample-data", entry["data"])
     bars, _ = data_mod.get_ohlcv(csv_path=path, limit=0)
     sig = strat.generate_signals(bars, cfg, periods_per_year=PPY)
     res = bt.run_backtest(bars, sig, periods_per_year=PPY)  # res.returns[i] realized on bars[i+1]
     return [(bars[i + 1].ts, res.returns[i]) for i in range(len(res.returns))]
 
 
-def _metrics(entry: dict, since_ts: int) -> dict:
-    fwd = [(ts, r) for ts, r in _forward_pairs(entry) if ts > since_ts]
+def _metrics(entry: dict, since_ts: int, data_path: str | None = None) -> dict:
+    pairs = _forward_pairs(entry, data_path)
+    fwd = [(ts, r) for ts, r in pairs if ts > since_ts]
     if not fwd:
-        pairs = _forward_pairs(entry)
         last = _date(pairs[-1][0]) if pairs else "n/a"
         return {"n_days": 0, "last_data": last}
     fr = [r for _, r in fwd]
@@ -138,7 +159,8 @@ def _metrics(entry: dict, since_ts: int) -> dict:
             "max_drawdown": m["max_drawdown"], "current_drawdown": round(cur_dd, 4), "psr": m["psr"]}
 
 
-def run(only: str | None = None, illustrative_since: str | None = None) -> dict:
+def run(only: str | None = None, illustrative_since: str | None = None,
+        refresh: bool = False) -> dict:
     reg = _load_reg()
     if not reg:
         raise SystemExit("Nothing registered. Run: python -m engine.forward_paper --register --strategy <name>")
@@ -149,7 +171,8 @@ def run(only: str | None = None, illustrative_since: str | None = None) -> dict:
             raise SystemExit(f"'{name}' is not registered.")
         entry = reg[name]
         since = illustrative_since or entry["registered_as_of"]
-        m = _metrics(entry, _ts(since))
+        data_path = _refresh_data(entry) if refresh else None
+        m = _metrics(entry, _ts(since), data_path)
         mandate = entry["mandate_max_drawdown"]
         results[name] = {
             "registered_as_of": entry["registered_as_of"], "evaluating_since": since,
@@ -213,6 +236,8 @@ def main(argv=None) -> int:
     p.add_argument("--as-of", default=None, dest="as_of", help="registration date YYYY-MM-DD")
     p.add_argument("--force", action="store_true", help="overwrite registration (new hypothesis)")
     p.add_argument("--run", action="store_true", help="mark frozen strategies to market")
+    p.add_argument("--refresh", action="store_true",
+                   help="pull latest prices from the live source before evaluating")
     p.add_argument("--since", default=None, help="ILLUSTRATIVE replay from this date")
     args = p.parse_args(argv)
 
@@ -224,8 +249,8 @@ def main(argv=None) -> int:
             pairs = _forward_pairs(FROZEN_STRATEGIES[args.strategy])
             as_of = _date(pairs[-1][0])
         register(args.strategy, as_of, force=args.force)
-    if args.run or args.since or not args.register:
-        results = run(only=args.strategy, illustrative_since=args.since)
+    if args.run or args.since or args.refresh or not args.register:
+        results = run(only=args.strategy, illustrative_since=args.since, refresh=args.refresh)
         print(json.dumps(results, indent=2))
         print(f"\nState → {STATE_MD}")
     return 0

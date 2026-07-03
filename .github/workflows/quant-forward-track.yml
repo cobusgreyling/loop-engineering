@@ -1,0 +1,49 @@
+name: Quant Forward Track
+
+# Scheduled forward paper-trade check for starters/quant-research-loop.
+# Each run pulls the latest prices, marks the two FROZEN strategies to market, and
+# commits the forward P&L record — so from registration onward we can see whether
+# the strategies actually make money on data that did not exist when they were
+# designed. No re-optimization; forward equity is the verdict.
+#
+# Activates once merged to the default branch. Trigger manually any time via the
+# "Run workflow" button. Self-suppresses (no commit) until new price data exists.
+
+on:
+  schedule:
+    - cron: '15 6 * * *'   # daily, 06:15 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: quant-forward-track
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Mark frozen strategies to market (live prices)
+        working-directory: starters/quant-research-loop
+        run: python -m engine.forward_paper --run --refresh
+
+      - name: Commit forward record if it changed
+        run: |
+          git config user.name "loop-forward-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add starters/quant-research-loop/quant-forward-state.md \
+                  starters/quant-research-loop/quant-forward-log.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No change (awaiting new price data or no movement) — nothing to commit."
+          else
+            git commit -m "chore(quant): forward paper-trade check [automated]"
+            git push
+          fi
