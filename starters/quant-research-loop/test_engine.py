@@ -416,6 +416,23 @@ def test_blotter_detects_one_round_trip():
     assert closed[0].net_return > 0.19  # ~ (110->121) held, ~21% ish, positive
 
 
+def test_xsec_blotter_reconciles_to_portfolio_returns():
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(here, "sample-data", "crypto_panel_expanded.csv")
+    if not os.path.exists(p):
+        return
+    from engine import multi_data as md
+    from engine import xsectional as xs
+    dates, series, assets = md.panel_from_csv(p)
+    cols = md.as_matrix(dates, series, assets)
+    cfg = {"lookback": 90, "top_k": 5, "rebalance": 30, "market_filter": True,
+           "market_trend_n": 100, "vol_target": True, "target_vol": 0.40, "vol_lookback": 30}
+    rets = xs.portfolio_returns(dates, cols, cfg)
+    trades, total_costs = xs.portfolio_trades(dates, cols, cfg)
+    recon = sum(t.contribution for t in trades) - total_costs
+    assert abs(recon - sum(rets)) < 1e-9, "per-coin contributions must reconcile to portfolio returns"
+
+
 def test_blotter_marks_open_trade():
     from engine import blotter
     from engine.data import Bar

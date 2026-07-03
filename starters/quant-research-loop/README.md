@@ -222,7 +222,7 @@ further searches halt and point you to forward-testing or new data.
 | `engine/search.py` | Grid search with enforced trial counting |
 | `engine/walkforward.py` | Walk-forward K-of-N rolling out-of-sample validation |
 | `engine/quarantine.py` | Forward out-of-time test; the verdict that gates capital |
-| `engine/blotter.py` | Per-trade blotter (single-asset) — round-trip PnL + win/loss stats |
+| `engine/blotter.py` | Per-trade blotter — single-asset round-trips + per-coin basket contribution |
 | `engine/split.py` | Three-way train/validation/lockbox split |
 | `engine/ledger.py` | Trial counter + budget + write-once lockbox/forward ledger |
 | `engine/stats.py` | Overfitting-aware metrics (no numpy/scipy) |
@@ -373,11 +373,18 @@ python3 -m engine.blotter --strategy regime-trend                 # full history
 python3 -m engine.blotter --strategy regime-trend --since 2024-01-01
 ```
 
-On `regime-trend` it exposes the classic trend-follower profile the curve hides:
-**33% win rate, but profit factor 1.82** — avg win +17.5% vs avg loss −4.75%, best
-+71%. A handful of big BTC trends carry it; the majority of trades are small
-scratches. You would need the discipline to be *wrong two times out of three* and
-still hold. (Cross-sectional per-coin blotter is the next addition.)
+```bash
+python3 -m engine.blotter --strategy xsectional-momentum-riskoff   # per-coin basket blotter
+```
+
+- **`regime-trend`** exposes the classic trend-follower profile the curve hides:
+  **33% win rate, profit factor 1.82** — avg win +17.5% vs avg loss −4.75%, best
+  +71%. A few big BTC trends carry it; most trades are small scratches. You must be
+  *wrong two times out of three* and still hold.
+- **`xsectional`** shows *which coins* made or lost the money (per-coin
+  contribution, reconciled to portfolio equity): XEM +103%, DASH +62%, ETH +53%
+  carried it — while **XVG (the −99% collapse) cost −27%** and ALGO −13%. The
+  survivorship drag is now itemized, not abstract.
 
 ### Forward paper trade (the honest end of the road)
 

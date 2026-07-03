@@ -19,9 +19,27 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from datetime import datetime
 from itertools import product
 
 from . import stats
+
+
+NOTIONAL = 10_000.0  # per-coin PnL shown on a fixed portfolio stake
+
+
+@dataclass
+class CoinTrade:
+    coin: str
+    entry_date: str
+    exit_date: str
+    holding_days: int
+    entry_price: float
+    exit_price: float
+    price_return: float    # coin's raw price move over the hold
+    contribution: float    # % it added to the portfolio's arithmetic return (net of overlays)
+    pnl_usd: float         # contribution on a fixed $NOTIONAL portfolio
+    status: str            # 'closed' | 'open'
 
 
 DEFAULT_GRID = {"lookback": [30, 60, 90], "top_k": [3, 5], "rebalance": [7, 30]}
@@ -124,6 +142,102 @@ def portfolio_returns(dates: list[int], cols: dict[str, list], params: dict,
         sd = stats.stdev(window)
         scaled.append(rets[t] if sd <= 0 else min(max_lev, tpb / sd) * rets[t])
     return scaled
+
+
+def _dt(ts: int) -> str:
+    return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
+
+
+def portfolio_trades(dates: list[int], cols: dict[str, list], params: dict, *,
+                     fee_bps: float = 10.0, slippage_bps: float = 10.0):
+    """Per-coin blotter for the long-only basket. Each contiguous span a coin sits
+    in the held set is a trade; its `contribution` is the % it added to the
+    portfolio's arithmetic return, net of the market-filter and vol-target overlays.
+
+    Reconciles: sum(contributions) − total_costs == sum(portfolio_returns(...)).
+    Long-only only (the frozen strategy is long-only); the short leg is ignored."""
+    lookback = int(params["lookback"])
+    top_k = int(params["top_k"])
+    rebalance = int(params["rebalance"])
+    skip = int(params.get("skip", 0))
+    cost = (fee_bps + slippage_bps) / 10_000.0
+    assets = list(cols)
+    T = len(dates)
+
+    g_days: list[dict] = []     # g_days[i][coin] = coin's gross contribution on day i+1
+    cost_day: list[float] = []
+    spans: list[tuple] = []     # (coin, entry_idx, exit_idx|None)
+    open_idx: dict = {}
+    held: set = set()
+    for t in range(1, T):
+        if (t - 1) % rebalance == 0:
+            ranks = []
+            for a in assets:
+                r = _trailing_return(cols[a], t - 1, lookback, skip)
+                if r is not None and cols[a][t - 1] is not None:
+                    ranks.append((r, a))
+            ranks.sort(reverse=True)
+            new_held = {a for _, a in ranks[:top_k]} if len(ranks) >= top_k else set()
+            turnover = len(new_held.symmetric_difference(held)) / max(1, top_k)
+            for a in held - new_held:
+                spans.append((a, open_idx.pop(a), t - 1))
+            for a in new_held - held:
+                open_idx[a] = t - 1
+            held = new_held
+        else:
+            turnover = 0.0
+        day = {a: cols[a][t] / cols[a][t - 1] - 1.0 for a in held
+               if cols[a][t - 1] and cols[a][t] and cols[a][t - 1] > 0}
+        m = len(day)
+        g_days.append({a: day[a] / m for a in day} if m else {})
+        cost_day.append(cost * turnover)
+    for a, ei in open_idx.items():
+        spans.append((a, ei, None))
+
+    # Overlays: overlay[i] = market_mask[i] * vol_scale[i] (matches portfolio_returns)
+    n = len(g_days)
+    raw = [sum(g_days[i].values()) - cost_day[i] for i in range(n)]
+    mask = [1.0] * n
+    if params.get("market_filter"):
+        tn = int(params.get("market_trend_n", 100))
+        mkt = cols.get(params.get("market_proxy", "btc"))
+        for i in range(n):
+            if mkt is not None and mkt[i] is not None:
+                hist = [mkt[k] for k in range(max(0, i - tn), i) if mkt[k] is not None]
+                if len(hist) >= max(20, tn // 2):
+                    mask[i] = 1.0 if mkt[i] > sum(hist) / len(hist) else 0.0
+    masked = [raw[i] * mask[i] for i in range(n)]
+    scale = [1.0] * n
+    if params.get("vol_target"):
+        target = float(params.get("target_vol", 0.50))
+        vlb = int(params.get("vol_lookback", 30))
+        max_lev = float(params.get("max_leverage", 1.0))
+        tpb = target / math.sqrt(365)
+        for i in range(n):
+            window = masked[max(0, i - vlb):i]
+            if len(window) < 5:
+                scale[i] = 0.0
+            else:
+                sd = stats.stdev(window)
+                scale[i] = 1.0 if sd <= 0 else min(max_lev, tpb / sd)
+    overlay = [mask[i] * scale[i] for i in range(n)]
+
+    total_costs = sum(overlay[i] * cost_day[i] for i in range(n))
+    trades = []
+    for coin, e, x in spans:
+        xi = x if x is not None else n
+        contrib = sum(overlay[i] * g_days[i].get(coin, 0.0) for i in range(e, min(xi, n)))
+        ep = cols[coin][e]
+        exit_i = xi if x is not None else T - 1
+        xp = cols[coin][exit_i] if exit_i < T and cols[coin][exit_i] is not None else ep
+        trades.append(CoinTrade(
+            coin=coin, entry_date=_dt(dates[e]), exit_date=_dt(dates[min(exit_i, T - 1)]),
+            holding_days=min(exit_i, T - 1) - e, entry_price=round(ep, 4), exit_price=round(xp, 4),
+            price_return=round(xp / ep - 1.0, 4) if ep else 0.0,
+            contribution=contrib, pnl_usd=contrib * NOTIONAL,
+            status="open" if x is None else "closed"))
+    trades.sort(key=lambda tr: tr.entry_date)
+    return trades, total_costs
 
 
 def _equity(rets: list[float]) -> list[float]:

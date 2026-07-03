@@ -149,29 +149,92 @@ def format_md(trades: list[Trade], name: str, since: str | None = None) -> str:
     return "\n".join(out)
 
 
+def xsec_summary(trades: list, total_costs: float) -> dict:
+    """Roll-up for a per-coin (cross-sectional) blotter."""
+    closed = [t for t in trades if t.status == "closed"]
+    wins = [t for t in closed if t.contribution > 0]
+    gross = sum(t.contribution for t in trades)
+    return {
+        "n_trades": len(closed), "n_open": len(trades) - len(closed),
+        "win_rate": round(len(wins) / len(closed), 3) if closed else 0.0,
+        "avg_holding_days": round(stats.mean([t.holding_days for t in closed]), 1) if closed else 0.0,
+        "gross_contribution": round(gross, 4), "total_costs": round(total_costs, 4),
+        "net": round(gross - total_costs, 4),
+        "best_trade": round(max((t.contribution for t in trades), default=0.0), 4),
+        "worst_trade": round(min((t.contribution for t in trades), default=0.0), 4),
+    }
+
+
+def coin_rollup(trades: list) -> list:
+    """Aggregate contribution by coin (which coins made/lost the money)."""
+    from collections import defaultdict
+    agg = defaultdict(lambda: [0, 0.0])
+    for t in trades:
+        agg[t.coin][0] += 1
+        agg[t.coin][1] += t.contribution
+    rows = [(c, n, contrib) for c, (n, contrib) in agg.items()]
+    rows.sort(key=lambda r: r[2], reverse=True)
+    return rows
+
+
+def format_xsec_md(trades: list, total_costs: float, name: str, since: str | None = None) -> str:
+    s = xsec_summary(trades, total_costs)
+    out = [f"# Trade Blotter — {name} (per-coin)", ""]
+    if since:
+        out += [f"_Coin-trades entered on/after {since}._", ""]
+    out += [
+        "| metric | value | metric | value |",
+        "|--------|-------|--------|-------|",
+        f"| coin-trades (closed) | {s['n_trades']} | win rate | {s['win_rate']:.0%} |",
+        f"| gross contribution | {s['gross_contribution']:+.1%} | costs | −{s['total_costs']:.1%} |",
+        f"| net contribution | {s['net']:+.1%} | avg hold (days) | {s['avg_holding_days']} |",
+        f"| best single trade | {s['best_trade']:+.1%} | worst single trade | {s['worst_trade']:+.1%} |",
+        "",
+        "## Which coins made (and lost) the money",
+        "",
+        "| coin | trades | contribution | $ (10k) |",
+        "|------|--------|--------------|---------|",
+    ]
+    for coin, ntr, contrib in coin_rollup(trades):
+        out.append(f"| {coin} | {ntr} | {contrib:+.1%} | {contrib * 10_000:+,.0f} |")
+    out += ["",
+            "_Contribution = the % each coin added to the portfolio's arithmetic return, "
+            "net of overlays. Reconciles to portfolio equity. Long-only basket._"]
+    return "\n".join(out)
+
+
 if __name__ == "__main__":
     import argparse
     import os
     from . import data as data_mod
     from . import strategy as strat
+    from . import multi_data as md
+    from . import xsectional as xs
     from .forward_paper import FROZEN_STRATEGIES, HERE
 
-    p = argparse.ArgumentParser(description="Per-trade blotter for a frozen single-asset strategy.")
+    p = argparse.ArgumentParser(description="Per-trade blotter for a frozen strategy.")
     p.add_argument("--strategy", default="regime-trend")
     p.add_argument("--since", default=None, help="only trades entered on/after YYYY-MM-DD")
     args = p.parse_args()
 
     entry = FROZEN_STRATEGIES[args.strategy]
-    if entry["kind"] != "single_asset":
-        raise SystemExit(f"{args.strategy} is {entry['kind']}; the single-asset blotter needs a single_asset strategy.")
-    bars, _ = data_mod.get_ohlcv(csv_path=os.path.join(HERE, "sample-data", entry["data"]), limit=0)
-    sig = strat.generate_signals(bars, entry["config"], periods_per_year=365)
-    trades = extract_trades(bars, sig)
-    if args.since:
-        trades = filter_since(trades, args.since)
-    md = format_md(trades, args.strategy, since=args.since)
-    print(md)
+    if entry["kind"] == "single_asset":
+        bars, _ = data_mod.get_ohlcv(csv_path=os.path.join(HERE, "sample-data", entry["data"]), limit=0)
+        sig = strat.generate_signals(bars, entry["config"], periods_per_year=365)
+        trades = extract_trades(bars, sig)
+        if args.since:
+            trades = filter_since(trades, args.since)
+        md_text = format_md(trades, args.strategy, since=args.since)
+    else:  # xsectional
+        dates, series, _ = md.panel_from_csv(os.path.join(HERE, "sample-data", entry["data"]))
+        universe = [a for a in entry["universe"] if a in series]
+        cols = md.as_matrix(dates, series, universe)
+        trades, total_costs = xs.portfolio_trades(dates, cols, entry["config"])
+        if args.since:
+            trades = [t for t in trades if t.entry_date >= args.since]
+        md_text = format_xsec_md(trades, total_costs, args.strategy, since=args.since)
+    print(md_text)
     path = os.path.join(HERE, f"quant-blotter-{args.strategy}.md")
     with open(path, "w") as fh:
-        fh.write(md + "\n")
+        fh.write(md_text + "\n")
     print(f"\nBlotter → {path}")
