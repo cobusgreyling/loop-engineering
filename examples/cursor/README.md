@@ -5,6 +5,7 @@ Copy-pasteable loop patterns for Cursor, using **Automations** (cloud cron) or m
 | Example | Cadence | Risk | File |
 |---|---|---|---|
 | Daily Triage | 1d–2h (Automation or manual) | Low | [daily-triage.md](daily-triage.md) |
+| Constraints | Every loop run (before triage) | Low | [constraints.md](constraints.md) |
 
 No `loop-init --tool cursor` yet — copy `SKILL.md` + `STATE.md` from any starter (e.g. `starters/minimal-loop`), then follow the example to wire scheduling.
 

@@ -22,7 +22,23 @@ Run this in the root of any git project (no clone required):
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
 ```
 
-Swap `--tool grok` for `claude`, `codex`, or `opencode` if needed. Swap `--pattern` for any pattern from [patterns/registry.yaml](../patterns/registry.yaml).
+Swap `--pattern` for any pattern from [patterns/registry.yaml](../patterns/registry.yaml). List all patterns:
+
+```bash
+npx @cobusgreyling/loop-init --help
+```
+
+### Which `--tool` values work?
+
+| `--tool` value | Scaffolded by `loop-init`? | Notes |
+|----------------|---------------------------|-------|
+| `grok` | Yes (default) | Native `/loop` scheduling |
+| `claude` | Yes | Native `/loop` + `$skill` invocation |
+| `codex` | Yes | Automations tab for scheduling |
+| `opencode` | Yes | Cron/systemd + `opencode run` |
+| `cursor` | No — manual copy | Copy skills + `STATE.md`; use Automations — see [examples/cursor/](../examples/cursor/) |
+| `windsurf` | No — manual copy | Copy skills + `STATE.md`; use Workflows — see [examples/windsurf/](../examples/windsurf/) |
+| `openclaw` | No — manual copy | Copy `skills/` + `STATE.md`; use `openclaw cron` — see [examples/openclaw/](../examples/openclaw/) |
 
 `loop-init` copies the starter kit, creates `STATE.md`, `LOOP.md`, `loop-budget.md`, and `loop-run-log.md`, then **prints your Loop Ready score** and first command.
 
@@ -113,8 +129,12 @@ Commit the scaffold + first run update so `loop-audit` sees activity on the next
 ## Copy-paste cheat sheet
 
 ```bash
-# Scaffold (swap --tool for claude | codex | opencode)
+# Scaffold — --tool accepts: grok | claude | codex | opencode
+# (cursor, windsurf, openclaw: manual copy — see table in section 2)
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
+
+# List patterns and flags
+npx @cobusgreyling/loop-init --help
 
 # Cost check
 npx @cobusgreyling/loop-cost --pattern daily-triage --level L1 --cadence 1d
