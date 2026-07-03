@@ -444,6 +444,26 @@ def test_blotter_marks_open_trade():
     assert trades[-1].status == "open"
 
 
+def test_service_scoreboard_scoring():
+    from engine import service
+    results = {
+        "regime-trend": {"registered_as_of": "2026-05-23", "mandate_max_drawdown": 0.40,
+                         "kind": "single_asset", "within_mandate": False,
+                         "forward": {"n_days": 0, "last_data": "2026-05-23"}},
+        "good-one": {"registered_as_of": "2025-01-01", "mandate_max_drawdown": 0.40,
+                     "kind": "xsectional", "within_mandate": True,
+                     "forward": {"n_days": 300, "equity_mult": 1.4, "sharpe": 0.9,
+                                 "max_drawdown": 0.31, "last_forward": "2026-01-01"}},
+    }
+    board = service.scoreboard_from_results(results, "2026-07-03 00:00:00Z")
+    assert board["strategies"]["regime-trend"]["status"] == "awaiting_data"
+    assert board["strategies"]["good-one"]["status"] == "within_mandate"
+    # a breached mandate is flagged
+    results["good-one"]["within_mandate"] = False
+    board = service.scoreboard_from_results(results, "t")
+    assert board["strategies"]["good-one"]["status"] == "breached"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

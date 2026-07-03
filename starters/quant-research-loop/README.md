@@ -223,6 +223,8 @@ further searches halt and point you to forward-testing or new data.
 | `engine/walkforward.py` | Walk-forward K-of-N rolling out-of-sample validation |
 | `engine/quarantine.py` | Forward out-of-time test; the verdict that gates capital |
 | `engine/blotter.py` | Per-trade blotter — single-asset round-trips + per-coin basket contribution |
+| `engine/forward_paper.py` | Frozen-strategy forward paper trade + registry (write-once) |
+| `engine/service.py` | Always-on tracker service (Railway) — scheduler + scoreboard |
 | `engine/split.py` | Three-way train/validation/lockbox split |
 | `engine/ledger.py` | Trial counter + budget + write-once lockbox/forward ledger |
 | `engine/stats.py` | Overfitting-aware metrics (no numpy/scipy) |
@@ -429,6 +431,21 @@ forward P&L record (`quant-forward-state.md` / `quant-forward-log.md`) — a dur
 in-git track record. It self-suppresses until new price data exists. (In a network
 that blocks exchange APIs, point `data.py`/`multi_data.py` at Coin Metrics, as it
 does by default, or a reachable feed.)
+
+**Always-on service (Railway).** For a hosted tracker that runs continuously and
+scores every thesis, `engine/service.py` is a stdlib web service + scheduler:
+
+```bash
+QUANT_DATA_DIR=./data CHECK_INTERVAL_SECONDS=3600 PORT=8080 python -m engine.service
+# → http://localhost:8080  (live scoreboard) · /scoreboard.json · /health
+```
+
+Deploy on Railway with the bundled `Dockerfile` + `railway.json` (mount a Volume at
+`/data` so the record survives redeploys) — see [DEPLOY-RAILWAY.md](DEPLOY-RAILWAY.md).
+**Add a new thesis** by defining it in `FROZEN_STRATEGIES` and redeploying; the
+service auto-registers it (write-once) and starts tracking it alongside the rest.
+The scoreboard shows each thesis as `within_mandate` / `breached` / `awaiting_data`
+— your running record of what's actually profitable.
 
 ## What this does NOT do
 

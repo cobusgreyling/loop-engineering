@@ -1,0 +1,7 @@
+data/
+__pycache__/
+*.pyc
+quant-blotter-*.md
+scoreboard.json
+paper-account.json
+research-ledger.json

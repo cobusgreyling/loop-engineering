@@ -35,9 +35,15 @@ from . import strategy as strat
 
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REG_PATH = os.path.join(HERE, "forward-registration.json")
-STATE_MD = os.path.join(HERE, "quant-forward-state.md")
-LOG_MD = os.path.join(HERE, "quant-forward-log.md")
+# Where the live record is persisted. Defaults to the repo dir (local runs); set
+# QUANT_DATA_DIR to a persistent volume (e.g. /data on Railway) for an always-on
+# service so the track record survives redeploys.
+DATA_DIR = os.environ.get("QUANT_DATA_DIR", HERE)
+os.makedirs(DATA_DIR, exist_ok=True)
+SEED_REG = os.path.join(HERE, "forward-registration.json")  # committed contract (seed)
+REG_PATH = os.path.join(DATA_DIR, "forward-registration.json")
+STATE_MD = os.path.join(DATA_DIR, "quant-forward-state.md")
+LOG_MD = os.path.join(DATA_DIR, "quant-forward-log.md")
 PPY = 365
 
 # The frozen, pre-registered strategies. Configs are a priori — NOT re-optimized
@@ -78,14 +84,34 @@ def _date(ts: int) -> str:
 
 
 def _load_reg() -> dict:
-    if not os.path.exists(REG_PATH):
+    path = REG_PATH if os.path.exists(REG_PATH) else SEED_REG  # fall back to committed seed
+    if not os.path.exists(path):
         return {}
-    with open(REG_PATH) as fh:
+    with open(path) as fh:
         data = json.load(fh)
     # migrate the old single flat format -> keyed dict
     if "strategy" in data and "registered_as_of" in data:
         return {data["strategy"]: data}
     return data
+
+
+def default_as_of(name: str) -> str:
+    """Latest date available in a strategy's data — the honest 'now' to register from."""
+    pairs = _forward_pairs(FROZEN_STRATEGIES[name])
+    return _date(pairs[-1][0]) if pairs else "1970-01-01"
+
+
+def auto_register_pending() -> list[str]:
+    """Register any FROZEN strategy not yet in the record (write-once), stamping the
+    latest data date. This is how you add a new thesis: define it in
+    FROZEN_STRATEGIES, redeploy, and it starts tracking from that point."""
+    reg = _load_reg()
+    added = []
+    for name in FROZEN_STRATEGIES:
+        if name not in reg:
+            register(name, default_as_of(name))
+            added.append(name)
+    return added
 
 
 def register(name: str, as_of: str, force: bool = False) -> None:
