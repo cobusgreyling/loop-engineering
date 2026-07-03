@@ -1,0 +1,3 @@
+# The quant-research-loop engine is PURE PYTHON STDLIB — no third-party packages.
+# This file exists so Railway/Railpack/Nixpacks detects a Python app and builds it
+# without a Dockerfile. Intentionally empty of dependencies.

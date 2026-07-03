@@ -15,18 +15,27 @@ required (though you can add one later).
 
 ## One-time setup
 
-1. **New Railway project → Deploy from repo**, root set to `starters/quant-research-loop`
-   (or point the service's root directory there). Railway reads `railway.json` and
-   builds the `Dockerfile`.
-2. **Add a Volume**, mount path `/data`. The Dockerfile already sets
-   `QUANT_DATA_DIR=/data`.
-3. **Generate a domain** (Settings → Networking) to see the status page. Railway
-   injects `$PORT` automatically; the service binds it.
-4. (Optional) Override `CHECK_INTERVAL_SECONDS` (default `86400` = daily).
+1. **New Railway project → Deploy from repo.** Set the service **Root Directory** to
+   `starters/quant-research-loop` (Settings → Source). The build works with either
+   builder — the default **Railpack/Nixpacks** picks it up via `requirements.txt`
+   (pure stdlib, no deps) + `Procfile` (`web: python -m engine.service`); or set the
+   builder to **Dockerfile** to use the bundled `Dockerfile`. No configuration
+   needed either way.
+2. **Set variables** (Settings → Variables):
+   - `QUANT_DATA_DIR=/data` — **required for persistence** (without it the record
+     lives on the ephemeral filesystem and resets on redeploy).
+   - `CHECK_INTERVAL_SECONDS=86400` — optional (default daily).
+3. **Add a Volume**, mount path `/data` (Settings → Volumes) — matches `QUANT_DATA_DIR`.
+4. **Generate a domain** (Settings → Networking) to see the status page. Railway
+   injects `$PORT`; the service binds it automatically.
 
 That's it. The service boots, auto-registers the frozen strategies (write-once),
 and starts checking. Visit the domain for the scoreboard; `GET /scoreboard.json`
 for the machine-readable version; `GET /health` for the healthcheck.
+
+> **If the build fails with "Railpack could not determine how to build the app,"**
+> you're on a commit that predates `requirements.txt`/`Procfile`. Redeploy the
+> latest `main` (Railway → Deployments → redeploy, or push a new commit).
 
 ## The data caveat (read this)
 
