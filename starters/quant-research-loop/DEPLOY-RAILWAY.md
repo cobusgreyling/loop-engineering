@@ -37,13 +37,20 @@ for the machine-readable version; `GET /health` for the healthcheck.
 > you're on a commit that predates `requirements.txt`/`Procfile`. Redeploy the
 > latest `main` (Railway → Deployments → redeploy, or push a new commit).
 
-## The data caveat (read this)
+## The data feed
 
-The default price source is the free Coin Metrics community dataset, which can lag
-by days–weeks. Forward rows only appear once it publishes bars **after** the
-registration date. For same-day tracking, wire a real-time feed (Binance.US /
-Coinbase) into `data.py` / `multi_data.py` — Railway has open internet, so exchange
-APIs that are blocked in some sandboxes work there.
+- **`regime-trend` uses a live Coinbase feed** (`source: coinbase`, daily candles,
+  public API — no key). On Railway (open internet) it pulls **current** prices, so
+  its forward record starts filling in as soon as there are bars after the
+  registration date. In a sandbox that blocks exchange egress it falls back to the
+  committed snapshot and reads "awaiting data."
+- **`xsectional-momentum-riskoff`** still uses the Coin Metrics panel (its
+  survivorship-corrected universe includes delisted coins an exchange won't serve),
+  which can lag — so it may read "awaiting data" longer. Forward trading can only
+  hold *listed* coins anyway; a live basket feed is a later refinement.
+
+Granular (hourly) data is available via `engine/coinbase.py` for the next class of
+strategies; the daily strategies fetch daily candles.
 
 ## Adding a new thesis (the iterate loop)
 

@@ -58,6 +58,15 @@ python3 -m engine.loop --search --source live --symbol BTCUSDT --timeframe 1d
 
 Three real-data notes:
 
+- **`coinbase`** pulls live OHLCV candles at any granularity (1m…1d) from the
+  public Coinbase Exchange API — no key. This is the **current, granular** feed:
+  it unblocks the forward tracker (the daily/lagging Coin Metrics feed can't) and
+  is the foundation for intraday strategies. Blocked in some sandboxes (exchange
+  egress) but works on Railway / your machine.
+  ```bash
+  python3 -m engine.coinbase --product BTC-USD --timeframe 1h --limit 500
+  python3 -m engine.coinbase --product BTC-USD --timeframe 1h --daily   # resample to daily
+  ```
 - **`coinmetrics`** pulls a daily *reference price* (close), not OHLC, so the
   breakout runs as **Donchian-on-close** — a standard daily variant. It works
   even behind a restrictive network policy (`raw.githubusercontent.com`).
@@ -225,6 +234,7 @@ further searches halt and point you to forward-testing or new data.
 | `engine/blotter.py` | Per-trade blotter — single-asset round-trips + per-coin basket contribution |
 | `engine/forward_paper.py` | Frozen-strategy forward paper trade + registry (write-once) |
 | `engine/service.py` | Always-on tracker service (Railway) — scheduler + scoreboard |
+| `engine/coinbase.py` | Live Coinbase candles (hourly+), pagination + daily resample |
 | `engine/split.py` | Three-way train/validation/lockbox split |
 | `engine/ledger.py` | Trial counter + budget + write-once lockbox/forward ledger |
 | `engine/stats.py` | Overfitting-aware metrics (no numpy/scipy) |

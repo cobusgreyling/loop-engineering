@@ -464,6 +464,52 @@ def test_service_scoreboard_scoring():
     assert board["strategies"]["good-one"]["status"] == "breached"
 
 
+def test_coinbase_parse_candles():
+    from engine import coinbase
+    # Coinbase row order: [time, low, high, open, close, volume], newest first
+    rows = [[1700003600, 9, 12, 10, 11, 100], [1700000000, 8, 11, 9, 10, 50]]
+    bars = coinbase.parse_candles(rows)
+    assert [b.ts for b in bars] == [1700000000, 1700003600], "must sort ascending"
+    b = bars[0]
+    assert (b.open, b.high, b.low, b.close, b.volume) == (9.0, 11.0, 8.0, 10.0, 50.0)
+
+
+def test_coinbase_to_daily_resample():
+    import calendar
+    import datetime as _dt
+    from engine import coinbase
+    from engine.data import Bar
+    day = calendar.timegm(_dt.datetime(2024, 1, 1, 0).timetuple())
+    hrs = [Bar(day, 10, 10, 10, 10, 1), Bar(day + 3600, 11, 15, 9, 12, 2),
+           Bar(day + 86400, 20, 20, 20, 20, 3)]
+    d = coinbase.to_daily(hrs)
+    assert len(d) == 2
+    a = d[0]  # open=first, high=max, low=min, close=last, volume=sum
+    assert (a.open, a.high, a.low, a.close, a.volume) == (10, 15, 9, 12, 3)
+
+
+def test_coinbase_fetch_pagination():
+    from engine import coinbase
+    from engine.data import Bar
+    orig, gran = coinbase._fetch_page, 3600
+    calls = {"n": 0}
+
+    def fake(product, g, start, end, timeout=20):
+        calls["n"] += 1
+        if calls["n"] > 3:
+            return []
+        page = [Bar(ts=end - i * gran, open=1, high=1, low=1, close=1, volume=1) for i in range(300)]
+        page.sort(key=lambda b: b.ts)  # ascending, like real parse_candles
+        return page
+    coinbase._fetch_page = fake
+    try:
+        bars = coinbase.fetch_candles("BTC-USD", "1h", limit=500, now_ts=1_700_000_000, pause_s=0)
+    finally:
+        coinbase._fetch_page = orig
+    assert len(bars) == 500, "must cap at limit"
+    assert all(bars[i].ts < bars[i + 1].ts for i in range(len(bars) - 1)), "ascending, deduped"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

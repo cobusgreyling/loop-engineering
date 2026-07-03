@@ -648,9 +648,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--strategy", default="donchian", choices=STRATEGY_NAMES,
                    help="hypothesis: donchian|tsmom|meanrev|regime|mvrv|trendval")
     p.add_argument("--source", default="synthetic",
-                   choices=["synthetic", "live", "coinmetrics"],
-                   help="live=Binance OHLCV (US users: see README); "
-                        "coinmetrics=real daily close history (works behind egress policy)")
+                   choices=["synthetic", "live", "coinmetrics", "coinbase"],
+                   help="coinbase=live hourly/daily candles (public, no key); "
+                        "coinmetrics=daily close history (works behind egress policy); "
+                        "live=Binance OHLCV (US users: see README)")
     p.add_argument("--csv", default=None, help="path to OHLCV csv (overrides --source)")
     p.add_argument("--symbol", default="BTCUSDT", help="e.g. BTCUSDT (spot)")
     p.add_argument("--timeframe", default="1d", choices=list(PERIODS_PER_YEAR),

@@ -213,6 +213,16 @@ def get_ohlcv(source: str = "synthetic", *, csv_path: str | None = None,
             return from_live(symbol, interval, min(limit, 1000)), f"live:binance:{symbol}:{interval}"
         except Exception as exc:  # network blocked / rate limited → fall back loudly
             return synthetic(n=limit, seed=seed), f"SYNTHETIC(live-failed:{type(exc).__name__})"
+    if source == "coinbase":
+        from . import coinbase  # local import: exchange egress may be blocked in some envs
+        product = symbol if "-" in symbol else "BTC-USD"
+        try:
+            bars = coinbase.fetch_candles(product, timeframe=interval, limit=limit or 2000)
+            if interval != "1d" and interval in coinbase.GRANULARITY:
+                pass  # caller may resample via coinbase.to_daily if they want daily
+            return bars, f"coinbase:{product}:{interval}"
+        except Exception as exc:
+            return synthetic(n=limit or 1500, seed=seed), f"SYNTHETIC(coinbase-failed:{type(exc).__name__})"
     if source == "coinmetrics":
         # Coin Metrics keys by bare asset ("btc"), not a pair — strip the quote.
         asset = symbol.lower()

@@ -66,7 +66,10 @@ FROZEN_STRATEGIES = {
     "regime-trend": {
         "kind": "single_asset",
         "description": "BTC long/flat trend gated by a calm-volatility regime, vol targeting",
-        "data": "btc_1d_coinmetrics.csv",
+        "data": "btc_1d_coinmetrics.csv",   # committed snapshot (seed / offline fallback)
+        "source": "coinbase",                # live feed for the forward record (current prices)
+        "product": "BTC-USD",
+        "timeframe": "1d",                   # daily strategy → daily candles
         "config": {"strategy": "regime", "trend_lookback": 100, "vol_regime_lookback": 30,
                    "vol_target": True, "target_vol": 0.40, "vol_lookback": 30, "max_leverage": 1.0},
         "mandate_max_drawdown": 0.40,
@@ -142,7 +145,12 @@ def _refresh_data(entry: dict) -> str:
             md.panel_to_csv(dates, series, [a for a in entry["universe"] if a in series], path)
         else:
             path = os.path.join(cache_dir, "btc_live.csv")
-            bars = data_mod.from_coinmetrics(asset="btc")
+            if entry.get("source") == "coinbase":
+                from . import coinbase
+                bars = coinbase.fetch_candles(entry.get("product", "BTC-USD"),
+                                              timeframe=entry.get("timeframe", "1d"), limit=1200)
+            else:
+                bars = data_mod.from_coinmetrics(asset="btc")
             data_mod.to_csv(bars, path)
         return path
     except Exception as exc:  # network blocked / source down → use the snapshot
