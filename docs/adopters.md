@@ -36,6 +36,7 @@ Or open a PR that adds a row to the table below:
 | [loop-engineering](https://github.com/cobusgreyling/loop-engineering) (maintainer) | Post-Merge Cleanup | Grok + GitHub Actions | L1→L2 | Off-peak scan; verifier caught doc/API drift — see [story](../stories/post-merge-cleanup-honest-win.md) |
 | [loop-engineering](https://github.com/cobusgreyling/loop-engineering) (maintainer) | Issue Triage + Daily Triage | Grok | L1 | Issue queue feeder: propose labels only week one; pairs with morning `STATE.md` triage |
 | [loop-engineering](https://github.com/cobusgreyling/loop-engineering) (maintainer) | PR Babysitter, Dependency Sweeper | Grok / Claude Code | L2 | Assisted fixes in worktrees; human gate on merges; patch-only deps |
+| [Hermes Agent](https://github.com/NousResearch/hermes-agent) by [Nous Research](https://nousresearch.com) | Daily Triage | Hermes | L1 | Six loop primitives in one binary — `hermes cron` + skill + `delegate_task` + MCP + memory. Reference: [examples/hermes/daily-triage.md](../examples/hermes/daily-triage.md) |
 
 *Your project here — see [CONTRIBUTING.md](../CONTRIBUTING.md).*
 
