@@ -1,8 +1,10 @@
 name: Welcome contributors
 
+# pull_request_target runs in the base-repo context so fork PRs can receive
+# maintainer welcome comments (GITHUB_TOKEN is read-only on pull_request).
 on:
-  pull_request:
-    types: [opened]
+  pull_request_target:
+    types: [opened, synchronize]
     paths:
       - 'stories/**'
       - 'docs/adopters.md'
@@ -11,7 +13,7 @@ on:
 
 permissions:
   issues: write
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   welcome:
@@ -40,6 +42,16 @@ jobs:
             else if (isExample) kind = 'a tool example';
             else if (isDocs) kind = 'a docs improvement';
 
+            const marker = '— loop-engineering maintainers';
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number, per_page: 100 }
+            );
+            if (comments.some((c) => c.body?.includes(marker))) {
+              core.info('Welcome comment already present; skipping.');
+              return;
+            }
+
             const body = [
               `Thanks @${opener} for contributing ${kind} — visible, reviewable PRs like this grow the reference for everyone.`,
               '',
@@ -51,7 +63,7 @@ jobs:
               '- [Contributor quickstart + open issues](https://github.com/cobusgreyling/loop-engineering/discussions/123)',
               '- [Good first issue backlog](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)',
               '',
-              '— loop-engineering maintainers'
+              marker
             ].join('\n');
 
             await github.rest.issues.createComment({
