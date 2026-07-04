@@ -25,7 +25,7 @@ function parseArgs(argv: string[]): SyncOptions {
     else if (!a.startsWith('-')) targetDir = a;
   }
 
-  return { targetDir, autoFix, dryRun, verbose, help };
+  return { targetDir, autoFix, dryRun, verbose, help, json };
 }
 
 async function main() {

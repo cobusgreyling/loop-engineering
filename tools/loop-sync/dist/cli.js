@@ -27,7 +27,7 @@ function parseArgs(argv) {
         else if (!a.startsWith('-'))
             targetDir = a;
     }
-    return { targetDir, autoFix, dryRun, verbose, help };
+    return { targetDir, autoFix, dryRun, verbose, help, json };
 }
 async function main() {
     const args = parseArgs(process.argv.slice(2));
