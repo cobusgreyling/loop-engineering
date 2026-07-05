@@ -29,6 +29,11 @@ create_issue "Share a PR Babysitter failure story" "good first issue,story" "$BO
 create_issue "Add your project to the adopters list" "good first issue,docs" "$BODY_DIR/adopters-row.md"
 create_issue "Clarify loop-init --tool values in QUICKSTART cheat sheet" "good first issue,docs" "$BODY_DIR/quickstart-tool-values.md"
 create_issue "Add loop-triage constraints example for Cursor" "good first issue,docs" "$BODY_DIR/cursor-constraints.md"
+create_issue "Add Hermes to examples README copy-paste starters table" "good first issue,docs" "$BODY_DIR/hermes-copy-paste-starters.md"
+create_issue "Add Hermes section to QUICKSTART" "good first issue,docs" "$BODY_DIR/hermes-quickstart.md"
+create_issue "Add examples/hermes/README.md index" "good first issue,docs" "$BODY_DIR/hermes-readme-index.md"
+create_issue "Add Windsurf PR Babysitter example doc" "good first issue,docs" "$BODY_DIR/windsurf-pr-babysitter-example.md"
+create_issue "Share a Post-Merge Cleanup production story" "good first issue,story" "$BODY_DIR/post-merge-cleanup-story.md"
 
 echo "Done. Open backlog:"
 echo "https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
