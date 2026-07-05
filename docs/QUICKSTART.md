@@ -50,6 +50,16 @@ npx @cobusgreyling/loop-cost --pattern daily-triage --level L1 --cadence 1d
 
 Adjust `--pattern`, `--level` (L1 → L2 → L3), and `--cadence` to match what you plan to run. High-frequency loops (CI Sweeper at 5m) can burn tokens fast — slow the cadence or require early-exit triage first.
 
+### Circuit breaker for L2+ loops (optional)
+
+When a loop starts fixing code unattended, wire a **circuit breaker** so it escalates instead of retrying the same failure forever. `loop-init` scaffolds `loop-ledger.json` and a `loop-guard` skill for fix-capable patterns; check the ledger before each retry:
+
+```bash
+npx @cobusgreyling/loop-context --check --ledger loop-ledger.json
+```
+
+Exit `0` = continue · `2` = escalate to a human. The breaker trips on max iterations, the same error repeating N× in a row, too many consecutive failures, or a token budget cap. Full API: [tools/loop-context/README.md](../tools/loop-context/README.md).
+
 ## 4. Audit readiness (30 seconds)
 
 ```bash
@@ -61,6 +71,19 @@ Scores 0–100 with concrete next steps. Re-run after each improvement. Paste a 
 ```bash
 npx @cobusgreyling/loop-audit . --badge
 ```
+
+### Optional: MCP runtime lookup
+
+Agents can query patterns, skills, and state on demand instead of stuffing docs into every prompt. Copy the config stub from [examples/mcp/loop-engineering.mcp.json](../examples/mcp/loop-engineering.mcp.json) into your MCP client settings.
+
+**npm publish is pending** — run the server from a cloned `loop-engineering` repo for now:
+
+```bash
+cd path/to/loop-engineering/tools/mcp-server && npm ci && npm run build
+LOOP_PROJECT_ROOT=/path/to/your/project node dist/index.js
+```
+
+See [tools/mcp-server/README.md](../tools/mcp-server/README.md) for resources and tools.
 
 ## 5. Run your first loop — report only (2 minutes)
 
