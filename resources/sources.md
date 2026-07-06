@@ -39,6 +39,11 @@ These provide important context and guardrails for loop design.
 - Peter Steinberger: emphasis on designing loops rather than prompting agents directly.
 - Various practitioners experimenting with closed-loop systems, feedback loop engineering, and "routines that prompt the model."
 
+## Community Philosophy Artifacts
+
+- **Marius ([@sololys](https://github.com/sololys))** — [KY Cut Surface Philosophy v0.1](./ky-cut-surface-philosophy-v0_1/) (July 2026)
+  Archived public philosophy on the distinction between generation and consequence. Not a pattern or runtime — indexed via [stories/ky-cut-surface-generation-vs-consequence.md](../stories/ky-cut-surface-generation-vs-consequence.md).
+
 ## How This Repo Relates
 
 We treat the above sources as the current best articulation of the idea and aim to turn the abstract framework into practical, copyable patterns, templates, and tool-specific guidance (with special attention to the Grok Build TUI, which has strong native support for the primitives).
