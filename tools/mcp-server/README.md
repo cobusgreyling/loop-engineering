@@ -6,7 +6,11 @@ Instead of stuffing all loop documentation into the prompt, agents can query onl
 
 ## Quick Start
 
-**v1 ships from this repo** (npm publish pending). From a cloned `loop-engineering` repo:
+```bash
+npx @cobusgreyling/loop-mcp-server
+```
+
+From a cloned `loop-engineering` repo:
 
 ```bash
 cd tools/mcp-server && npm ci && npm test

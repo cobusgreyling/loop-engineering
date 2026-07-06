@@ -12,6 +12,7 @@ on:
       - 'docs/**'
 
 permissions:
+  contents: read
   issues: write
   pull-requests: write
 
@@ -24,25 +25,8 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             const opener = pr.user.login;
-            const files = await github.paginate(
-              github.rest.pulls.listFiles,
-              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number, per_page: 100 }
-            );
-            const paths = files.map((f) => f.filename);
-            const isStory = pr.title.toLowerCase().includes('story') ||
-              pr.body?.toLowerCase().includes('stories/') ||
-              paths.some((p) => p.startsWith('stories/'));
-            const isAdopter = paths.some((p) => p === 'docs/adopters.md');
-            const isExample = paths.some((p) => p.startsWith('examples/'));
-            const isDocs = paths.some((p) => p.startsWith('docs/'));
-
-            let kind = 'a contribution';
-            if (isStory) kind = 'a production story';
-            else if (isAdopter) kind = 'an adopter listing';
-            else if (isExample) kind = 'a tool example';
-            else if (isDocs) kind = 'a docs improvement';
-
             const marker = '— loop-engineering maintainers';
+
             const comments = await github.paginate(
               github.rest.issues.listComments,
               { owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number, per_page: 100 }
@@ -51,6 +35,32 @@ jobs:
               core.info('Welcome comment already present; skipping.');
               return;
             }
+
+            let paths = [];
+            try {
+              const files = await github.paginate(
+                github.rest.pulls.listFiles,
+                { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number, per_page: 100 }
+              );
+              paths = files.map((f) => f.filename);
+            } catch (err) {
+              core.warning(`Could not list PR files (${err.message}); inferring from title/body.`);
+            }
+
+            const isStory = pr.title.toLowerCase().includes('story') ||
+              pr.body?.toLowerCase().includes('stories/') ||
+              paths.some((p) => p.startsWith('stories/'));
+            const isAdopter = paths.some((p) => p === 'docs/adopters.md');
+            const isExample = paths.some((p) => p.startsWith('examples/')) ||
+              pr.title.toLowerCase().includes('example');
+            const isDocs = paths.some((p) => p.startsWith('docs/')) ||
+              pr.title.toLowerCase().includes('docs:');
+
+            let kind = 'a contribution';
+            if (isStory) kind = 'a production story';
+            else if (isAdopter) kind = 'an adopter listing';
+            else if (isExample) kind = 'a tool example';
+            else if (isDocs) kind = 'a docs improvement';
 
             const body = [
               `Thanks @${opener} for contributing ${kind} — visible, reviewable PRs like this grow the reference for everyone.`,

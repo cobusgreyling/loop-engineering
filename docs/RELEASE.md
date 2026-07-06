@@ -1,6 +1,6 @@
 # Release playbook — npm packages
 
-This repo ships five public npm packages from `tools/`:
+This repo ships six public npm packages from `tools/`:
 
 | Package | Directory | Release tag |
 |---------|-----------|-------------|
@@ -9,6 +9,7 @@ This repo ships five public npm packages from `tools/`:
 | `@cobusgreyling/loop-cost` | `tools/loop-cost` | `loop-cost-v*` |
 | `@cobusgreyling/loop-sync` | `tools/loop-sync` | `loop-sync-v*` |
 | `@cobusgreyling/loop-context` | `tools/loop-context` | `loop-context-v*` |
+| `@cobusgreyling/loop-mcp-server` | `tools/mcp-server` | `loop-mcp-server-v*` |
 
 ## One-time setup (trusted publishing — recommended)
 
@@ -21,6 +22,7 @@ Link npm to GitHub, then for **each package** on [npmjs.com](https://www.npmjs.c
 | `@cobusgreyling/loop-cost` | `cobusgreyling/loop-engineering` | `release-loop-cost.yml` |
 | `@cobusgreyling/loop-sync` | `cobusgreyling/loop-engineering` | `release-loop-sync.yml` |
 | `@cobusgreyling/loop-context` | `cobusgreyling/loop-engineering` | `release-loop-context.yml` |
+| `@cobusgreyling/loop-mcp-server` | `cobusgreyling/loop-engineering` | `release-loop-mcp-server.yml` |
 
 Names must match **exactly** (case-sensitive). No `NPM_TOKEN` secret is required when trusted publishing is configured.
 
@@ -58,9 +60,13 @@ git push origin loop-sync-v1.0.0
 # loop-context (stateful memory manager + circuit breaker)
 git tag loop-context-v1.0.0
 git push origin loop-context-v1.0.0
+
+# loop-mcp-server (MCP runtime lookup for patterns, skills, state)
+git tag loop-mcp-server-v1.0.0
+git push origin loop-mcp-server-v1.0.0
 ```
 
-Workflows: `.github/workflows/release-loop-audit.yml`, `.github/workflows/release-loop-init.yml`, `.github/workflows/release-loop-cost.yml`, `.github/workflows/release-loop-sync.yml`, `.github/workflows/release-loop-context.yml`.
+Workflows: `.github/workflows/release-loop-audit.yml`, `.github/workflows/release-loop-init.yml`, `.github/workflows/release-loop-cost.yml`, `.github/workflows/release-loop-sync.yml`, `.github/workflows/release-loop-context.yml`, `.github/workflows/release-loop-mcp-server.yml`.
 
 ## Verify after publish
 
@@ -70,6 +76,7 @@ npx @cobusgreyling/loop-init --help
 npx @cobusgreyling/loop-cost --help
 npx @cobusgreyling/loop-sync --help
 npx @cobusgreyling/loop-context --help
+npx @cobusgreyling/loop-mcp-server --help
 
 mkdir /tmp/loop-init-test && cd /tmp/loop-init-test
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --dry-run
