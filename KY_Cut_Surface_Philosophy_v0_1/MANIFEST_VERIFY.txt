@@ -1,0 +1,5 @@
+README.md: OK
+TERMINAL_ART.txt: OK
+alternative_openers.txt: OK
+compressed_version.txt: OK
+linkedin_post_july06.txt: OK

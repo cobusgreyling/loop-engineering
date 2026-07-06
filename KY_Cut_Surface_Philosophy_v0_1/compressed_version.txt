@@ -1,0 +1,1 @@
+I systemarkitektur er skillet mellom generasjon og realisering fundamentalt. Free dynamics kan skape kandidater, men det er arkitekturen — disiplinen i kuttflaten — som tildeler dem konsekvens. Enten vi snakker om kvante-admissibilitet eller signalintegritet, handler alt om å bevare de skillene som gjør senere dom mulig. Uten en non-lying kernel er generasjon bare støy.
