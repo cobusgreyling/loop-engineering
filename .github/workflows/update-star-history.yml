@@ -1,0 +1,29 @@
+name: Update Star History Chart
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Generate static star-history SVGs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh auth setup-git
+          python3 scripts/generate-star-history.py
+
+      - name: Commit chart if changed
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: 'chore: update star-history chart SVGs'
+          file_pattern: assets/visuals/star-history.svg assets/visuals/star-history-dark.svg
+          branch: main
