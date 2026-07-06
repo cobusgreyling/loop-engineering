@@ -13,6 +13,7 @@ Same patterns, different tools. Skills and state schemas are shared; only schedu
 | Opencode | [opencode/](./opencode/) |
 | GitHub Actions | [github-actions/](./github-actions/) |
 | MCP connectors | [mcp/](./mcp/) — config example; reference server in [tools/mcp-server/](../tools/mcp-server/) |
+| Hermes | [hermes/](./hermes/) |
 
 Start with [primitives-matrix.md](../docs/primitives-matrix.md) to map capabilities.
 
