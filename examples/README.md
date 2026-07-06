@@ -14,6 +14,7 @@ Same patterns, different tools. Skills and state schemas are shared; only schedu
 | GitHub Actions | [github-actions/](./github-actions/) |
 | MCP connectors | [mcp/](./mcp/) — config example; reference server in [tools/mcp-server/](../tools/mcp-server/) |
 | Hermes | [hermes/](./hermes/) |
+| Aider | [Aider CLI](../docs/primitives-matrix.md#aider-cli) — CLI-first loops via cron + `--read` skills |
 
 Start with [primitives-matrix.md](../docs/primitives-matrix.md) to map capabilities.
 
