@@ -8,6 +8,7 @@ Open-source coding agent that runs from the CLI, can run headlessly via `opencod
 | [constraints.md](./constraints.md) | Constraints (binding rules loaded before every loop run) |
 | [ci-sweeper.md](./ci-sweeper.md) | CI Sweeper (cron/systemd + `opencode run` for short cadences) |
 | [pr-babysitter.md](./pr-babysitter.md) | PR Babysitter (long-running PR shepherd with worktree isolation) |
+| [Constraints Example](constraints-example.md) – Minimal loop-triage skill with recommended guardrails. |
 
 > **Starter kit:** [../../starters/minimal-loop-opencode/](../../starters/minimal-loop-opencode/) — clone-and-run scaffold for L1 daily triage.
 >
