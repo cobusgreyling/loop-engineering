@@ -62,6 +62,22 @@ Scores 0–100 with concrete next steps. Re-run after each improvement. Paste a 
 npx @cobusgreyling/loop-audit . --badge
 ```
 
+## Optional: MCP runtime lookup
+
+If you want to use the MCP runtime locally, copy the example configuration:
+
+```bash
+cp examples/mcp/loop-engineering.mcp.json <your-mcp-config>.json
+```
+
+Then run the MCP server from your cloned repository:
+
+```bash
+node tools/mcp-server/dist/index.js
+```
+
+> **Note:** npm publishing is still pending. Run the MCP server from your local clone of the repository—do not use or document an `npx` command yet.
+
 ## 5. Run your first loop — report only (2 minutes)
 
 ### Grok
