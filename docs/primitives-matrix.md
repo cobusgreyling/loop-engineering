@@ -136,3 +136,48 @@ aider --read diff.patch --read STATE.md \
 ```
 
 Transfer recipe: copy the tool-agnostic `SKILL.md` + state schema from this repo; map scheduling to cron, systemd, or CI until Aider is wrapped by a richer loop scheduler.
+
+## Appendix: Zed
+
+Zed is editor-hosted rather than a standalone loop scheduler, so map the same primitives from [Choosing a Tool](#choosing-a-tool) onto [Agent Panel](https://zed.dev/docs/ai/agent-panel) threads, [Instructions](https://zed.dev/docs/ai/instructions), [Skills](https://zed.dev/docs/ai/skills), [Agent Profiles](https://zed.dev/docs/ai/agent-profiles), [Tool Permissions](https://zed.dev/docs/ai/tool-permissions), [MCP](https://zed.dev/docs/ai/mcp) servers, [Terminal Threads](https://zed.dev/docs/ai/terminal-threads), [Tasks](https://zed.dev/docs/tasks), and [Parallel Agents](https://zed.dev/docs/ai/parallel-agents) worktrees.
+
+| Primitive | Zed mapping |
+|-----------|-------------|
+| Scheduling | Zed does not currently expose a first-class cron-style loop scheduler. Use Agent Panel threads or Terminal Threads for manual/ad-hoc runs, Zed Tasks for editor-side command hooks, and cron, systemd, GitHub Actions, or another external scheduler for cadence. |
+| Project rules / skills path | Put always-on repo guidance in project instructions, preferably `AGENTS.md`; Zed also supports `.rules`, `.cursorrules`, `.windsurfrules`, `.clinerules`, `.github/copilot-instructions.md`, `AGENT.md`, `CLAUDE.md`, and `GEMINI.md`. Put reusable workflows in project-local Skills under `.agents/skills/<name>/SKILL.md`. |
+| State | Keep `STATE.md` at the repo root and make every loop prompt read and update the same file. Zed thread history helps local continuity, but committed markdown state is the portable memory spine across restarts, agents, and external schedulers. |
+| Worktrees | Use Parallel Agents with git worktree isolation when multiple threads may edit the same files; review the diff and merge through normal git flow. |
+| Maker/checker split | Run the maker in a Write profile thread, then run a second Ask/read-only or restricted custom profile thread over `git diff`, `STATE.md`, and the acceptance criteria. Use Tool Permissions to keep destructive tools denied or confirmation-gated for the checker. |
+| Connectors | Configure MCP servers in Zed Agent Settings for GitHub, docs lookup, issue/PR discovery, or other external context. External Agents and Terminal Threads may use their own native config, so do not assume Zed controls every connector. Keep credentials out of prompts and state files. |
+
+Minimal transfer recipe:
+
+```bash
+mkdir -p .agents/skills/loop-triage .agents/skills/loop-verifier
+cp templates/SKILL.md.loop-triage .agents/skills/loop-triage/SKILL.md
+cp templates/SKILL.md.verifier .agents/skills/loop-verifier/SKILL.md
+cp starters/minimal-loop/STATE.md.example STATE.md
+```
+
+Week-one Daily Triage prompt (report-only, state updates only):
+
+```text
+Run loop-triage for this repository.
+
+Read AGENTS.md and STATE.md first.
+Update STATE.md with High Priority and Watch List only.
+Do not edit source code in week one.
+Use MCP tools only when needed for issue/PR discovery.
+```
+
+Verifier pass for later L2 work:
+
+```text
+Act as loop-verifier.
+
+Review git diff against STATE.md goals and the issue acceptance criteria.
+Use an Ask/read-only or confirmation-gated profile.
+Report PASS/FAIL and do not edit files.
+```
+
+After copying: map scheduling to manual Agent Panel threads, Terminal Threads, Zed Tasks, or an external scheduler until Zed has a richer first-class loop scheduler. Use `AGENTS.md` for always-on repo rules, `.agents/skills/<name>/SKILL.md` for reusable workflows, Agent Profiles / Tool Permissions for maker-checker separation, and MCP for external tools.
