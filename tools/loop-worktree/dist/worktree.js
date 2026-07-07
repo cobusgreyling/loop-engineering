@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, realpath } from 'node:fs/promises';
 import path from 'node:path';
 const run = promisify(execFile);
 export const MANIFEST_DIR = '.loop-worktrees';
@@ -154,13 +154,15 @@ export async function cleanupWorktrees(input) {
 }
 /** Paths (repo-relative, posix) of every worktree git currently knows about. */
 async function gitWorktreePaths(root) {
+    const rootReal = await realpath(root);
     const out = await git(['worktree', 'list', '--porcelain'], root);
     const paths = [];
     for (const line of out.split('\n')) {
         if (!line.startsWith('worktree '))
             continue;
         const abs = line.slice('worktree '.length).trim();
-        const rel = path.relative(root, abs).split(path.sep).join('/');
+        const absReal = await realpath(abs);
+        const rel = path.relative(rootReal, absReal).split(path.sep).join('/');
         paths.push(rel);
     }
     return paths;
