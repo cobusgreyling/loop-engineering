@@ -76,7 +76,13 @@ npx @cobusgreyling/loop-audit . --badge
 
 Agents can query patterns, skills, and state on demand instead of stuffing docs into every prompt. Copy the config stub from [examples/mcp/loop-engineering.mcp.json](../examples/mcp/loop-engineering.mcp.json) into your MCP client settings.
 
-**npm publish is pending** — run the server from a cloned `loop-engineering` repo for now:
+Run the server from npm (no clone required):
+
+```bash
+LOOP_PROJECT_ROOT=. npx @cobusgreyling/loop-mcp-server
+```
+
+Or from a cloned `loop-engineering` repo for local development:
 
 ```bash
 cd path/to/loop-engineering/tools/mcp-server && npm ci && npm run build
@@ -173,6 +179,9 @@ npx @cobusgreyling/loop-audit . --suggest
 
 # Optional badge for your README
 npx @cobusgreyling/loop-audit . --badge
+
+# Optional MCP runtime lookup (patterns, skills, state on demand)
+LOOP_PROJECT_ROOT=. npx @cobusgreyling/loop-mcp-server
 ```
 
 ## Learn the why (optional, 10 minutes)
