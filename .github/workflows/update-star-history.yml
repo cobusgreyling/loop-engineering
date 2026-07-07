@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+  statuses: write
 
 jobs:
   update:
@@ -21,9 +23,96 @@ jobs:
           gh auth setup-git
           python3 scripts/generate-star-history.py
 
-      - name: Commit chart if changed
-        uses: stefanzweifel/git-auto-commit-action@v7
+      - name: Run validate gates (for PR status)
+        id: validate_gates
+        continue-on-error: true
+        run: bash scripts/ci-validate-gates.sh
+
+      - name: Run audit gates (for PR status)
+        id: audit_gates
+        continue-on-error: true
+        run: bash scripts/ci-audit-gates.sh
+
+      - name: Fail the run if either gate failed
+        if: steps.validate_gates.outcome == 'failure' || steps.audit_gates.outcome == 'failure'
+        run: |
+          echo "validate gates: ${{ steps.validate_gates.outcome }}"
+          echo "audit gates:    ${{ steps.audit_gates.outcome }}"
+          echo "One or more dogfood gates failed — not opening an automated PR."
+          exit 1
+
+      - name: Open PR for chart SVGs if changed
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet assets/visuals/star-history.svg assets/visuals/star-history-dark.svg; then
+            echo "No chart changes — skip PR"
+            echo "opened=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BRANCH="automated/star-history-$(date -u +%Y-%m-%d)"
+          git fetch origin main "$BRANCH" 2>/dev/null || git fetch origin main
+          git checkout -B "$BRANCH"
+          git add assets/visuals/star-history.svg assets/visuals/star-history-dark.svg
+          git commit -m "chore: update star-history chart SVGs"
+          if git rev-parse --verify "refs/remotes/origin/${BRANCH}" >/dev/null 2>&1; then
+            git rebase "origin/${BRANCH}"
+          fi
+          git push -u origin "$BRANCH" --force-with-lease
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "opened=true" >> "$GITHUB_OUTPUT"
+
+          EXISTING=$(gh pr list --head "${{ github.repository_owner }}:${BRANCH}" --base main --state open --json number -q '.[0].number' 2>/dev/null || true)
+          if [ -n "$EXISTING" ] && [ "$EXISTING" != "null" ]; then
+            echo "PR #$EXISTING already open"
+            PR_NUMBER="$EXISTING"
+          else
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore: update star-history chart $(date -u +%Y-%m-%d)" \
+              --body "Automated star-history SVG refresh from \`update-star-history.yml\`.
+
+          Branch protection requires PR merge — direct pushes to \`main\` are blocked."
+            PR_NUMBER=$(gh pr view "$BRANCH" --json number -q '.number')
+          fi
+          echo "number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+          gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
+
+      - name: Post required commit statuses for branch protection
+        if: steps.pr.outputs.opened == 'true'
+        uses: actions/github-script@v9
         with:
-          commit_message: 'chore: update star-history chart SVGs'
-          file_pattern: assets/visuals/star-history.svg assets/visuals/star-history-dark.svg
-          branch: main
+          script: |
+            const sha = '${{ steps.pr.outputs.head_sha }}';
+            if (!sha) {
+              core.setFailed('Missing head_sha for commit statuses');
+              return;
+            }
+            const toState = (outcome) => (outcome === 'success' ? 'success' : 'failure');
+            const checks = [
+              {
+                context: 'validate',
+                description: 'Pattern/registry gates (star-history inline)',
+                state: toState('${{ steps.validate_gates.outcome }}'),
+              },
+              {
+                context: 'audit',
+                description: 'Loop readiness gates (star-history inline)',
+                state: toState('${{ steps.audit_gates.outcome }}'),
+              },
+            ];
+            for (const check of checks) {
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha,
+                ...check,
+              });
+            }

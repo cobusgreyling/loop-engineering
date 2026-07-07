@@ -15,8 +15,6 @@ Same patterns, different tools. Skills and state schemas are shared; only schedu
 | GitHub Actions | [github-actions/](./github-actions/) |
 | Aider CLI | [primitives-matrix § Aider](../docs/primitives-matrix.md#appendix-aider-cli) — CLI-first loops via cron + `--read` skills |
 | MCP connectors | [mcp/](./mcp/) — config example; reference server in [tools/mcp-server/](../tools/mcp-server/) |
-| Hermes | [hermes/](./hermes/) |
-| Aider | [Aider CLI](../docs/primitives-matrix.md#aider-cli) — CLI-first loops via cron + `--read` skills |
 
 Start with [primitives-matrix.md](../docs/primitives-matrix.md) to map capabilities.
 
@@ -42,4 +40,5 @@ L2 patterns ship multi-tool skills inside one starter folder — see `starters/<
 | Claude Code | [minimal-loop-claude](../starters/minimal-loop-claude/) | via `loop-init --tool claude` | via `loop-init --tool claude` | via `loop-init --tool claude` | via `loop-init --tool claude` | via `loop-init --tool claude` | via `loop-init --tool claude` |
 | Codex | [minimal-loop-codex](../starters/minimal-loop-codex/) | via `loop-init --tool codex` | via `loop-init --tool codex` | via `loop-init --tool codex` | via `loop-init --tool codex` | via `loop-init --tool codex` | via `loop-init --tool codex` |
 | OpenClaw | [openclaw/daily-triage.md](./openclaw/daily-triage.md) (manual) | [openclaw/pr-babysitter.md](./openclaw/pr-babysitter.md) | [openclaw/ci-sweeper.md](./openclaw/ci-sweeper.md) | [openclaw/dependency-sweeper.md](./openclaw/dependency-sweeper.md) | [openclaw/post-merge-cleanup.md](./openclaw/post-merge-cleanup.md) | [openclaw/changelog-drafter.md](./openclaw/changelog-drafter.md) | [openclaw/issue-triage.md](./openclaw/issue-triage.md) |
+| Hermes | [hermes/daily-triage.md](./hermes/daily-triage.md) (manual) | — | — | — | — | — | — |
 | Opencode | [minimal-loop-opencode](../starters/minimal-loop-opencode/) | [pr-babysitter-opencode](../starters/pr-babysitter-opencode/) | [ci-sweeper-opencode](../starters/ci-sweeper-opencode/) | [dependency-sweeper-opencode](../starters/dependency-sweeper-opencode/) | [post-merge-cleanup-opencode](../starters/post-merge-cleanup-opencode/) | [changelog-drafter-opencode](../starters/changelog-drafter-opencode/) | [issue-triage-opencode](../starters/issue-triage-opencode/) |

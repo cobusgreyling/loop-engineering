@@ -121,6 +121,12 @@ opencode run "Run loop-triage. Read STATE.md first. Update High Priority and Wat
 
 See [examples/opencode/daily-triage.md](../examples/opencode/daily-triage.md) for worktree + verifier patterns (L2+).
 
+### Hermes
+
+No `loop-init --tool hermes` yet — install the `loop-triage` skill manually and schedule via `hermes cron`. See [examples/hermes/daily-triage.md](../examples/hermes/daily-triage.md) for setup, channel delivery, and the full command reference.
+
+Week one: use `--deliver local` so routine triage output stays out of your chat history until you trust it.
+
 ### Cursor
 
 No `loop-init --tool cursor` yet — copy skills and state from any starter, then map scheduling to editor Automations. See [examples/cursor/daily-triage.md](../examples/cursor/daily-triage.md).
