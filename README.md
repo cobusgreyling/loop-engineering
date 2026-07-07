@@ -285,7 +285,7 @@ MIT
 </p>
 
 <p align="center">
-  <a href="https://www.star-history.com/?repos=cobusgreyling%2Floop-engineering&type=timeline&legend=top-left">
+  <a href="https://cobusgreyling.github.io/loop-engineering/star-history.html">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/visuals/star-history-dark.svg" />
       <source media="(prefers-color-scheme: light)" srcset="assets/visuals/star-history.svg" />
@@ -293,3 +293,4 @@ MIT
     </picture>
   </a>
 </p>
+<p align="center"><sub>Static chart (CI-updated daily). <a href="https://cobusgreyling.github.io/loop-engineering/star-history.html">Live chart</a> needs a GitHub token — stored in your browser only.</sub></p>

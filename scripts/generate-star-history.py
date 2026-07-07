@@ -4,6 +4,8 @@
 Used while api.star-history.com live embeds are unavailable (GitHub restricted
 stargazer API access for third-party services, Jul 2026). Runs in CI with
 GITHUB_TOKEN (repo collaborator) or locally with gh auth / GH_TOKEN.
+
+Interactive browser UI (token in localStorage): docs/star-history.html
 """
 
 from __future__ import annotations

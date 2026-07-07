@@ -1,0 +1,430 @@
+---
+layout: null
+title: Star History — Loop Engineering
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Star History — Loop Engineering</title>
+  <meta name="description" content="View GitHub star growth for loop-engineering. Token stays in your browser — never sent to our servers.">
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/showcase.css">
+  <link rel="icon" href="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg">
+  <style>
+    .star-page { padding: 48px 0 80px; }
+    .star-page h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); letter-spacing: -0.03em; margin-bottom: 12px; }
+    .star-lead { color: var(--text-muted); max-width: 62ch; margin-bottom: 28px; }
+    .star-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .star-input {
+      flex: 1 1 280px;
+      min-width: 0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      font: inherit;
+    }
+    .star-chart-wrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      padding: 16px;
+      min-height: 380px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .star-chart-wrap svg { max-width: 100%; height: auto; }
+    .star-status {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .star-status.error { color: #ff8a8a; }
+    .token-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .token-badge.ok { border-color: rgba(62, 232, 197, 0.35); color: var(--accent); }
+    .token-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(4, 8, 14, 0.72);
+      backdrop-filter: blur(6px);
+    }
+    .token-overlay.open { display: flex; }
+    .token-panel {
+      width: min(560px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+      padding: 28px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+    .token-panel h2 { font-size: 1.25rem; margin-bottom: 14px; }
+    .token-panel p { color: var(--text-muted); margin-bottom: 14px; font-size: 0.95rem; }
+    .token-panel ul { margin: 0 0 16px 1.2rem; color: var(--text-muted); font-size: 0.92rem; }
+    .token-panel li { margin-bottom: 8px; }
+    .token-panel label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .token-panel input[type="password"],
+    .token-panel input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      font: inherit;
+      margin-bottom: 18px;
+    }
+    .token-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .token-note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 179, 71, 0.25);
+      background: rgba(255, 179, 71, 0.08);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    .static-fallback { text-align: center; }
+    .static-fallback img { max-width: 100%; border-radius: 8px; }
+    .static-fallback p { margin-top: 12px; font-size: 0.88rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a href="{{ site.baseurl }}/" class="logo">
+      <img src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg" alt="" width="28" height="28" style="vertical-align:-6px;margin-right:8px;border-radius:6px;" />
+      Loop <span>Engineering</span>
+    </a>
+    <div class="nav-menu">
+      <ul class="nav-links">
+        <li><a href="{{ site.baseurl }}/">Showcase</a></li>
+        <li><a href="https://github.com/cobusgreyling/loop-engineering/blob/main/README.md">README</a></li>
+        <li><a href="https://github.com/cobusgreyling/loop-engineering">GitHub</a></li>
+      </ul>
+      <button type="button" class="btn btn-ghost" id="open-token-btn">Add access token</button>
+      <a href="https://github.com/cobusgreyling/loop-engineering" class="btn btn-primary">View Repo</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap star-page">
+  <p class="section-label">Community</p>
+  <h1>Star history</h1>
+  <p class="star-lead">
+    Track how <code>cobusgreyling/loop-engineering</code> grew on GitHub. Live data needs your token —
+    the static chart in the README is refreshed daily by CI.
+  </p>
+
+  <div class="star-toolbar">
+    <input
+      type="text"
+      id="repo-input"
+      class="star-input"
+      value="cobusgreyling/loop-engineering"
+      placeholder="owner/repo"
+      spellcheck="false"
+      autocomplete="off"
+    />
+    <button type="button" class="btn btn-primary" id="load-chart-btn">View star history</button>
+    <span id="token-badge" class="token-badge">No token saved</span>
+  </div>
+
+  <div class="star-chart-wrap" id="chart-wrap">
+    <div class="static-fallback" id="static-fallback">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history-dark.svg" />
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history.svg" />
+        <img alt="Star history chart (static, CI-updated)" src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history.svg" />
+      </picture>
+      <p>Static chart from the repo. Add a token to load live data from the GitHub API.</p>
+    </div>
+  </div>
+  <p class="star-status" id="status" aria-live="polite"></p>
+</main>
+
+<div class="token-overlay" id="token-overlay" role="dialog" aria-modal="true" aria-labelledby="token-title">
+  <div class="token-panel">
+    <h2 id="token-title">GitHub access token</h2>
+    <p>
+      Star-history reads star data from the GitHub API. GitHub now restricts starred data to a
+      repository's own admins and collaborators, so star history is only available for repos you
+      own or collaborate on — and you'll need an access token that can read them.
+    </p>
+    <p>
+      Create a
+      <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">fine-grained token</a>
+      with only <strong>Metadata → Read-only</strong> permission (all the stargazers endpoint needs),
+      or a
+      <a href="https://github.com/settings/tokens/new?scopes=public_repo&amp;description=loop-engineering-star-history" target="_blank" rel="noopener noreferrer">classic token</a>
+      with the <code>public_repo</code> scope, then paste it below.
+      <a href="https://www.star-history.com/blog/how-to-use-github-star-history#how-to-add-your-github-access-token" target="_blank" rel="noopener noreferrer">More details</a>.
+    </p>
+    <p><strong>A token with no scopes no longer works</strong>, even for your own repositories.</p>
+    <ul>
+      <li><strong>Fine-grained (recommended):</strong> Repository access → this repo (or All repositories). Permissions → Metadata → Read-only only.</li>
+      <li><strong>Classic:</strong> tick <code>public_repo</code> — also works for repos you collaborate on.</li>
+    </ul>
+    <label for="token-input">Access Token (will be stored in your local storage)</label>
+    <input
+      type="password"
+      id="token-input"
+      placeholder="ghp_… or github_pat_…"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <div class="token-actions">
+      <button type="button" class="btn btn-primary" id="save-token-btn">Save token</button>
+      <button type="button" class="btn btn-ghost" id="clear-token-btn">Clear saved token</button>
+      <button type="button" class="btn btn-ghost" id="close-token-btn">Close</button>
+    </div>
+    <p class="token-note">
+      Your token is stored only in this browser's <code>localStorage</code> — it is never sent to
+      Loop Engineering servers. Chart requests go directly from your browser to GitHub's API.
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'loop-engineering:github-star-history-token';
+  const overlay = document.getElementById('token-overlay');
+  const tokenInput = document.getElementById('token-input');
+  const tokenBadge = document.getElementById('token-badge');
+  const chartWrap = document.getElementById('chart-wrap');
+  const staticFallback = document.getElementById('static-fallback');
+  const statusEl = document.getElementById('status');
+  const repoInput = document.getElementById('repo-input');
+
+  function getToken() {
+    return localStorage.getItem(STORAGE_KEY) || '';
+  }
+
+  function setToken(value) {
+    const trimmed = (value || '').trim();
+    if (trimmed) localStorage.setItem(STORAGE_KEY, trimmed);
+    else localStorage.removeItem(STORAGE_KEY);
+    updateBadge();
+  }
+
+  function updateBadge() {
+    const token = getToken();
+    if (token) {
+      tokenBadge.textContent = 'Token saved locally';
+      tokenBadge.classList.add('ok');
+    } else {
+      tokenBadge.textContent = 'No token saved';
+      tokenBadge.classList.remove('ok');
+    }
+  }
+
+  function openTokenPanel() {
+    tokenInput.value = getToken();
+    overlay.classList.add('open');
+    tokenInput.focus();
+  }
+
+  function closeTokenPanel() {
+    overlay.classList.remove('open');
+  }
+
+  function parseRepo(value) {
+    const raw = (value || '').trim();
+    if (!raw) return null;
+    const urlMatch = raw.match(/github\.com\/([^/]+)\/([^/#?]+)/i);
+    if (urlMatch) return { owner: urlMatch[1], repo: urlMatch[2].replace(/\.git$/, '') };
+    const parts = raw.split('/').filter(Boolean);
+    if (parts.length >= 2) return { owner: parts[0], repo: parts[1].replace(/\.git$/, '') };
+    return null;
+  }
+
+  function setStatus(message, isError) {
+    statusEl.textContent = message || '';
+    statusEl.classList.toggle('error', !!isError);
+  }
+
+  async function fetchStarTimestamps(owner, repo, token) {
+    const timestamps = [];
+    let page = 1;
+    while (true) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/stargazers?per_page=100&page=${page}`;
+      const res = await fetch(url, {
+        headers: {
+          Accept: 'application/vnd.github.v3.star+json',
+          Authorization: `Bearer ${token}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      });
+      if (res.status === 401) throw new Error('Token rejected (401). Create a new token with Metadata read or public_repo scope.');
+      if (res.status === 403) throw new Error('Rate limited or forbidden (403). Wait a minute or check token permissions.');
+      if (res.status === 404) throw new Error('Repository not found or stargazers hidden (404). You must own or collaborate on this repo.');
+      if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) break;
+      for (const row of data) {
+        if (row.starred_at) timestamps.push(new Date(row.starred_at));
+      }
+      const link = res.headers.get('Link') || '';
+      if (!link.includes('rel="next"')) break;
+      page += 1;
+      if (page > 500) break;
+    }
+    timestamps.sort((a, b) => a - b);
+    return timestamps;
+  }
+
+  function buildSeries(timestamps) {
+    if (!timestamps.length) return [[new Date(), 0]];
+    return timestamps.map((ts, i) => [ts, i + 1]);
+  }
+
+  function escapeXml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function renderSvg(series, repoLabel, dark) {
+    const width = 900;
+    const height = 360;
+    const margin = { top: 36, right: 28, bottom: 52, left: 64 };
+    const plotW = width - margin.left - margin.right;
+    const plotH = height - margin.top - margin.bottom;
+    const bg = dark ? '#0d1117' : '#ffffff';
+    const fg = dark ? '#e6edf3' : '#24292f';
+    const grid = dark ? '#30363d' : '#d0d7de';
+    const line = dark ? '#3ee8c5' : '#0969da';
+    const accent = dark ? '#58d5c4' : '#0550ae';
+
+    const start = series[0][0];
+    const end = series[series.length - 1][0];
+    const maxStars = series[series.length - 1][1];
+    const span = Math.max(end - start, 1);
+
+    const xPos = (ts) => margin.left + ((ts - start) / span) * plotW;
+    const yPos = (count) => margin.top + plotH - (count / Math.max(maxStars, 1)) * plotH;
+
+    const points = series.map(([ts, count]) => `${xPos(ts).toFixed(1)},${yPos(count).toFixed(1)}`).join(' ');
+    const areaPoints = `${margin.left},${margin.top + plotH} ${points} ${margin.left + plotW},${margin.top + plotH}`;
+
+    const yStep = maxStars > 1000
+      ? Math.max(500, (Math.floor(maxStars / 4 / 500) + 1) * 500)
+      : Math.max(100, (Math.floor(maxStars / 4 / 100) + 1) * 100);
+
+    let yTicks = '';
+    for (let value = 0; value <= maxStars; value += yStep) {
+      const y = yPos(value);
+      yTicks += `<line x1="${margin.left - 4}" y1="${y.toFixed(1)}" x2="${margin.left}" y2="${y.toFixed(1)}" stroke="${grid}" />`;
+      yTicks += `<text x="${margin.left - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="${fg}" font-family="ui-sans-serif, system-ui, sans-serif">${value.toLocaleString()}</text>`;
+    }
+
+    const updated = new Date().toISOString().slice(0, 10);
+    const legend = `<text x="${margin.left}" y="22" font-size="13" font-weight="600" fill="${fg}" font-family="ui-sans-serif, system-ui, sans-serif">${escapeXml(repoLabel)}</text>`
+      + `<text x="${margin.left}" y="38" font-size="11" fill="${fg}" font-family="ui-sans-serif, system-ui, sans-serif">${maxStars.toLocaleString()} stars · live · ${updated}</text>`;
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Star history for ${escapeXml(repoLabel)}">
+  <rect width="100%" height="100%" fill="${bg}" rx="8"/>
+  ${legend}
+  <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" stroke="${grid}"/>
+  <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotH}" stroke="${grid}"/>
+  ${yTicks}
+  <polygon points="${areaPoints}" fill="${accent}" fill-opacity="0.12"/>
+  <polyline points="${points}" fill="none" stroke="${line}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="${xPos(end).toFixed(1)}" cy="${yPos(maxStars).toFixed(1)}" r="4" fill="${line}"/>
+</svg>`;
+  }
+
+  function prefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  async function loadChart() {
+    const parsed = parseRepo(repoInput.value);
+    if (!parsed) {
+      setStatus('Enter a repo as owner/repo or a full GitHub URL.', true);
+      return;
+    }
+    const token = getToken();
+    if (!token) {
+      setStatus('Add an access token first — required since GitHub restricted the stargazers API.', true);
+      openTokenPanel();
+      return;
+    }
+
+    const repoLabel = `${parsed.owner}/${parsed.repo}`;
+    setStatus(`Loading stargazers for ${repoLabel}…`);
+    staticFallback.style.display = 'none';
+
+    try {
+      const timestamps = await fetchStarTimestamps(parsed.owner, parsed.repo, token);
+      const series = buildSeries(timestamps);
+      const svg = renderSvg(series, repoLabel, prefersDark());
+      chartWrap.innerHTML = svg;
+      setStatus(`Loaded ${timestamps.length.toLocaleString()} stars for ${repoLabel}.`);
+    } catch (err) {
+      chartWrap.innerHTML = '';
+      staticFallback.style.display = '';
+      chartWrap.appendChild(staticFallback);
+      setStatus(err.message || String(err), true);
+    }
+  }
+
+  document.getElementById('open-token-btn').addEventListener('click', openTokenPanel);
+  document.getElementById('close-token-btn').addEventListener('click', closeTokenPanel);
+  document.getElementById('save-token-btn').addEventListener('click', () => {
+    setToken(tokenInput.value);
+    closeTokenPanel();
+    setStatus('Token saved in local storage.');
+  });
+  document.getElementById('clear-token-btn').addEventListener('click', () => {
+    setToken('');
+    tokenInput.value = '';
+    setStatus('Saved token cleared.');
+  });
+  document.getElementById('load-chart-btn').addEventListener('click', loadChart);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeTokenPanel(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeTokenPanel();
+  });
+
+  updateBadge();
+
+  if (new URLSearchParams(location.search).get('token') === '1') openTokenPanel();
+})();
+</script>
+</body>
+</html>
