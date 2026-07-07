@@ -7,226 +7,173 @@ title: Star History — Loop Engineering
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Star History — Loop Engineering</title>
-  <meta name="description" content="View GitHub star growth for loop-engineering. Token stays in your browser — never sent to our servers.">
-  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/showcase.css">
+  <title>GitHub Star History — Loop Engineering</title>
+  <meta name="description" content="View and compare GitHub star history for loop-engineering and other repos you own.">
+  <meta name="theme-color" content="#363636">
   <link rel="icon" href="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg">
-  <style>
-    .star-page { padding: 48px 0 80px; }
-    .star-page h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); letter-spacing: -0.03em; margin-bottom: 12px; }
-    .star-lead { color: var(--text-muted); max-width: 62ch; margin-bottom: 28px; }
-    .star-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    .star-input {
-      flex: 1 1 280px;
-      min-width: 0;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: var(--text);
-      font: inherit;
-    }
-    .star-chart-wrap {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--bg-card);
-      padding: 16px;
-      min-height: 380px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .star-chart-wrap svg { max-width: 100%; height: auto; }
-    .star-status {
-      margin-top: 16px;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-    .star-status.error { color: #ff8a8a; }
-    .token-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--bg-elevated);
-      font-size: 0.82rem;
-      color: var(--text-muted);
-    }
-    .token-badge.ok { border-color: rgba(62, 232, 197, 0.35); color: var(--accent); }
-    .token-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: rgba(4, 8, 14, 0.72);
-      backdrop-filter: blur(6px);
-    }
-    .token-overlay.open { display: flex; }
-    .token-panel {
-      width: min(560px, 100%);
-      max-height: 90vh;
-      overflow: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--bg-elevated);
-      padding: 28px;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-    }
-    .token-panel h2 { font-size: 1.25rem; margin-bottom: 14px; }
-    .token-panel p { color: var(--text-muted); margin-bottom: 14px; font-size: 0.95rem; }
-    .token-panel ul { margin: 0 0 16px 1.2rem; color: var(--text-muted); font-size: 0.92rem; }
-    .token-panel li { margin-bottom: 8px; }
-    .token-panel label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--text);
-    }
-    .token-panel input[type="password"],
-    .token-panel input[type="text"] {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: var(--text);
-      font: inherit;
-      margin-bottom: 18px;
-    }
-    .token-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-    .token-note {
-      margin-top: 16px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 179, 71, 0.25);
-      background: rgba(255, 179, 71, 0.08);
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-    .static-fallback { text-align: center; }
-    .static-fallback img { max-width: 100%; border-radius: 8px; }
-    .static-fallback p { margin-top: 12px; font-size: 0.88rem; color: var(--text-muted); }
-  </style>
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/star-history.css">
 </head>
 <body>
 
-<nav class="nav">
-  <div class="wrap nav-inner">
-    <a href="{{ site.baseurl }}/" class="logo">
-      <img src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg" alt="" width="28" height="28" style="vertical-align:-6px;margin-right:8px;border-radius:6px;" />
-      Loop <span>Engineering</span>
-    </a>
-    <div class="nav-menu">
-      <ul class="nav-links">
-        <li><a href="{{ site.baseurl }}/">Showcase</a></li>
-        <li><a href="https://github.com/cobusgreyling/loop-engineering/blob/main/README.md">README</a></li>
-        <li><a href="https://github.com/cobusgreyling/loop-engineering">GitHub</a></li>
-      </ul>
-      <button type="button" class="btn btn-ghost" id="open-token-btn">Add access token</button>
-      <a href="https://github.com/cobusgreyling/loop-engineering" class="btn btn-primary">View Repo</a>
-    </div>
-  </div>
+<nav class="sh-banner">
+  <p>
+    🚨 GitHub restricts star data to repo admins & collaborators —
+    <a href="https://www.star-history.com/blog/github-stargazer-api-restriction" target="_blank" rel="noopener noreferrer">what it means</a>
+    · add a token via <button type="button" class="sh-clear-all" id="banner-token-btn" style="color:#fff;text-decoration:underline;">settings</button>
+  </p>
 </nav>
 
-<main class="wrap star-page">
-  <p class="section-label">Community</p>
-  <h1>Star history</h1>
-  <p class="star-lead">
-    Track how <code>cobusgreyling/loop-engineering</code> grew on GitHub. Live data needs your token —
-    the static chart in the README is refreshed daily by CI.
-  </p>
+<header class="sh-header">
+  <div class="sh-header-inner">
+    <div class="sh-header-left">
+      <a href="{{ site.baseurl }}/star-history.html" class="sh-logo" title="Star History">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <defs>
+            <filter id="xkcd-logo" filterUnits="userSpaceOnUse" x="-2" y="-2" width="28" height="28">
+              <feTurbulence type="fractalNoise" baseFrequency="0.04" result="noise"/>
+              <feDisplacementMap scale="2.5" xChannelSelector="R" yChannelSelector="G" in="SourceGraphic" in2="noise"/>
+            </filter>
+          </defs>
+          <g filter="url(#xkcd-logo)" stroke="#fff" stroke-width="1.4" fill="#fff">
+            <polygon points="12,2 15,9 22,9 16,14 18,22 12,17 6,22 8,14 2,9 9,9"/>
+          </g>
+        </svg>
+        <span>Star History</span>
+      </a>
+      <a href="https://www.star-history.com/compare" class="sh-nav-link hidden-md" target="_blank" rel="noopener noreferrer">Compare</a>
+    </div>
+    <div class="sh-header-center">
+      <a href="{{ site.baseurl }}/" class="sh-nav-link">Loop Engineering</a>
+      <a href="https://www.star-history.com/" class="sh-nav-link" target="_blank" rel="noopener noreferrer">star-history.com</a>
+    </div>
+    <div class="sh-header-right">
+      <button type="button" class="sh-icon-btn" id="open-token-btn" aria-label="Settings — access token" title="Access token">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+      </button>
+      <a href="https://github.com/cobusgreyling/loop-engineering" class="sh-icon-btn" target="_blank" rel="noopener noreferrer" aria-label="GitHub repo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1.5C6.2 1.5 1.5 6.2 1.5 12c0 4.6 3 8.6 7.2 10 .5.1.7-.2.7-.5v-1.8c-2.9.6-3.5-1.4-3.5-1.4-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.8.8.1-.6.3-1.1.6-1.3-2.3-.3-4.8-1.2-4.8-5.2 0-1.1.4-2.1 1-2.8-.1-.3-.5-1.3.1-2.8 0 0 .8-.3 2.7 1 .8-.2 1.6-.3 2.5-.3s1.7.1 2.5.3c1.9-1.3 2.7-1 2.7-1 .6 1.5.2 2.5.1 2.8.6.7 1 1.7 1 2.8 0 4-2.5 4.9-4.8 5.2.4.3.7 1 .7 2v3c0 .3.2.6.7.5 4.2-1.4 7.2-5.4 7.2-10C22.5 6.2 17.8 1.5 12 1.5z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</header>
 
-  <div class="star-toolbar">
+<main class="sh-main">
+  <div class="sh-search-row">
     <input
       type="text"
       id="repo-input"
-      class="star-input"
-      value="cobusgreyling/loop-engineering"
-      placeholder="owner/repo"
+      class="sh-search-input"
+      placeholder="Enter GitHub repo — e.g. cobusgreyling/loop-engineering"
       spellcheck="false"
       autocomplete="off"
     />
-    <button type="button" class="btn btn-primary" id="load-chart-btn">View star history</button>
-    <span id="token-badge" class="token-badge">No token saved</span>
+    <button type="button" class="sh-search-btn" id="load-chart-btn">View star history</button>
   </div>
 
-  <div class="star-chart-wrap" id="chart-wrap">
-    <div class="static-fallback" id="static-fallback">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history-dark.svg" />
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history.svg" />
-        <img alt="Star history chart (static, CI-updated)" src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history.svg" />
-      </picture>
-      <p>Static chart from the repo. Add a token to load live data from the GitHub API.</p>
+  <div class="sh-pills" id="pills-wrap">
+    <button type="button" class="sh-clear-all" id="clear-all-btn" hidden>Clear all</button>
+  </div>
+
+  <div class="sh-controls">
+    <label class="sh-control">
+      <input type="checkbox" id="align-timeline" />
+      Align timeline
+    </label>
+    <label class="sh-control">
+      <input type="checkbox" id="log-scale" />
+      Log scale
+    </label>
+    <div class="sh-control-group">
+      <span>Legend</span>
+      <label class="sh-control"><input type="radio" name="legend" value="top-left" checked /> Top left</label>
+      <label class="sh-control"><input type="radio" name="legend" value="bottom-right" /> Bottom right</label>
     </div>
   </div>
-  <p class="star-status" id="status" aria-live="polite"></p>
+
+  <div class="sh-chart-box" id="chart-wrap">
+    <div class="sh-empty" id="empty-state">
+      <strong>☝️ Enter a GitHub repo name to get started</strong>
+      Default: <code>cobusgreyling/loop-engineering</code> — add comma-separated repos to compare.
+      <div class="sh-static-fallback" style="margin-top:24px;">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history-dark.svg" />
+          <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history.svg" />
+          <img alt="Static star history (CI-updated daily)" src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/star-history.svg" />
+        </picture>
+        <p>Static chart from CI. Live data needs your token (settings ⚙).</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="sh-status" id="status" aria-live="polite"></p>
+
+  <div class="sh-exports">
+    <button type="button" class="sh-export-btn" id="export-png" disabled>Image</button>
+    <button type="button" class="sh-export-btn" id="export-csv" disabled>CSV</button>
+    <button type="button" class="sh-export-btn" id="export-link" disabled>Link</button>
+    <button type="button" class="sh-export-btn" id="export-share" disabled>Share</button>
+  </div>
+
+  <p class="sh-footer">
+    Inspired by <a href="https://www.star-history.com/" target="_blank" rel="noopener noreferrer">star-history.com</a>
+    · Part of <a href="{{ site.baseurl }}/">Loop Engineering</a>
+  </p>
 </main>
 
-<div class="token-overlay" id="token-overlay" role="dialog" aria-modal="true" aria-labelledby="token-title">
-  <div class="token-panel">
+<div class="sh-overlay" id="token-overlay" role="dialog" aria-modal="true" aria-labelledby="token-title">
+  <div class="sh-modal">
     <h2 id="token-title">GitHub access token</h2>
     <p>
-      Star-history reads star data from the GitHub API. GitHub now restricts starred data to a
-      repository's own admins and collaborators, so star history is only available for repos you
-      own or collaborate on — and you'll need an access token that can read them.
+      Star history reads from the GitHub API. Since mid-2026, stargazer data is limited to repos you
+      <strong>own or collaborate on</strong> — and requires a scoped token.
     </p>
     <p>
       Create a
       <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">fine-grained token</a>
-      with only <strong>Metadata → Read-only</strong> permission (all the stargazers endpoint needs),
+      with only <strong>Metadata → Read-only</strong>,
       or a
       <a href="https://github.com/settings/tokens/new?scopes=public_repo&amp;description=loop-engineering-star-history" target="_blank" rel="noopener noreferrer">classic token</a>
-      with the <code>public_repo</code> scope, then paste it below.
+      with <code>public_repo</code>.
       <a href="https://www.star-history.com/blog/how-to-use-github-star-history#how-to-add-your-github-access-token" target="_blank" rel="noopener noreferrer">More details</a>.
     </p>
-    <p><strong>A token with no scopes no longer works</strong>, even for your own repositories.</p>
+    <p><strong>Tokens with no scopes no longer work</strong>, even for your own repos.</p>
     <ul>
-      <li><strong>Fine-grained (recommended):</strong> Repository access → this repo (or All repositories). Permissions → Metadata → Read-only only.</li>
-      <li><strong>Classic:</strong> tick <code>public_repo</code> — also works for repos you collaborate on.</li>
+      <li><strong>Fine-grained:</strong> Repository access → this repo. Permissions → Metadata → Read-only.</li>
+      <li><strong>Classic:</strong> tick <code>public_repo</code>.</li>
     </ul>
-    <label for="token-input">Access Token (will be stored in your local storage)</label>
-    <input
-      type="password"
-      id="token-input"
-      placeholder="ghp_… or github_pat_…"
-      autocomplete="off"
-      spellcheck="false"
-    />
-    <div class="token-actions">
-      <button type="button" class="btn btn-primary" id="save-token-btn">Save token</button>
-      <button type="button" class="btn btn-ghost" id="clear-token-btn">Clear saved token</button>
-      <button type="button" class="btn btn-ghost" id="close-token-btn">Close</button>
+    <label for="token-input">Access token (stored in local storage only)</label>
+    <input type="password" id="token-input" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false" />
+    <div class="sh-modal-actions">
+      <button type="button" class="sh-btn sh-btn-primary" id="save-token-btn">Save token</button>
+      <button type="button" class="sh-btn sh-btn-ghost" id="clear-token-btn">Clear</button>
+      <button type="button" class="sh-btn sh-btn-ghost" id="close-token-btn">Close</button>
     </div>
-    <p class="token-note">
-      Your token is stored only in this browser's <code>localStorage</code> — it is never sent to
-      Loop Engineering servers. Chart requests go directly from your browser to GitHub's API.
-    </p>
+    <p class="sh-note">Never sent to Loop Engineering servers — chart requests go directly to GitHub.</p>
   </div>
 </div>
 
 <script>
 (function () {
   const STORAGE_KEY = 'loop-engineering:github-star-history-token';
+  const COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
+  const MAX_REPOS = 4;
+
   const overlay = document.getElementById('token-overlay');
   const tokenInput = document.getElementById('token-input');
-  const tokenBadge = document.getElementById('token-badge');
   const chartWrap = document.getElementById('chart-wrap');
-  const staticFallback = document.getElementById('static-fallback');
+  const emptyState = document.getElementById('empty-state');
   const statusEl = document.getElementById('status');
   const repoInput = document.getElementById('repo-input');
+  const pillsWrap = document.getElementById('pills-wrap');
+  const clearAllBtn = document.getElementById('clear-all-btn');
+
+  let repos = [];
+  let chartData = [];
 
   function getToken() {
     return localStorage.getItem(STORAGE_KEY) || '';
@@ -236,18 +183,6 @@ title: Star History — Loop Engineering
     const trimmed = (value || '').trim();
     if (trimmed) localStorage.setItem(STORAGE_KEY, trimmed);
     else localStorage.removeItem(STORAGE_KEY);
-    updateBadge();
-  }
-
-  function updateBadge() {
-    const token = getToken();
-    if (token) {
-      tokenBadge.textContent = 'Token saved locally';
-      tokenBadge.classList.add('ok');
-    } else {
-      tokenBadge.textContent = 'No token saved';
-      tokenBadge.classList.remove('ok');
-    }
   }
 
   function openTokenPanel() {
@@ -260,19 +195,39 @@ title: Star History — Loop Engineering
     overlay.classList.remove('open');
   }
 
-  function parseRepo(value) {
+  function parseRepos(value) {
     const raw = (value || '').trim();
-    if (!raw) return null;
-    const urlMatch = raw.match(/github\.com\/([^/]+)\/([^/#?]+)/i);
-    if (urlMatch) return { owner: urlMatch[1], repo: urlMatch[2].replace(/\.git$/, '') };
-    const parts = raw.split('/').filter(Boolean);
-    if (parts.length >= 2) return { owner: parts[0], repo: parts[1].replace(/\.git$/, '') };
-    return null;
+    if (!raw) return [];
+    return raw.split(/[,\s]+/).map((chunk) => {
+      const t = chunk.trim();
+      if (!t) return null;
+      const urlMatch = t.match(/github\.com\/([^/]+)\/([^/#?]+)/i);
+      if (urlMatch) return { owner: urlMatch[1], repo: urlMatch[2].replace(/\.git$/, '') };
+      const parts = t.split('/').filter(Boolean);
+      if (parts.length >= 2) return { owner: parts[0], repo: parts[1].replace(/\.git$/, '') };
+      return null;
+    }).filter(Boolean);
+  }
+
+  function repoKey(r) {
+    return `${r.owner}/${r.repo}`;
   }
 
   function setStatus(message, isError) {
     statusEl.textContent = message || '';
     statusEl.classList.toggle('error', !!isError);
+  }
+
+  function updateUrl() {
+    if (!repos.length) return;
+    const params = new URLSearchParams();
+    params.set('repos', repos.map(repoKey).join(','));
+    history.replaceState(null, '', `${location.pathname}?${params}`);
+  }
+
+  function readUrl() {
+    const q = new URLSearchParams(location.search).get('repos');
+    if (q) repoInput.value = q;
   }
 
   async function fetchStarTimestamps(owner, repo, token) {
@@ -287,9 +242,9 @@ title: Star History — Loop Engineering
           'X-GitHub-Api-Version': '2022-11-28',
         },
       });
-      if (res.status === 401) throw new Error('Token rejected (401). Create a new token with Metadata read or public_repo scope.');
-      if (res.status === 403) throw new Error('Rate limited or forbidden (403). Wait a minute or check token permissions.');
-      if (res.status === 404) throw new Error('Repository not found or stargazers hidden (404). You must own or collaborate on this repo.');
+      if (res.status === 401) throw new Error('Token rejected (401). Use Metadata read-only or public_repo.');
+      if (res.status === 403) throw new Error('Rate limited or forbidden (403). Wait or check token scopes.');
+      if (res.status === 404) throw new Error(`Not found or hidden (404): ${owner}/${repo}`);
       if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) break;
@@ -305,9 +260,13 @@ title: Star History — Loop Engineering
     return timestamps;
   }
 
-  function buildSeries(timestamps) {
+  function buildSeries(timestamps, alignTimeline) {
     if (!timestamps.length) return [[new Date(), 0]];
-    return timestamps.map((ts, i) => [ts, i + 1]);
+    const start = timestamps[0].getTime();
+    return timestamps.map((ts, i) => {
+      const x = alignTimeline ? (ts.getTime() - start) / 86400000 : ts;
+      return [x, i + 1];
+    });
   }
 
   function escapeXml(text) {
@@ -318,112 +277,305 @@ title: Star History — Loop Engineering
       .replace(/"/g, '&quot;');
   }
 
-  function renderSvg(series, repoLabel, dark) {
-    const width = 900;
-    const height = 360;
-    const margin = { top: 36, right: 28, bottom: 52, left: 64 };
-    const plotW = width - margin.left - margin.right;
-    const plotH = height - margin.top - margin.bottom;
-    const bg = dark ? '#0d1117' : '#ffffff';
-    const fg = dark ? '#e6edf3' : '#24292f';
-    const grid = dark ? '#30363d' : '#d0d7de';
-    const line = dark ? '#3ee8c5' : '#0969da';
-    const accent = dark ? '#58d5c4' : '#0550ae';
-
-    const start = series[0][0];
-    const end = series[series.length - 1][0];
-    const maxStars = series[series.length - 1][1];
-    const span = Math.max(end - start, 1);
-
-    const xPos = (ts) => margin.left + ((ts - start) / span) * plotW;
-    const yPos = (count) => margin.top + plotH - (count / Math.max(maxStars, 1)) * plotH;
-
-    const points = series.map(([ts, count]) => `${xPos(ts).toFixed(1)},${yPos(count).toFixed(1)}`).join(' ');
-    const areaPoints = `${margin.left},${margin.top + plotH} ${points} ${margin.left + plotW},${margin.top + plotH}`;
-
-    const yStep = maxStars > 1000
-      ? Math.max(500, (Math.floor(maxStars / 4 / 500) + 1) * 500)
-      : Math.max(100, (Math.floor(maxStars / 4 / 100) + 1) * 100);
-
-    let yTicks = '';
-    for (let value = 0; value <= maxStars; value += yStep) {
-      const y = yPos(value);
-      yTicks += `<line x1="${margin.left - 4}" y1="${y.toFixed(1)}" x2="${margin.left}" y2="${y.toFixed(1)}" stroke="${grid}" />`;
-      yTicks += `<text x="${margin.left - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="${fg}" font-family="ui-sans-serif, system-ui, sans-serif">${value.toLocaleString()}</text>`;
+  function formatXLabel(value, alignTimeline) {
+    if (alignTimeline) {
+      const days = Math.round(value);
+      return days === 0 ? 'Day 0' : `Day ${days}`;
     }
-
-    const updated = new Date().toISOString().slice(0, 10);
-    const legend = `<text x="${margin.left}" y="22" font-size="13" font-weight="600" fill="${fg}" font-family="ui-sans-serif, system-ui, sans-serif">${escapeXml(repoLabel)}</text>`
-      + `<text x="${margin.left}" y="38" font-size="11" fill="${fg}" font-family="ui-sans-serif, system-ui, sans-serif">${maxStars.toLocaleString()} stars · live · ${updated}</text>`;
-
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Star history for ${escapeXml(repoLabel)}">
-  <rect width="100%" height="100%" fill="${bg}" rx="8"/>
-  ${legend}
-  <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" stroke="${grid}"/>
-  <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotH}" stroke="${grid}"/>
-  ${yTicks}
-  <polygon points="${areaPoints}" fill="${accent}" fill-opacity="0.12"/>
-  <polyline points="${points}" fill="none" stroke="${line}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="${xPos(end).toFixed(1)}" cy="${yPos(maxStars).toFixed(1)}" r="4" fill="${line}"/>
-</svg>`;
+    const d = value instanceof Date ? value : new Date(value);
+    return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
   }
 
-  function prefersDark() {
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  function wigglePoints(points, seed) {
+    return points.split(' ').map((pair, i) => {
+      const [x, y] = pair.split(',').map(Number);
+      const jx = Math.sin(seed + i * 0.7) * 1.2;
+      const jy = Math.cos(seed + i * 1.1) * 1.2;
+      return `${(x + jx).toFixed(1)},${(y + jy).toFixed(1)}`;
+    }).join(' ');
+  }
+
+  function renderChart() {
+    const visible = chartData.filter((d) => d.visible && d.series.length);
+    if (!visible.length) {
+      chartWrap.innerHTML = '';
+      chartWrap.appendChild(emptyState);
+      emptyState.style.display = '';
+      document.getElementById('export-png').disabled = true;
+      document.getElementById('export-csv').disabled = true;
+      document.getElementById('export-link').disabled = true;
+      document.getElementById('export-share').disabled = true;
+      return;
+    }
+
+    const alignTimeline = document.getElementById('align-timeline').checked;
+    const logScale = document.getElementById('log-scale').checked;
+    const legendPos = document.querySelector('input[name="legend"]:checked')?.value || 'top-left';
+
+    const width = 920;
+    const height = 400;
+    const margin = { top: 48, right: 32, bottom: 56, left: 72 };
+    const plotW = width - margin.left - margin.right;
+    const plotH = height - margin.top - margin.bottom;
+
+    let xMin = Infinity;
+    let xMax = -Infinity;
+    let yMax = 1;
+
+    for (const entry of visible) {
+      const s = entry.series;
+      xMin = Math.min(xMin, s[0][0] instanceof Date ? s[0][0].getTime() : s[0][0]);
+      xMax = Math.max(xMax, s[s.length - 1][0] instanceof Date ? s[s.length - 1][0].getTime() : s[s.length - 1][0]);
+      yMax = Math.max(yMax, s[s.length - 1][1]);
+    }
+
+    const xSpan = Math.max(xMax - xMin, 1);
+    const xPos = (x) => {
+      const v = x instanceof Date ? x.getTime() : x;
+      const base = alignTimeline ? 0 : xMin;
+      return margin.left + ((v - base) / xSpan) * plotW;
+    };
+    const yPos = (count) => {
+      const v = logScale ? Math.log10(Math.max(count, 1)) : count;
+      const max = logScale ? Math.log10(Math.max(yMax, 1)) : yMax;
+      return margin.top + plotH - (v / Math.max(max, 1)) * plotH;
+    };
+
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" id="star-chart-svg" role="img">
+  <defs>
+    <filter id="xkcd-sketch" filterUnits="userSpaceOnUse" x="-4" y="-4" width="${width + 8}" height="${height + 8}">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise"/>
+      <feDisplacementMap scale="2.8" xChannelSelector="R" yChannelSelector="G" in="SourceGraphic" in2="noise"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#fff"/>
+  <g filter="url(#xkcd-sketch)" font-family="Patrick Hand, cursive">
+    <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" stroke="#333" stroke-width="1.5"/>
+    <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotH}" stroke="#333" stroke-width="1.5"/>`;
+
+    const yStep = yMax > 2000 ? Math.ceil(yMax / 4 / 500) * 500 : yMax > 500 ? 250 : yMax > 100 ? 100 : 25;
+    for (let v = 0; v <= yMax; v += yStep) {
+      const y = yPos(v);
+      svg += `<line x1="${margin.left - 5}" y1="${y.toFixed(1)}" x2="${margin.left}" y2="${y.toFixed(1)}" stroke="#999" stroke-width="1"/>`;
+      svg += `<text x="${margin.left - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="13" fill="#555">${v.toLocaleString()}</text>`;
+    }
+
+    const xTicks = 5;
+    for (let i = 0; i <= xTicks; i++) {
+      const t = xMin + (xSpan * i) / xTicks;
+      const x = xPos(alignTimeline ? t - xMin : t);
+      const label = formatXLabel(alignTimeline ? t - xMin : new Date(t), alignTimeline);
+      svg += `<text x="${x.toFixed(1)}" y="${(margin.top + plotH + 22).toFixed(1)}" text-anchor="middle" font-size="12" fill="#555">${escapeXml(label)}</text>`;
+    }
+
+    visible.forEach((entry, idx) => {
+      const color = entry.color;
+      const pts = entry.series.map(([x, c]) => `${xPos(x).toFixed(1)},${yPos(c).toFixed(1)}`).join(' ');
+      const wiggled = wigglePoints(pts, idx * 2.1 + 0.5);
+      svg += `<polyline points="${wiggled}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+      const last = entry.series[entry.series.length - 1];
+      svg += `<circle cx="${xPos(last[0]).toFixed(1)}" cy="${yPos(last[1]).toFixed(1)}" r="4" fill="${color}"/>`;
+    });
+
+    const legendBaseY = legendPos === 'bottom-right' ? margin.top + plotH - visible.length * 18 : margin.top + 12;
+    const legendX = legendPos === 'bottom-right' ? margin.left + plotW - 12 : margin.left + 12;
+    visible.forEach((entry, i) => {
+      const ly = legendBaseY + i * 18;
+      const dotX = legendPos === 'bottom-right' ? legendX - 120 : legendX;
+      const textX = legendPos === 'bottom-right' ? legendX : legendX + 14;
+      const anchor = legendPos === 'bottom-right' ? 'end' : 'start';
+      svg += `<circle cx="${dotX}" cy="${ly}" r="5" fill="${entry.color}"/>`;
+      svg += `<text x="${textX}" y="${ly + 4}" text-anchor="${anchor}" font-size="13" fill="#333">${escapeXml(entry.label)} (${entry.series[entry.series.length - 1][1].toLocaleString()})</text>`;
+    });
+
+    svg += `</g></svg>`;
+    chartWrap.innerHTML = svg;
+    document.getElementById('export-png').disabled = false;
+    document.getElementById('export-csv').disabled = false;
+    document.getElementById('export-link').disabled = false;
+    document.getElementById('export-share').disabled = false;
+  }
+
+  function renderPills() {
+    pillsWrap.querySelectorAll('.sh-pill').forEach((el) => el.remove());
+    repos.forEach((r, i) => {
+      const key = repoKey(r);
+      const entry = chartData.find((d) => d.key === key);
+      const pill = document.createElement('span');
+      pill.className = 'sh-pill' + (entry && !entry.visible ? ' hidden-series' : '');
+      pill.innerHTML = `<span class="sh-pill-dot" style="background:${COLORS[i % COLORS.length]}"></span><span>${key}</span><button type="button" class="sh-pill-remove" aria-label="Remove ${key}">×</button>`;
+      pill.addEventListener('click', (e) => {
+        if (e.target.closest('.sh-pill-remove')) return;
+        if (entry) {
+          entry.visible = !entry.visible;
+          renderPills();
+          renderChart();
+        }
+      });
+      pill.querySelector('.sh-pill-remove').addEventListener('click', (e) => {
+        e.stopPropagation();
+        repos = repos.filter((x) => repoKey(x) !== key);
+        chartData = chartData.filter((d) => d.key !== key);
+        repoInput.value = repos.map(repoKey).join(',');
+        renderPills();
+        renderChart();
+        updateUrl();
+      });
+      pillsWrap.insertBefore(pill, clearAllBtn);
+    });
+    clearAllBtn.hidden = repos.length === 0;
   }
 
   async function loadChart() {
-    const parsed = parseRepo(repoInput.value);
-    if (!parsed) {
-      setStatus('Enter a repo as owner/repo or a full GitHub URL.', true);
+    const parsed = parseRepos(repoInput.value);
+    if (!parsed.length) {
+      setStatus('Enter at least one repo as owner/repo.', true);
       return;
     }
+    if (parsed.length > MAX_REPOS) {
+      setStatus(`Compare up to ${MAX_REPOS} repos at once.`, true);
+      return;
+    }
+
     const token = getToken();
     if (!token) {
-      setStatus('Add an access token first — required since GitHub restricted the stargazers API.', true);
+      setStatus('Add an access token first (settings ⚙).', true);
       openTokenPanel();
       return;
     }
 
-    const repoLabel = `${parsed.owner}/${parsed.repo}`;
-    setStatus(`Loading stargazers for ${repoLabel}…`);
-    staticFallback.style.display = 'none';
+    repos = parsed;
+    updateUrl();
+    setStatus('Loading…');
+    emptyState.style.display = 'none';
+
+    const alignTimeline = document.getElementById('align-timeline').checked;
+    chartData = [];
 
     try {
-      const timestamps = await fetchStarTimestamps(parsed.owner, parsed.repo, token);
-      const series = buildSeries(timestamps);
-      const svg = renderSvg(series, repoLabel, prefersDark());
-      chartWrap.innerHTML = svg;
-      setStatus(`Loaded ${timestamps.length.toLocaleString()} stars for ${repoLabel}.`);
+      for (let i = 0; i < repos.length; i++) {
+        const r = repos[i];
+        const key = repoKey(r);
+        setStatus(`Loading ${key} (${i + 1}/${repos.length})…`);
+        const timestamps = await fetchStarTimestamps(r.owner, r.repo, token);
+        chartData.push({
+          key,
+          label: key,
+          color: COLORS[i % COLORS.length],
+          visible: true,
+          timestamps,
+          series: buildSeries(timestamps, alignTimeline),
+        });
+      }
+      renderPills();
+      renderChart();
+      const total = chartData.reduce((n, d) => n + d.timestamps.length, 0);
+      setStatus(`Loaded ${total.toLocaleString()} stars across ${chartData.length} repo(s).`);
     } catch (err) {
       chartWrap.innerHTML = '';
-      staticFallback.style.display = '';
-      chartWrap.appendChild(staticFallback);
+      chartWrap.appendChild(emptyState);
+      emptyState.style.display = '';
       setStatus(err.message || String(err), true);
     }
   }
 
+  function exportCsv() {
+    const rows = [['repo', 'date', 'cumulative_stars']];
+    for (const entry of chartData) {
+      entry.timestamps.forEach((ts, i) => {
+        rows.push([entry.label, ts.toISOString(), String(i + 1)]);
+      });
+    }
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'star-history.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function exportPng() {
+    const svg = document.getElementById('star-chart-svg');
+    if (!svg) return;
+    const xml = new XMLSerializer().serializeToString(svg);
+    const img = new Image();
+    const url = URL.createObjectURL(new Blob([xml], { type: 'image/svg+xml' }));
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = svg.width.baseVal.value * 2;
+      canvas.height = svg.height.baseVal.value * 2;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'star-history.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  function exportLink() {
+    updateUrl();
+    navigator.clipboard.writeText(location.href).then(() => setStatus('Link copied to clipboard.'));
+  }
+
+  function exportShare() {
+    const text = `Star history: ${repos.map(repoKey).join(', ')}`;
+    const url = location.href;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener');
+  }
+
   document.getElementById('open-token-btn').addEventListener('click', openTokenPanel);
+  document.getElementById('banner-token-btn').addEventListener('click', openTokenPanel);
   document.getElementById('close-token-btn').addEventListener('click', closeTokenPanel);
   document.getElementById('save-token-btn').addEventListener('click', () => {
     setToken(tokenInput.value);
     closeTokenPanel();
-    setStatus('Token saved in local storage.');
+    setStatus('Token saved locally.');
   });
   document.getElementById('clear-token-btn').addEventListener('click', () => {
     setToken('');
     tokenInput.value = '';
-    setStatus('Saved token cleared.');
+    setStatus('Token cleared.');
   });
   document.getElementById('load-chart-btn').addEventListener('click', loadChart);
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeTokenPanel(); });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeTokenPanel();
+  document.getElementById('clear-all-btn').addEventListener('click', () => {
+    repos = [];
+    chartData = [];
+    repoInput.value = '';
+    renderPills();
+    chartWrap.innerHTML = '';
+    chartWrap.appendChild(emptyState);
+    emptyState.style.display = '';
+    history.replaceState(null, '', location.pathname);
+    setStatus('');
   });
+  document.getElementById('align-timeline').addEventListener('change', () => {
+    const align = document.getElementById('align-timeline').checked;
+    chartData.forEach((d) => { d.series = buildSeries(d.timestamps, align); });
+    renderChart();
+  });
+  document.getElementById('log-scale').addEventListener('change', renderChart);
+  document.querySelectorAll('input[name="legend"]').forEach((el) => el.addEventListener('change', renderChart));
+  document.getElementById('export-png').addEventListener('click', exportPng);
+  document.getElementById('export-csv').addEventListener('click', exportCsv);
+  document.getElementById('export-link').addEventListener('click', exportLink);
+  document.getElementById('export-share').addEventListener('click', exportShare);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeTokenPanel(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTokenPanel(); });
+  repoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadChart(); });
 
-  updateBadge();
-
+  readUrl();
+  if (!repoInput.value) repoInput.value = 'cobusgreyling/loop-engineering';
   if (new URLSearchParams(location.search).get('token') === '1') openTokenPanel();
+  if (new URLSearchParams(location.search).get('repos')) loadChart();
 })();
 </script>
 </body>
