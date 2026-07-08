@@ -1,5 +1,6 @@
 # Loop Engineering
 
+[![Listed on TakoAPI](https://takoapi.com/api/badge/cobusgreyling-loop-engineering)](https://takoapi.com/agents/cobusgreyling-loop-engineering)
 
 <p align="center">
   <a href="https://cobusgreyling.github.io/loop-engineering/">
