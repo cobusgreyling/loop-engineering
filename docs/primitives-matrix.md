@@ -181,3 +181,30 @@ Report PASS/FAIL and do not edit files.
 ```
 
 After copying: map scheduling to manual Agent Panel threads, Terminal Threads, Zed Tasks, or an external scheduler until Zed has a richer first-class loop scheduler. Use `AGENTS.md` for always-on repo rules, `.agents/skills/<name>/SKILL.md` for reusable workflows, Agent Profiles / Tool Permissions for maker-checker separation, and MCP for external tools.
+
+## Appendix: Gemini CLI
+
+Gemini CLI is a terminal-based agent tool. Map the same loop primitives onto the `gemini` command, external schedulers, context files, and separate verification sessions.
+
+| Primitive | Gemini CLI mapping |
+|-----------|--------------------|
+| Scheduling | Use external schedulers such as cron, systemd timers, or GitHub Actions to invoke Gemini CLI workflows on a cadence. |
+| Skills / Context Files | Use project context files such as `GEMINI.md` and repository documentation to provide instructions, conventions, and background information. |
+| State | Keep persistent loop state in files such as `STATE.md.example`. Each run should read existing state, update only relevant sections, and preserve history. |
+| Maker/checker split | Use separate Gemini CLI sessions: one session creates changes, another reviews output, validates requirements, and checks the diff. |
+| Connectors | Use available MCP servers or external tools to provide additional context and capabilities. |
+
+### Week-one Daily Triage Example
+
+A Gemini CLI daily triage loop:
+
+1. Start Gemini CLI from the repository root.
+2. Read `STATE.md.example`.
+3. Review pending triage items.
+4. Update only triage sections.
+5. Do not edit source files during the first week.
+6. Save updated state for the next run.
+
+### Official Documentation
+
+https://github.com/google-gemini/gemini-cli

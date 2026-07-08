@@ -12,6 +12,7 @@ Same patterns, different tools. Skills and state schemas are shared; only schedu
 | Windsurf | [windsurf/](./windsurf/) |
 | Opencode | [opencode/](./opencode/) |
 | Hermes Agent | [hermes/](./hermes/) |
+| Gemini CLI | [primitives-matrix § Gemini CLI](../docs/primitives-matrix.md#appendix-gemini-cli) — terminal-based loops via `gemini` + external scheduling |
 | GitHub Actions | [github-actions/](./github-actions/) |
 | Aider CLI | [primitives-matrix § Aider](../docs/primitives-matrix.md#appendix-aider-cli) — CLI-first loops via cron + `--read` skills |
 | MCP connectors | [mcp/](./mcp/) — config example; reference server in [tools/mcp-server/](../tools/mcp-server/) |
