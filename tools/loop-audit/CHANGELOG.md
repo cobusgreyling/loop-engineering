@@ -2,6 +2,18 @@
 
 All notable changes to `@cobusgreyling/loop-audit` are documented here.
 
+## [1.6.0] - 2026-07-09
+
+### Added
+- Governance scoring signals: least-privilege tool scope, stall / no-progress detection, human-escalation path
+- `allowed-tools` frontmatter in `SKILL.md` detected as a least-privilege signal
+- `--suggest` recommendations when governance signals are missing
+
+## [1.5.3] - 2026-07-06
+
+### Added
+- Contributor quickstart CTA after CLI runs (skipped for `--json`, `--md`, and `--badge`)
+
 ## [1.5.2] - 2026-06-30
 
 ### Added

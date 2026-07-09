@@ -52,7 +52,7 @@ npm run build
 npm publish --access public
 ```
 
-## Signals Checked (v1.4+)
+## Signals Checked (v1.6+)
 
 | Signal                  | Notes |
 |-------------------------|-------|

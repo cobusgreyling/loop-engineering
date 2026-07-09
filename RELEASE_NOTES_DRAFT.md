@@ -1,12 +1,26 @@
 # Release notes draft — since `loop-mcp-server-v1.0.0`
 
-**Status:** Published to [Discussions](https://github.com/cobusgreyling/loop-engineering/discussions) on 2026-07-08. Archive copy for the next changelog-drafter run.
+**Status:** Published to [Discussions #219](https://github.com/cobusgreyling/loop-engineering/discussions/219) on 2026-07-08. Post-publish additions below (loop-audit 1.6.0). Archive copy for the next changelog-drafter run.
 
-**Window:** 2026-07-06 → 2026-07-08
+**Window:** 2026-07-06 → 2026-07-09
 
 ---
 
 ## Highlights
+
+### loop-audit 1.6.0 — governance scoring ([#233](https://github.com/cobusgreyling/loop-engineering/pull/233))
+
+Readiness scoring now checks multi-agent safety signals:
+
+- Least-privilege tool scope (`allowed-tools` in skills, scoped MCP)
+- Stall / no-progress detection (`loop-context`, circuit breaker, max attempts)
+- Human-escalation path (HITL, handoff language in `LOOP.md` / constraints)
+
+Tagged `loop-audit-v1.6.0`.
+
+```bash
+npx @cobusgreyling/loop-audit . --suggest
+```
 
 ### New on npm: `@cobusgreyling/loop-worktree` ([#190](https://github.com/cobusgreyling/loop-engineering/pull/190), [#204](https://github.com/cobusgreyling/loop-engineering/pull/204))
 
@@ -20,6 +34,13 @@ npx @cobusgreyling/loop-worktree cleanup --older-than 24h
 
 Thanks [@KhaiTrang1995](https://github.com/KhaiTrang1995).
 
+### Stories
+
+| PR | What shipped |
+|----|--------------|
+| [#234](https://github.com/cobusgreyling/loop-engineering/pull/234) | CI Sweeper infinite flaky-test failure story |
+| [#182](https://github.com/cobusgreyling/loop-engineering/pull/182) | Multi-loop coordination story (@k-anushka14) |
+
 ### Docs & examples
 
 | PR | Contributor | What shipped |
@@ -28,7 +49,6 @@ Thanks [@KhaiTrang1995](https://github.com/KhaiTrang1995).
 | [#202](https://github.com/cobusgreyling/loop-engineering/pull/202) | @Mahizhan-S | Gemini CLI appendix in primitives matrix |
 | [#206](https://github.com/cobusgreyling/loop-engineering/pull/206) | @Mahizhan-S | Zed appendix in primitives matrix |
 | [#208](https://github.com/cobusgreyling/loop-engineering/pull/208) | @Mahizhan-S | Windsurf PR Babysitter example |
-| [#182](https://github.com/cobusgreyling/loop-engineering/pull/182) | @k-anushka14 | Multi-loop coordination story |
 | [#183](https://github.com/cobusgreyling/loop-engineering/pull/183) | @k-anushka14 | Opencode constraints example |
 | [#185](https://github.com/cobusgreyling/loop-engineering/pull/185) | @k-anushka14 | Aider appendix link in examples index |
 | Hermes index + QUICKSTART | @AshayK003 ([#187](https://github.com/cobusgreyling/loop-engineering/pull/187)–[#189](https://github.com/cobusgreyling/loop-engineering/pull/189)) | `examples/hermes/README.md`, QUICKSTART section |
@@ -43,6 +63,7 @@ Thanks [@KhaiTrang1995](https://github.com/KhaiTrang1995).
 ### Housekeeping
 
 - **Star-history workflow** — opens an auto-merge PR instead of pushing to protected `main`
+- **loop-audit publish** — install `sigstore` before npm publish ([#236](https://github.com/cobusgreyling/loop-engineering/pull/236))
 - Dependabot bumps: `actions/github-script` 7→9, `@types/node` in loop-audit/loop-init
 - Stale branch prune + contributor PR backlog triage
 
@@ -52,13 +73,14 @@ Thanks [@KhaiTrang1995](https://github.com/KhaiTrang1995).
 
 | Package | Version | Notes |
 |---------|---------|-------|
+| `@cobusgreyling/loop-audit` | **1.6.0** | Governance scoring — `loop-audit-v1.6.0` |
 | `@cobusgreyling/loop-worktree` | **1.0.0** | New — `loop-worktree-v1.0.0` |
+| `@cobusgreyling/loop-init` | 1.3.3 | Contributor CTA after scaffold |
 | `@cobusgreyling/loop-mcp-server` | 1.0.0 | No change |
-| `@cobusgreyling/loop-audit` | 1.5.3 | No change |
-| `@cobusgreyling/loop-init` | 1.3.3 | No change |
 | `@cobusgreyling/loop-cost` | 1.0.3 | No change |
 | `@cobusgreyling/loop-sync` | 1.0.0 | No change |
 | `@cobusgreyling/loop-context` | 1.0.0 | No change |
+| `@cobusgreyling/goal-audit` | 1.0.2 | Companion — Goal Engineering stack |
 
 ---
 

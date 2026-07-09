@@ -5,7 +5,7 @@ Last run: 2026-07-08T10:01:59Z (automated daily-triage workflow)
 ## High Priority (loop is acting or waiting on human)
 
 - Maintain loop readiness score ≥ 58 (current: **100**, level **L3**).
-- Keep npm packages current after tool changes (tag `loop-audit-v*`, `loop-init-v*`, `loop-cost-v*` — see docs/RELEASE.md).
+- Keep npm packages current after tool changes (per-package tags — see [docs/RELEASE.md](docs/RELEASE.md)).
 
 
 ## Watch List

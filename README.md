@@ -87,8 +87,8 @@ For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agent
 | [Patterns](patterns/README.md) | 7 production patterns + [interactive picker](https://cobusgreyling.github.io/loop-engineering/#interactive) |
 | [Starters](starters/) | Clone-and-run kits (Grok, Claude Code, Codex, Opencode) |
 | [Opencode examples](examples/opencode/) | CLI-first loops: cron/systemd + `opencode run`, skills, worktrees |
-| [loop-audit](tools/loop-audit/) | Loop Readiness Score CLI (v1.5 + constraints scoring) — `npx @cobusgreyling/loop-audit . --suggest` · `--badge` for README |
-| [loop-init](tools/loop-init/) | Scaffold starters + budget/run-log + constraints (v1.2) — `npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok` |
+| [loop-audit](tools/loop-audit/) | Loop Readiness Score CLI (v1.6 — constraints + governance scoring) — `npx @cobusgreyling/loop-audit . --suggest` · `--badge` for README |
+| [loop-init](tools/loop-init/) | Scaffold starters + budget/run-log + constraints (v1.3) — `npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok` |
 | [loop-cost](tools/loop-cost/) | Token spend estimator — `npx @cobusgreyling/loop-cost` |
 | [loop-sync](tools/loop-sync/) | Drift detection between `STATE.md` and `LOOP.md` — `npx @cobusgreyling/loop-sync .` |
 | [loop-context](tools/loop-context/) | Stateful memory manager + circuit breaker for long runs — `npx @cobusgreyling/loop-context --check --ledger run.json` |
@@ -98,6 +98,7 @@ For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agent
 | [Stories](stories/) | Real wins and honest failures |
 | [Contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123) | **Help wanted:** 25 scoped `good first issues` — comment *I'll take this* to get assigned |
 | [Community update](https://github.com/cobusgreyling/loop-engineering/discussions/145) | **July 4:** 5.5k stars, traffic sources, contributor merges |
+| [Community week (Jul 8)](https://github.com/cobusgreyling/loop-engineering/discussions/219) | loop-worktree npm, MCP quickstart, tool appendices |
 | [Prior release notes](https://github.com/cobusgreyling/loop-engineering/discussions/89) | v1.5.0 — loop-sync, constraints, MCP server |
 | [Add your project](https://github.com/cobusgreyling/loop-engineering/discussions/92) | **Pinned:** Loop Ready badge + adopters list |
 
@@ -204,7 +205,7 @@ bash scripts/before-after-demo.sh
 /loop 1d Run loop-triage. Update STATE.md. No auto-fix in week one.
 ```
 
-All three CLIs publish to npm from tagged releases — see [docs/RELEASE.md](docs/RELEASE.md). No clone required.
+All npm CLIs publish from tagged releases — see [docs/RELEASE.md](docs/RELEASE.md). No clone required.
 
 **Develop from source** (monorepo contributors):
 

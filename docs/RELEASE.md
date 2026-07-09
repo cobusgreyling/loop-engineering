@@ -1,6 +1,6 @@
 # Release playbook — npm packages
 
-This repo ships six public npm packages from `tools/`:
+This repo ships eight public npm packages from `tools/`:
 
 | Package | Directory | Release tag |
 |---------|-----------|-------------|
@@ -10,6 +10,8 @@ This repo ships six public npm packages from `tools/`:
 | `@cobusgreyling/loop-sync` | `tools/loop-sync` | `loop-sync-v*` |
 | `@cobusgreyling/loop-context` | `tools/loop-context` | `loop-context-v*` |
 | `@cobusgreyling/loop-mcp-server` | `tools/mcp-server` | `loop-mcp-server-v*` |
+| `@cobusgreyling/loop-worktree` | `tools/loop-worktree` | `loop-worktree-v*` |
+| `@cobusgreyling/goal-audit` | `tools/goal-audit` | `goal-audit-v*` |
 
 ## One-time setup (trusted publishing — recommended)
 
@@ -23,12 +25,14 @@ Link npm to GitHub, then for **each package** on [npmjs.com](https://www.npmjs.c
 | `@cobusgreyling/loop-sync` | `cobusgreyling/loop-engineering` | `release-loop-sync.yml` |
 | `@cobusgreyling/loop-context` | `cobusgreyling/loop-engineering` | `release-loop-context.yml` |
 | `@cobusgreyling/loop-mcp-server` | `cobusgreyling/loop-engineering` | `release-loop-mcp-server.yml` |
+| `@cobusgreyling/loop-worktree` | `cobusgreyling/loop-engineering` | `release-loop-worktree.yml` |
+| `@cobusgreyling/goal-audit` | `cobusgreyling/loop-engineering` | `release-goal-audit.yml` |
 
 Names must match **exactly** (case-sensitive). No `NPM_TOKEN` secret is required when trusted publishing is configured.
 
 **Auth:** release workflows use repo secret `NPM_TOKEN` (Automation token). Refresh it at [npmjs.com](https://www.npmjs.com/) → Access Tokens if publishes fail with `E401`/`E404`.
 
-**Retry without re-tagging:** Actions → Release workflow → **Run workflow** → enter the tag (e.g. `loop-audit-v1.4.2`).
+**Retry without re-tagging:** Actions → Release workflow → **Run workflow** → enter the tag (e.g. `loop-audit-v1.6.0`).
 
 **Trusted publishing (optional):** configure per package on npm; OIDC alone is not sufficient unless `NPM_TOKEN` is removed and trusted publishers are verified.
 
@@ -42,16 +46,16 @@ Tag pushes trigger the release workflows:
 
 ```bash
 # loop-audit (runs tests before publish)
-git tag loop-audit-v1.3.0
-git push origin loop-audit-v1.3.0
+git tag loop-audit-v1.6.0
+git push origin loop-audit-v1.6.0
 
 # loop-init (bundles starters/templates, runs smoke tests)
-git tag loop-init-v1.2.0
-git push origin loop-init-v1.2.0
+git tag loop-init-v1.3.3
+git push origin loop-init-v1.3.3
 
 # loop-cost (bundles patterns/registry.yaml)
-git tag loop-cost-v1.0.0
-git push origin loop-cost-v1.0.0
+git tag loop-cost-v1.0.3
+git push origin loop-cost-v1.0.3
 
 # loop-sync (drift detection between STATE.md and LOOP.md)
 git tag loop-sync-v1.0.0
@@ -64,9 +68,17 @@ git push origin loop-context-v1.0.0
 # loop-mcp-server (MCP runtime lookup for patterns, skills, state)
 git tag loop-mcp-server-v1.0.0
 git push origin loop-mcp-server-v1.0.0
+
+# loop-worktree (isolated git worktrees per fix attempt)
+git tag loop-worktree-v1.0.0
+git push origin loop-worktree-v1.0.0
+
+# goal-audit (Goal Engineering readiness scorer — companion repo)
+git tag goal-audit-v1.0.2
+git push origin goal-audit-v1.0.2
 ```
 
-Workflows: `.github/workflows/release-loop-audit.yml`, `.github/workflows/release-loop-init.yml`, `.github/workflows/release-loop-cost.yml`, `.github/workflows/release-loop-sync.yml`, `.github/workflows/release-loop-context.yml`, `.github/workflows/release-loop-mcp-server.yml`.
+Workflows: `.github/workflows/release-loop-audit.yml`, `.github/workflows/release-loop-init.yml`, `.github/workflows/release-loop-cost.yml`, `.github/workflows/release-loop-sync.yml`, `.github/workflows/release-loop-context.yml`, `.github/workflows/release-loop-mcp-server.yml`, `.github/workflows/release-loop-worktree.yml`, `.github/workflows/release-goal-audit.yml`.
 
 ## Verify after publish
 
@@ -77,6 +89,8 @@ npx @cobusgreyling/loop-cost --help
 npx @cobusgreyling/loop-sync --help
 npx @cobusgreyling/loop-context --help
 npx @cobusgreyling/loop-mcp-server --help
+npx @cobusgreyling/loop-worktree --help
+npx @cobusgreyling/goal-audit --help
 
 mkdir /tmp/loop-init-test && cd /tmp/loop-init-test
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --dry-run
