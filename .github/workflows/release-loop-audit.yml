@@ -31,7 +31,9 @@ jobs:
           cache-dependency-path: tools/loop-audit/package-lock.json
 
       - name: Ensure npm supports trusted publishing (OIDC)
-        run: npm install -g npm@latest
+        run: |
+          npm install -g npm@latest
+          npm install -g sigstore
 
       - name: Install, build, test
         working-directory: tools/loop-audit
