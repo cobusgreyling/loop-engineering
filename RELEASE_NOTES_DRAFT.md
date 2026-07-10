@@ -1,6 +1,6 @@
 # Release notes draft — since `loop-mcp-server-v1.0.0`
 
-**Status:** Published to [Discussions #219](https://github.com/cobusgreyling/loop-engineering/discussions/219) on 2026-07-08. Post-publish additions below (loop-audit 1.6.0). Archive copy for the next changelog-drafter run.
+**Status:** Published to [Discussions #219](https://github.com/cobusgreyling/loop-engineering/discussions/219) (2026-07-08) and [#241](https://github.com/cobusgreyling/loop-engineering/discussions/241) (2026-07-10 maintenance). Archive copy for the next changelog-drafter run.
 
 **Window:** 2026-07-06 → 2026-07-09
 
@@ -65,7 +65,7 @@ Thanks [@KhaiTrang1995](https://github.com/KhaiTrang1995).
 - **Star-history workflow** — opens an auto-merge PR instead of pushing to protected `main`
 - **loop-audit publish** — install `sigstore` before npm publish ([#236](https://github.com/cobusgreyling/loop-engineering/pull/236))
 - Dependabot bumps: `actions/github-script` 7→9, `@types/node` in loop-audit/loop-init
-- Stale branch prune + contributor PR backlog triage
+- Stale branch prune (18+ merged heads deleted 2026-07-10) + doc sync ([#238](https://github.com/cobusgreyling/loop-engineering/pull/238))
 
 ---
 

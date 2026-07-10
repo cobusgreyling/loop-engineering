@@ -96,9 +96,10 @@ For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agent
 | [loop-worktree](tools/loop-worktree/) | Manage isolated git worktrees per fix attempt — `npx @cobusgreyling/loop-worktree create --run-id <id> --pattern <p>` |
 | [Goal Engineering](https://github.com/cobusgreyling/goal-engineering) | **Companion:** loops discover, goals finish — `/goal` + [stack cookbook](https://github.com/cobusgreyling/goal-engineering/blob/main/docs/stack-cookbook.md) (`npx @cobusgreyling/goal doctor .`) |
 | [Stories](stories/) | Real wins and honest failures |
-| [Contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123) | **Help wanted:** 25 scoped `good first issues` — comment *I'll take this* to get assigned |
+| [Contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123) | **Help wanted:** 21 scoped `good first issues` — comment *I'll take this* to get assigned |
 | [Community update](https://github.com/cobusgreyling/loop-engineering/discussions/145) | **July 4:** 5.5k stars, traffic sources, contributor merges |
 | [Community week (Jul 8)](https://github.com/cobusgreyling/loop-engineering/discussions/219) | loop-worktree npm, MCP quickstart, tool appendices |
+| [Maintenance (Jul 10)](https://github.com/cobusgreyling/loop-engineering/discussions/241) | Doc sync, branch prune, loop-audit 1.6.0 follow-up |
 | [Prior release notes](https://github.com/cobusgreyling/loop-engineering/discussions/89) | v1.5.0 — loop-sync, constraints, MCP server |
 | [Add your project](https://github.com/cobusgreyling/loop-engineering/discussions/92) | **Pinned:** Loop Ready badge + adopters list |
 

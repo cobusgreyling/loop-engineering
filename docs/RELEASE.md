@@ -96,6 +96,18 @@ mkdir /tmp/loop-init-test && cd /tmp/loop-init-test
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --dry-run
 ```
 
+## Changelog & release notes (no root `CHANGELOG.md`)
+
+This repo does **not** maintain a root `CHANGELOG.md`. Use:
+
+| Surface | Purpose |
+|---------|---------|
+| `RELEASE_NOTES_DRAFT.md` | Working draft for the next community update (changelog-drafter + human edit) |
+| [GitHub Discussions → Announcements](https://github.com/cobusgreyling/loop-engineering/discussions/categories/announcements) | Published release notes (e.g. [#89](https://github.com/cobusgreyling/loop-engineering/discussions/89), [#219](https://github.com/cobusgreyling/loop-engineering/discussions/219)) |
+| `tools/*/CHANGELOG.md` | Per-package history when a tool version bumps |
+
+After publish: trim `RELEASE_NOTES_DRAFT.md` to a short “since last discussion” stub for the next drafter run.
+
 ## Before npm is live (local / monorepo)
 
 ```bash

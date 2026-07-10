@@ -72,6 +72,21 @@ npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok  # after npm p
 bash scripts/before-after-demo.sh
 ```
 
+## Automation status (2026-07-10)
+
+| Loop | Level | Automation | Notes |
+|------|-------|------------|-------|
+| Daily Triage | L1 | ✅ `daily-triage.yml` | Weekdays; updates `STATE.md` + `loop-run-log.md` |
+| Changelog Drafter | L1 | ✅ `changelog-drafter.yml` | Mondays; opens release-prep issue |
+| Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main` |
+| Validate + Audit | L1 | ✅ `validate-patterns.yml`, `audit.yml` | On PR + push; readiness score on PRs |
+| Dependabot | L1 | ✅ `.github/dependabot.yml` | Weekly npm (`loop-audit`, `loop-init`) + GitHub Actions |
+| PR Babysitter | L2 | ⏸ Manual | Maintainer `/loop` or `starters/pr-babysitter` — no Action yet |
+| Dependency Sweeper | L2 | ⏸ Dependabot only | Patch PRs via Dependabot; full sweeper starter is manual |
+| CI Sweeper | L2 | ⏸ Partial | Reacts via failing validate/audit; no dedicated retry workflow |
+
+**Next automation candidates:** PR Babysitter on a schedule (read-only triage comment), CI Sweeper workflow_dispatch tied to failed `audit.yml` runs.
+
 ## Evolution
 
 Journey recorded in `stories/`. Target: solid L2 with excellent observability.
