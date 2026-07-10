@@ -4,6 +4,8 @@ Scaffold loop engineering starters into your project by pattern and tool.
 
 **npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok** works immediately.
 
+See [docs/loop-init-validation.md](../../docs/loop-init-validation.md) for a validated pattern × --tool matrix.
+
 ## Install & Run
 
 ```bash
