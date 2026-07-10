@@ -103,7 +103,7 @@ Transfer recipes map the same loop shape onto each host:
 | 4. Verification | Create a verifier named agent with `opencode agent`; invoke via `opencode run "Verify diff" --agent verifier --file diff.patch` | `.cursor/agents/loop-verifier.md` from `templates/SKILL.md.verifier` | Add review step at end of workflow; human gate on denylist paths |
 | 5. Connectors | Configure MCP or CLI bridges in `opencode.json` | Enable GitHub MCP read-only for issue/PR discovery | Configure GitHub MCP in Cascade settings |
 
-## Appendix: Aider CLI
+  ## Appendix: Aider CLI
 
 Aider is CLI-first rather than a loop host with native schedulers, so map the same primitives from [Choosing a Tool](#choosing-a-tool) onto shell scripts, cron, and git branches.
 
@@ -204,6 +204,63 @@ A Gemini CLI daily triage loop:
 4. Update only triage sections.
 5. Do not edit source files during the first week.
 6. Save updated state for the next run.
+
+## Appendix: Amazon Q Developer CLI
+
+Amazon Q Developer CLI (`q chat`) is a terminal-based agent, AWS-native, with custom agent
+profiles and MCP support. Map the same loop primitives onto `q chat`, custom agent configs,
+context resources, and external schedulers.
+
+| Primitive | Amazon Q Developer CLI mapping |
+|-----------|--------------------------------|
+| Scheduling | No native cron-style scheduler. Use external schedulers (cron, systemd timers, GitHub Actions) to invoke `q chat` non-interactively, or `q chat --resume` to continue a saved per-directory conversation on the next scheduled run. |
+| Rules / Context files | Define a custom agent in `.amazonq/agents/<name>.json` (project) or `~/.aws/amazonq/cli-agents/<name>.json` (personal), and list always-on context in its `resources` field (e.g. `file://STATE.md`, `file://.amazonq/rules/**/*.md`). Use `hooks.agentSpawn` to inject fresh context (like `git status`) at session start. |
+| State | Keep `STATE.md` at the repo root, referenced in the custom agent's `resources` field so it's loaded every session; each run should read then update only the relevant section. |
+| Maker/checker split | No native subagent/reviewer primitive. Workaround: define two custom agents (e.g. `daily-triage.json` with write tools, `loop-verifier.json` restricted to `fs_read`/`@git` only) and run the verifier agent over the diff in a separate `q chat --agent loop-verifier` session. |
+| Connectors | Configure MCP servers in `.amazonq/mcp.json` (project) or `~/.aws/amazonq/mcp.json` (global); scope tool trust per agent via `allowedTools`. Treat workspace `.amazonq/mcp.json` files from untrusted repos with caution — review before opening, since auto-loaded MCP configs have been a real attack vector for this class of tool. |
+| Honest gaps | No first-class scheduler, no built-in maker/checker separation, no dedicated state-file convention — these are all manual conventions layered on top of `q chat`, same as most terminal agents without a purpose-built loop scheduler. |
+
+Minimal transfer recipe:
+
+```bash
+mkdir -p .amazonq/agents .amazonq/rules
+cp templates/SKILL.md.loop-triage .amazonq/rules/loop-triage.md
+cp starters/minimal-loop/STATE.md.example STATE.md
+```
+
+`.amazonq/agents/daily-triage.json`:
+
+```json
+{
+  "name": "daily-triage",
+  "description": "Report-only daily triage agent",
+  "prompt": "Run loop-triage. Update STATE.md with High Priority and Watch List only. Do not edit source code in week one.",
+  "tools": ["fs_read", "fs_write"],
+  "resources": [
+    "file://STATE.md",
+    "file://.amazonq/rules/loop-triage.md"
+  ]
+}
+```
+
+### Week-one Daily Triage prompt (report-only, copy-paste)
+
+```bash
+q chat --agent daily-triage --no-interactive \
+  "Run loop-triage. Read STATE.md first. Update only High Priority and Watch List sections. Do not edit source code in week one."
+```
+
+Verifier pass for later L2 work — a separate, read-only-scoped agent:
+
+```bash
+git diff > diff.patch
+q chat --agent loop-verifier --no-interactive \
+  "Act as loop-verifier. Review diff.patch against STATE.md goals. Report PASS/FAIL and do not edit files."
+```
+
+After copying: map scheduling to cron/systemd/GitHub Actions until Q has a first-class
+loop scheduler. Use `.amazonq/rules/` for always-on repo guidance, separate custom agents
+for maker/checker separation, and `.amazonq/mcp.json` for external tools.
 
 ### Official Documentation
 
