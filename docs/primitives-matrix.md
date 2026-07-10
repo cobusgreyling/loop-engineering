@@ -103,6 +103,58 @@ Transfer recipes map the same loop shape onto each host:
 | 4. Verification | Create a verifier named agent with `opencode agent`; invoke via `opencode run "Verify diff" --agent verifier --file diff.patch` | `.cursor/agents/loop-verifier.md` from `templates/SKILL.md.verifier` | Add review step at end of workflow; human gate on denylist paths |
 | 5. Connectors | Configure MCP or CLI bridges in `opencode.json` | Enable GitHub MCP read-only for issue/PR discovery | Configure GitHub MCP in Cascade settings |
 
+## Appendix: Codeium (Windsurf)
+
+Codeium rebranded its agentic surface to Windsurf; the agent itself is called
+Cascade. There is no standalone Codeium CLI — "Codeium" as a brand today
+mostly covers enterprise completion analytics, not agent loop primitives.
+This appendix documents the **Windsurf IDE / Cascade agent**, the same
+surface referenced in the Editor transfer recipes table above.
+
+| Primitive | Windsurf (Cascade) mapping |
+|-----------|----------------------------|
+| Scheduling | No native cron-style scheduler. Use `.windsurf/workflows/<name>.md` invoked manually via `/workflow-name`, or pair with an external scheduler (cron, systemd, GitHub Actions) that reopens the workspace and triggers a workflow. |
+| Skills / Rules path | Project rules: `.windsurfrules` (root) or `.windsurf/rules/` for multiple files. Global rules across all projects: `~/.codeium/windsurf/memories/global_rules.md`. |
+| State | No native `STATE.md` convention. Commit `STATE.md` at the repo root manually, same as other editor-hosted tools; Cascade's built-in Memories system (per-workspace) can supplement but does not replace a committed state file. |
+| Maker/checker split | No native subagent or reviewer role. Workaround: run the maker in one Cascade session, then open a second session (or manually review the diff view) as the checker before accepting changes. |
+| Worktrees | Not native. Use standard git branches/worktrees and review through Cascade's diff view before merge, same as Aider. |
+| Connectors | Configure MCP servers directly in Cascade/Windsurf settings for GitHub, issue/PR discovery, or other external context. |
+| Honest gaps | No durable scheduler for headless/unattended runs, no built-in maker/checker separation, no first-class state-file convention — Windsurf's loop primitives are almost entirely manual and session-driven today. |
+
+Minimal transfer recipe:
+
+```bash
+mkdir -p .windsurf/rules .windsurf/workflows
+cp templates/SKILL.md.loop-triage .windsurf/rules/loop-triage.md
+cp starters/minimal-loop/STATE.md.example STATE.md
+```
+
+Week-one Daily Triage workflow (`.windsurf/workflows/daily-triage.md`), report-only:
+
+```text
+Run loop-triage for this repository.
+
+Read STATE.md first.
+Update STATE.md with High Priority and Watch List only.
+Do not edit source code in week one.
+```
+
+Invoke with `/daily-triage` in the Cascade panel.
+
+Verifier pass for later L2 work — open a second Cascade session:
+
+```text
+Act as loop-verifier.
+
+Review the current git diff against STATE.md goals.
+Report PASS/FAIL and do not edit files.
+```
+
+After copying: map scheduling to manual `/workflow-name` invocation or an external
+scheduler until Windsurf has a first-class cron-equivalent. Use `.windsurfrules`
+or `.windsurf/rules/` for always-on repo guidance, and a second Cascade session
+(or human diff review) for maker/checker separation.
+
 ## Appendix: Aider CLI
 
 Aider is CLI-first rather than a loop host with native schedulers, so map the same primitives from [Choosing a Tool](#choosing-a-tool) onto shell scripts, cron, and git branches.
