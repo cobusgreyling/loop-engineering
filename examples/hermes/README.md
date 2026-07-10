@@ -5,6 +5,7 @@
 | Example | Pattern |
 |---------|---------|
 | [daily-triage.md](./daily-triage.md) | Daily Triage (L1 report → L2 assisted) |
+| [pr-babysitter.md](./pr-babysitter.md) | PR Babysitter (L1 report → L2 worktree + verifier) |
 
 Optional **channel delivery** (Telegram, Slack, Discord, WhatsApp, SMS, Feishu) is Hermes's differentiator — the same cron job can post its summary into any connected home channel.
 
