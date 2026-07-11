@@ -70,4 +70,4 @@ Use a shared section in `STATE.md`:
 
 Add CI Sweeper only after PR Babysitter attempt limits and verifier are proven for two weeks.
 
-See [stories/multi-loop-collision.md](../stories/multi-loop-collision.md) for a real collision story.
+See [stories/multi-loop-collision.md](../stories/multi-loop-collision.md) and [stories/dependency-vs-ci-sweeper-collision.md](../stories/dependency-vs-ci-sweeper-collision.md) for real-world collision stories.

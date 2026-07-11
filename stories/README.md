@@ -9,6 +9,7 @@ Real-world loop engineering — including failures. Contribute yours via [CONTRI
 | [why-we-killed-ci-sweeper.md](./why-we-killed-ci-sweeper.md) | CI Sweeper | Budget, branch allowlist, kill switch |
 | [dependency-sweeper-week-one.md](./dependency-sweeper-week-one.md) | Dependency Sweeper | Verifier must match CI install path |
 | [multi-loop-collision.md](./multi-loop-collision.md) | Multi-loop | Branch lock + collision detection |
+| [dependency-vs-ci-sweeper-collision.md](./dependency-vs-ci-sweeper-collision.md) | Multi-loop | Pre-flight CI checks + priority locks |
 | [l1-to-l2-graduation.md](./l1-to-l2-graduation.md) | Daily Triage | Calibration before auto-fix |
 | [changelog-drafter-week-one.md](./changelog-drafter-week-one.md) | Changelog Drafter | Low-risk, high-ROI L1 win |
 | [post-merge-cleanup-honest-win.md](./post-merge-cleanup-honest-win.md) | Post-Merge Cleanup | Off-peak cadence; verifier caught doc/API drift; bot-merge noise |
