@@ -37,8 +37,3 @@ jobs:
           script: |
             // Post a comment or create/update a release-prep issue with link to the draft.
             console.log('In production: comment with link to RELEASE_NOTES_DRAFT.md and the loop run id.');
-```
-
-This gives a starting point for event-driven or scheduled release note generation.
-
-Now the big one: showcase enhancement.
