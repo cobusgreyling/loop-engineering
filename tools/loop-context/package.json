@@ -49,7 +49,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@cobusgreyling/loop-cost": "^1.0.3"
+    "@cobusgreyling/loop-cost": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
