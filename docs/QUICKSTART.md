@@ -72,6 +72,35 @@ Scores 0–100 with concrete next steps. Re-run after each improvement. Paste a 
 npx @cobusgreyling/loop-audit . --badge
 ```
 
+### Catch drift before you schedule (`loop-sync`)
+
+`loop-audit` scores readiness; `loop-sync` checks that your `STATE.md` and `LOOP.md` still agree. When they drift — you edit `LOOP.md` to add a loop but never wire it into `STATE.md`, or a starter update leaves one file behind — a scheduled loop can run against stale instructions.
+
+```bash
+npx @cobusgreyling/loop-sync .
+```
+
+Sample output on a fresh daily-triage scaffold:
+
+```
+Loop Sync Report
+══════════════════════════════════════════════════
+Score: 80/100 (healthy)
+
+Found 2 issue(s):
+
+⚠️ Warnings:
+   - LOOP.md: LOOP.md does not reference STATE.md
+   - STATE.md ↔ LOOP.md: Low structural similarity between STATE.md and LOOP.md
+
+💡 Suggestions:
+   - Review STATE.md and LOOP.md for consistency
+```
+
+Read it top-down: the **score** (70+ healthy, 40–69 warning, below 40 needs attention) is the headline, then each **warning** names the two files that disagree and how. Here, `LOOP.md` describes loops that never point back at `STATE.md` — expected right after scaffolding, worth fixing once you customize either file.
+
+**When to run it:** after editing `LOOP.md`, and again before you schedule an L2 loop — so an unattended run never fires on stale state. Full checks, options, and score bands: [tools/loop-sync/README.md](../tools/loop-sync/README.md).
+
 ### Optional: MCP runtime lookup
 
 Agents can query patterns, skills, and state on demand instead of stuffing docs into every prompt. Copy the config stub from [examples/mcp/loop-engineering.mcp.json](../examples/mcp/loop-engineering.mcp.json) into your MCP client settings.
@@ -201,6 +230,9 @@ npx @cobusgreyling/loop-audit . --suggest
 
 # Optional badge for your README
 npx @cobusgreyling/loop-audit . --badge
+
+# Check STATE.md ↔ LOOP.md drift (run after editing LOOP.md, before scheduling L2)
+npx @cobusgreyling/loop-sync .
 
 # Optional MCP runtime lookup (patterns, skills, state on demand)
 LOOP_PROJECT_ROOT=. npx @cobusgreyling/loop-mcp-server
