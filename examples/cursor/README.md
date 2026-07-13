@@ -8,6 +8,7 @@ Copy-pasteable loop patterns for Cursor, using **Automations** (cloud cron) or m
 | Constraints | Every loop run (before triage) | Low | [constraints.md](constraints.md) |
 | PR Babysitter | On cadence (Automation or manual) | Medium | [pr-babysitter.md](pr-babysitter.md) |
 | Dependency Sweeper | 6h report, patch-only after tuning | Medium | [dependency-sweeper.md](dependency-sweeper.md) |
+| Post-Merge Cleanup | 1d (Automation or manual) | Low | [post-merge-cleanup.md](post-merge-cleanup.md) |
 
 No `loop-init --tool cursor` yet — copy `SKILL.md` + `STATE.md` from any starter (e.g. `starters/minimal-loop`), then follow the example to wire scheduling.
 
