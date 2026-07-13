@@ -33,6 +33,10 @@ jobs:
       - name: Ensure npm supports trusted publishing (OIDC)
         run: npm install -g npm@latest
 
+      - name: Install loop-cost (monorepo sibling tests shell out to its CLI)
+        working-directory: tools/loop-cost
+        run: npm ci
+
       - name: Install, build, test
         working-directory: tools/loop-context
         run: |
