@@ -16,6 +16,8 @@ import os
 import shutil
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -23,31 +25,59 @@ REPO = os.environ.get("STAR_HISTORY_REPO", "cobusgreyling/loop-engineering")
 OUT_DIR = Path(os.environ.get("STAR_HISTORY_OUT_DIR", "assets/visuals"))
 
 
-def fetch_star_timestamps() -> list[datetime]:
-    endpoint = f"repos/{REPO}/stargazers?per_page=100"
-    proc = subprocess.run(
-        [
-            "gh",
-            "api",
-            endpoint,
-            "--paginate",
-            "-H",
-            "Accept: application/vnd.github.v3.star+json",
-            "--jq",
-            ".[].starred_at",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-        env={**os.environ},
+def _api_token() -> str:
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        return token
+    if shutil.which("gh"):
+        proc = subprocess.run(
+            ["gh", "auth", "token"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode == 0 and proc.stdout.strip():
+            return proc.stdout.strip()
+    raise RuntimeError(
+        "GH_TOKEN/GITHUB_TOKEN or gh auth required "
+        "(CI: set STAR_HISTORY_TOKEN repo secret)"
     )
+
+
+def fetch_star_timestamps() -> list[datetime]:
+    """Paginate the stargazers REST API (gh CLI auth is unreliable in Actions)."""
+    token = _api_token()
     timestamps: list[datetime] = []
-    for line in proc.stdout.splitlines():
-        starred_at = line.strip().strip('"')
-        if starred_at:
-            timestamps.append(
-                datetime.fromisoformat(starred_at.replace("Z", "+00:00"))
-            )
+    page = 1
+    while True:
+        url = f"https://api.github.com/repos/{REPO}/stargazers?per_page=100&page={page}"
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "application/vnd.github.v3.star+json",
+                "Authorization": f"Bearer {token}",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                payload = json.loads(resp.read().decode())
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode(errors="replace")
+            raise RuntimeError(
+                f"GitHub stargazers API failed (HTTP {exc.code}): {body}"
+            ) from exc
+        if not payload:
+            break
+        for item in payload:
+            starred_at = item.get("starred_at")
+            if starred_at:
+                timestamps.append(
+                    datetime.fromisoformat(starred_at.replace("Z", "+00:00"))
+                )
+        if len(payload) < 100:
+            break
+        page += 1
     timestamps.sort()
     return timestamps
 
@@ -172,13 +202,10 @@ def render_svg(series: list[tuple[datetime, int]], *, dark: bool) -> str:
 
 
 def main() -> int:
-    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
-    if not (token or shutil.which("gh")):
-        print(
-            "GH_TOKEN/GITHUB_TOKEN or gh CLI required "
-            "(CI: set STAR_HISTORY_TOKEN repo secret)",
-            file=sys.stderr,
-        )
+    try:
+        _api_token()
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
         return 1
 
     print(f"Fetching stargazers for {REPO}...")
