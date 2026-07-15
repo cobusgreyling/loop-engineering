@@ -78,7 +78,7 @@ bash scripts/before-after-demo.sh
 |------|-------|------------|-------|
 | Daily Triage | L1 | ✅ `daily-triage.yml` | Weekdays; updates `STATE.md` + `loop-run-log.md` |
 | Changelog Drafter | L1 | ✅ `changelog-drafter.yml` | Mondays; opens release-prep issue |
-| Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main` |
+| Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main`; needs `STAR_HISTORY_TOKEN` secret (PAT) |
 | Validate + Audit | L1 | ✅ `validate-patterns.yml`, `audit.yml` | On PR + push; readiness score on PRs |
 | Dependabot | L1 | ✅ `.github/dependabot.yml` | Weekly npm (`loop-audit`, `loop-init`) + GitHub Actions |
 | PR Babysitter | L2 | ⏸ Manual | Maintainer `/loop` or `starters/pr-babysitter` — no Action yet |

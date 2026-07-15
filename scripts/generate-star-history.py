@@ -2,8 +2,9 @@
 """Generate a static star-history timeline SVG from GitHub stargazers data.
 
 Used while api.star-history.com live embeds are unavailable (GitHub restricted
-stargazer API access for third-party services, Jul 2026). Runs in CI with
-GITHUB_TOKEN (repo collaborator) or locally with gh auth / GH_TOKEN.
+stargazer API access for third-party services, Jul 2026). CI requires the
+``STAR_HISTORY_TOKEN`` repo secret (fine-grained PAT with read access to this
+repo). Locally, use ``gh auth`` / ``GH_TOKEN``.
 
 Interactive browser UI (token in localStorage): docs/star-history.html
 """
@@ -171,12 +172,13 @@ def render_svg(series: list[tuple[datetime, int]], *, dark: bool) -> str:
 
 
 def main() -> int:
-    if not (
-        os.environ.get("GITHUB_TOKEN")
-        or os.environ.get("GH_TOKEN")
-        or shutil.which("gh")
-    ):
-        print("GITHUB_TOKEN/GH_TOKEN or gh CLI required", file=sys.stderr)
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if not (token or shutil.which("gh")):
+        print(
+            "GH_TOKEN/GITHUB_TOKEN or gh CLI required "
+            "(CI: set STAR_HISTORY_TOKEN repo secret)",
+            file=sys.stderr,
+        )
         return 1
 
     print(f"Fetching stargazers for {REPO}...")

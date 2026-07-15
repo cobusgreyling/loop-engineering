@@ -18,8 +18,12 @@ jobs:
 
       - name: Generate static star-history SVGs
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.STAR_HISTORY_TOKEN }}
         run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::STAR_HISTORY_TOKEN secret is required. GITHUB_TOKEN cannot list stargazers since GitHub's Jul 2026 API restriction — add a fine-grained PAT with read access to this repository (see scripts/generate-star-history.py)."
+            exit 1
+          fi
           gh auth setup-git
           python3 scripts/generate-star-history.py
 
