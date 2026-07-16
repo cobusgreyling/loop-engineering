@@ -39,14 +39,15 @@ loop-worktree gc [--force] [--json]
 
 loop-worktree list [--status active] [--json]
 
-loop-worktree lock --paths <glob1,glob2,...> --owner <name> [--ttl 6h]
+loop-worktree lock --paths <glob1,glob2,...> --owner <name> [--ttl 6h] [--wait 15m]
   # advisory lock: fails if another (non-expired) owner already holds an overlapping path
+  # --wait queues instead of failing immediately; detects wait-for-graph deadlocks
 
 loop-worktree unlock --owner <name>
   # releases that owner's lock; no-op if it didn't hold one
 
 loop-worktree locks [--sweep] [--force] [--json]
-  # lists active locks; --sweep reports expired ones (report-only; --force deletes them)
+  # lists active locks and wait intents; --sweep reports expired ones (report-only; --force deletes them)
 ```
 
 ## Status

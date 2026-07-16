@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop-worktree",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Manage isolated git worktrees for loop engineering attempts: create, mark, cleanup, and reconcile one worktree per fix attempt.",
   "type": "module",
   "bin": {
