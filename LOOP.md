@@ -9,7 +9,7 @@ The goal of this repo is to be the canonical, copyable, high-signal collection o
 ### Daily Triage (L1 — automated + report)
 - Cadence: 1d weekdays (`/.github/workflows/daily-triage.yml`)
 - Skill: `loop-triage` (from `skills/` and `starters/minimal-loop`)
-- State: `STATE.md` (updated by workflow; human reviews weekly issue)
+- State: STATE.md (updated by workflow; human reviews weekly issue)
 - Phase: Report-only. Human reviews and decides actions.
 - Handoff: Design decisions, large refactors, new pattern acceptance.
 
