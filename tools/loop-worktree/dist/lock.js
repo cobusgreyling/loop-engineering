@@ -3,6 +3,71 @@ import path from 'node:path';
 import { MANIFEST_DIR, parseDurationMs } from './worktree.js';
 export const LOCKS_DIR = path.posix.join(MANIFEST_DIR, 'locks');
 const MUTEX_FILE = path.posix.join(LOCKS_DIR, '.mutex');
+function waitFile(root, owner) {
+    return path.join(root, LOCKS_DIR, `${owner}.wait.json`);
+}
+async function readWait(root, owner) {
+    const file = waitFile(root, owner);
+    if (!(await exists(file)))
+        return null;
+    const raw = await readFile(file, 'utf8');
+    try {
+        return JSON.parse(raw);
+    }
+    catch {
+        throw new Error(`Corrupt wait file ${file}: not valid JSON. Inspect it and delete it manually if it's stale.`);
+    }
+}
+export async function listWaits(root) {
+    const files = await readdirSafely(path.join(root, LOCKS_DIR));
+    const waits = [];
+    for (const file of files) {
+        if (!file.endsWith('.wait.json'))
+            continue;
+        const wait = await readWait(root, file.slice(0, -'.wait.json'.length));
+        if (wait)
+            waits.push(wait);
+    }
+    return waits;
+}
+export function isWaitExpired(wait, now = Date.now()) {
+    return wait.expiresAt !== undefined && Date.parse(wait.expiresAt) <= now;
+}
+function detectDeadlock(owner, waitingOn, allWaits) {
+    const graph = new Map();
+    graph.set(owner, waitingOn);
+    for (const w of allWaits) {
+        if (w.owner !== owner) {
+            graph.set(w.owner, w.waitingOn);
+        }
+    }
+    const visited = new Set();
+    const stack = new Set();
+    const path = [];
+    function dfs(node) {
+        if (stack.has(node)) {
+            path.push(node);
+            return true;
+        }
+        if (visited.has(node))
+            return false;
+        visited.add(node);
+        stack.add(node);
+        path.push(node);
+        const neighbors = graph.get(node) || [];
+        for (const neighbor of neighbors) {
+            if (dfs(neighbor))
+                return true;
+        }
+        stack.delete(node);
+        path.pop();
+        return false;
+    }
+    if (dfs(owner)) {
+        const cycle = path.slice(path.indexOf(path[path.length - 1])).join(' -> ');
+        throw new Error(`Deadlock detected: ${cycle}`);
+    }
+}
 const OWNER_PATTERN = /^[A-Za-z0-9._-]+$/;
 function assertValidOwner(owner) {
     if (!OWNER_PATTERN.test(owner)) {
@@ -81,7 +146,7 @@ export async function listLocks(root) {
     const files = await readdirSafely(path.join(root, LOCKS_DIR));
     const locks = [];
     for (const file of files) {
-        if (!file.endsWith('.json'))
+        if (!file.endsWith('.json') || file.endsWith('.wait.json'))
             continue;
         const lock = await readLock(root, file.slice(0, -'.json'.length));
         if (lock)
@@ -130,48 +195,88 @@ async function withLocksMutex(root, fn) {
  * same owner replaces that owner's own previous lock (paths and TTL both).
  */
 export async function lockPaths(input) {
-    const { root, owner, paths } = input;
+    const { root, owner, paths, wait, ttl } = input;
     assertValidOwner(owner);
     if (paths.length === 0) {
         throw new Error('--paths requires at least one path or glob.');
     }
-    return withLocksMutex(root, async () => {
-        const now = Date.now();
-        for (const other of await listLocks(root)) {
-            if (other.owner === owner || isExpired(other, now))
-                continue;
-            for (const p of paths) {
-                const clash = other.paths.find((op) => pathsOverlap(p, op));
-                if (clash) {
-                    throw new Error(`Path "${p}" is locked by owner "${other.owner}" (locked at ${other.lockedAt}` +
-                        (other.expiresAt ? `, expires at ${other.expiresAt}` : '') +
-                        `). Use --paths that don't overlap, or wait for the lock to clear.`);
+    const waitUntil = wait ? Date.now() + parseDurationMs(wait, '--wait') : undefined;
+    for (;;) {
+        const success = await withLocksMutex(root, async () => {
+            const now = Date.now();
+            const locks = await listLocks(root);
+            const blockingOwners = new Set();
+            const blockingErrors = [];
+            for (const other of locks) {
+                if (other.owner === owner || isExpired(other, now))
+                    continue;
+                for (const p of paths) {
+                    const clash = other.paths.find((op) => pathsOverlap(p, op));
+                    if (clash) {
+                        blockingOwners.add(other.owner);
+                        blockingErrors.push(`Path "${p}" is locked by owner "${other.owner}" (locked at ${other.lockedAt}` +
+                            (other.expiresAt ? `, expires at ${other.expiresAt}` : '') +
+                            `).`);
+                    }
                 }
             }
+            if (blockingOwners.size > 0) {
+                if (!waitUntil) {
+                    throw new Error(`${blockingErrors.join('\n')}\nUse --paths that don't overlap, or wait for the lock to clear.`);
+                }
+                if (Date.now() > waitUntil) {
+                    await unlink(waitFile(root, owner)).catch(() => { });
+                    throw new Error(`Timed out waiting for lock on paths: ${paths.join(', ')}`);
+                }
+                const allWaits = (await listWaits(root)).filter((w) => !isWaitExpired(w, now));
+                detectDeadlock(owner, Array.from(blockingOwners), allWaits);
+                const waitEntry = {
+                    owner,
+                    paths,
+                    waitingOn: Array.from(blockingOwners),
+                    requestedAt: new Date(now).toISOString(),
+                    expiresAt: new Date(waitUntil).toISOString(),
+                };
+                await writeFile(waitFile(root, owner), `${JSON.stringify(waitEntry, null, 2)}\n`);
+                return false;
+            }
+            await unlink(waitFile(root, owner)).catch(() => { });
+            const entry = { owner, paths, lockedAt: new Date(now).toISOString() };
+            if (ttl) {
+                entry.expiresAt = new Date(now + parseDurationMs(ttl, '--ttl')).toISOString();
+            }
+            await writeFile(lockFile(root, owner), `${JSON.stringify(entry, null, 2)}\n`);
+            return entry;
+        });
+        if (success) {
+            return success;
         }
-        const entry = { owner, paths, lockedAt: new Date(now).toISOString() };
-        if (input.ttl) {
-            entry.expiresAt = new Date(now + parseDurationMs(input.ttl, '--ttl')).toISOString();
-        }
-        await writeFile(lockFile(root, owner), `${JSON.stringify(entry, null, 2)}\n`);
-        return entry;
-    });
+        await new Promise((resolve) => setTimeout(resolve, 2000 + Math.random() * 1000));
+    }
 }
 /** Release `owner`'s lock. Returns false (no-op) if it didn't hold one. */
 export async function unlockOwner(root, owner) {
     assertValidOwner(owner);
-    const file = lockFile(root, owner);
-    if (!(await exists(file)))
-        return false;
-    await unlink(file);
-    return true;
+    const lFile = lockFile(root, owner);
+    const wFile = waitFile(root, owner);
+    let released = false;
+    if (await exists(lFile)) {
+        await unlink(lFile);
+        released = true;
+    }
+    if (await exists(wFile)) {
+        await unlink(wFile);
+    }
+    return released;
 }
 /** Report (and, with force, delete) locks past their own TTL. Never touches an active lock. */
 export async function sweepExpiredLocks(root, opts = {}) {
     return withLocksMutex(root, async () => {
         const now = Date.now();
         const expired = (await listLocks(root)).filter((l) => isExpired(l, now));
+        const expiredWaits = (await listWaits(root)).filter((w) => isWaitExpired(w, now));
         const removed = [];
+        const removedWaits = [];
         if (opts.force) {
             for (const l of expired) {
                 try {
@@ -182,7 +287,16 @@ export async function sweepExpiredLocks(root, opts = {}) {
                     // Already gone; nothing to report.
                 }
             }
+            for (const w of expiredWaits) {
+                try {
+                    await unlink(waitFile(root, w.owner));
+                    removedWaits.push(w.owner);
+                }
+                catch {
+                    // Already gone
+                }
+            }
         }
-        return { expired, removed };
+        return { expired, removed, expiredWaits, removedWaits };
     });
 }

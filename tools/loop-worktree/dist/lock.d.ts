@@ -6,6 +6,15 @@ export interface LockEntry {
     /** Absent means the lock never expires automatically; must be explicitly unlocked. */
     expiresAt?: string;
 }
+export interface WaitEntry {
+    owner: string;
+    paths: string[];
+    waitingOn: string[];
+    requestedAt: string;
+    expiresAt?: string;
+}
+export declare function listWaits(root: string): Promise<WaitEntry[]>;
+export declare function isWaitExpired(wait: WaitEntry, now?: number): boolean;
 export declare function isExpired(lock: LockEntry, now?: number): boolean;
 /**
  * Two path globs "overlap" if, segment by segment, every position where both
@@ -25,6 +34,8 @@ export interface LockPathsInput {
     paths: string[];
     /** e.g. "6h" -- if omitted, the lock never expires automatically. */
     ttl?: string;
+    /** e.g. "15m" -- wait duration if paths are locked. */
+    wait?: string;
 }
 /**
  * Acquire an advisory lock on `paths` for `owner`. Fails if any *other*,
@@ -37,6 +48,8 @@ export declare function unlockOwner(root: string, owner: string): Promise<boolea
 export interface SweepExpiredLocksResult {
     expired: LockEntry[];
     removed: string[];
+    expiredWaits?: WaitEntry[];
+    removedWaits?: string[];
 }
 /** Report (and, with force, delete) locks past their own TTL. Never touches an active lock. */
 export declare function sweepExpiredLocks(root: string, opts?: {

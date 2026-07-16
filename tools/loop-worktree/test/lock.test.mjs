@@ -156,3 +156,69 @@ test('sweepExpiredLocks removes with --force, leaves active locks untouched', as
   const remaining = await listLocks(dir);
   assert.deepEqual(remaining.map((l) => l.owner), ['dependency-sweeper']);
 });
+
+test('lockPaths with --wait queues and acquires lock when released', async () => {
+  const dir = await freshDir();
+  await lockPaths({ root: dir, owner: 'ci-sweeper', paths: ['package.json'] });
+
+  // Start a wait in the background
+  const p = lockPaths({ root: dir, owner: 'dependency-sweeper', paths: ['package.json'], wait: '10s' });
+
+  // Ensure the wait intent is written
+  await new Promise(r => setTimeout(r, 50));
+  const { listWaits } = await import('../dist/lock.js');
+  const waits = await listWaits(dir);
+  assert.equal(waits.length, 1);
+  assert.equal(waits[0].owner, 'dependency-sweeper');
+  assert.deepEqual(waits[0].waitingOn, ['ci-sweeper']);
+
+  // Release the lock
+  await unlockOwner(dir, 'ci-sweeper');
+
+  // Background lock should now succeed
+  const entry = await p;
+  assert.equal(entry.owner, 'dependency-sweeper');
+  
+  // Wait intent should be cleaned up
+  assert.equal((await listWaits(dir)).length, 0);
+});
+
+test('lockPaths with --wait times out', async () => {
+  const dir = await freshDir();
+  await lockPaths({ root: dir, owner: 'ci-sweeper', paths: ['package.json'] });
+
+  const start = Date.now();
+  await assert.rejects(
+    () => lockPaths({ root: dir, owner: 'dependency-sweeper', paths: ['package.json'], wait: '1s' }),
+    /Timed out waiting for lock on paths/
+  );
+  assert.ok(Date.now() - start >= 1000);
+
+  const { listWaits } = await import('../dist/lock.js');
+  assert.equal((await listWaits(dir)).length, 0);
+});
+
+test('lockPaths deadlock detection aborts cycle immediately', async () => {
+  const dir = await freshDir();
+  
+  // A holds package.json
+  await lockPaths({ root: dir, owner: 'A', paths: ['package.json'] });
+  // B holds src/**
+  await lockPaths({ root: dir, owner: 'B', paths: ['src/**'] });
+
+  // A wants src/** and waits on B
+  const pA = lockPaths({ root: dir, owner: 'A', paths: ['src/**'], wait: '10s' });
+
+  await new Promise(r => setTimeout(r, 50));
+
+  // B wants package.json and waits on A - this should throw DeadlockError immediately
+  await assert.rejects(
+    () => lockPaths({ root: dir, owner: 'B', paths: ['package.json'], wait: '10s' }),
+    /Deadlock detected: B -> A -> B/
+  );
+
+  // A is still waiting, release B so A can finish
+  await unlockOwner(dir, 'B');
+  await pA;
+});
+

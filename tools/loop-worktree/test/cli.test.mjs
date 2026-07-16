@@ -32,7 +32,7 @@ test('cli lock/locks/unlock round-trip', async () => {
 
   const listed = runCli(['locks', '--json'], dir);
   assert.equal(listed.status, 0);
-  const locks = JSON.parse(listed.stdout);
+  const { locks } = JSON.parse(listed.stdout);
   assert.equal(locks.length, 1);
   assert.equal(locks[0].owner, 'dependency-sweeper');
 
@@ -41,7 +41,7 @@ test('cli lock/locks/unlock round-trip', async () => {
   assert.match(unlocked.stdout, /unlocked dependency-sweeper/);
 
   const listedAfter = runCli(['locks', '--json'], dir);
-  assert.deepEqual(JSON.parse(listedAfter.stdout), []);
+  assert.deepEqual(JSON.parse(listedAfter.stdout).locks, []);
 });
 
 test('cli lock surfaces an overlap error from a different owner', () => {

@@ -8,7 +8,7 @@ import {
   VALID_STATUSES,
   type WorktreeStatus,
 } from './worktree.js';
-import { lockPaths, unlockOwner, listLocks, sweepExpiredLocks, isExpired } from './lock.js';
+import { lockPaths, unlockOwner, listLocks, sweepExpiredLocks, isExpired, listWaits, isWaitExpired } from './lock.js';
 
 interface Flags {
   root: string;
@@ -22,6 +22,7 @@ interface Flags {
   paths?: string;
   owner?: string;
   ttl?: string;
+  wait?: string;
   sweep: boolean;
 }
 
@@ -40,6 +41,7 @@ function parseFlags(argv: string[]): Flags {
     else if (a === '--paths') flags.paths = argv[++i];
     else if (a === '--owner') flags.owner = argv[++i];
     else if (a === '--ttl') flags.ttl = argv[++i];
+    else if (a === '--wait') flags.wait = argv[++i];
     else if (a === '--sweep') flags.sweep = true;
   }
   return flags;
@@ -63,7 +65,7 @@ Usage:
   loop-worktree cleanup [--status rejected,escalated] [--older-than 24h] [--force]
   loop-worktree gc [--force] [--json]
   loop-worktree list [--status <s>] [--json]
-  loop-worktree lock   --paths <glob1,glob2,...> --owner <name> [--ttl 6h]
+  loop-worktree lock   --paths <glob1,glob2,...> --owner <name> [--ttl 6h] [--wait 15m]
   loop-worktree unlock --owner <name>
   loop-worktree locks [--sweep] [--force] [--json]
 
@@ -77,6 +79,7 @@ Locking (advisory, not enforced by create -- pair it in your control script):
   --paths <csv>  Comma-separated path globs this owner is about to touch
   --owner <name> Lock/unlock identity, typically the pattern name
   --ttl <dur>    Optional expiry (e.g. 30m, 6h, 1d); omit for no auto-expiry
+  --wait <dur>   Wait up to this long for locks to clear instead of failing immediately (detects deadlocks)
   locks --sweep  Report expired locks (report-only; --force deletes them)
 
 Worktrees live under .loop-worktrees/, tracked in .loop-worktrees/manifest.json.
@@ -170,7 +173,7 @@ async function main(): Promise<number> {
         throw new Error('lock requires --paths and --owner.');
       }
       const paths = flags.paths.split(',').map((p) => p.trim()).filter(Boolean);
-      const entry = await lockPaths({ root: flags.root, owner: flags.owner, paths, ttl: flags.ttl });
+      const entry = await lockPaths({ root: flags.root, owner: flags.owner, paths, ttl: flags.ttl, wait: flags.wait });
       console.log(`locked ${entry.paths.join(', ')} for ${entry.owner}` + (entry.expiresAt ? ` (expires ${entry.expiresAt})` : ''));
       return 0;
     }
@@ -192,24 +195,37 @@ async function main(): Promise<number> {
         for (const l of result.expired) {
           console.log(result.removed.includes(l.owner) ? `removed expired lock ${l.owner}` : `expired lock ${l.owner}`);
         }
+        const expiredWaits = result.expiredWaits || [];
+        const removedWaits = result.removedWaits || [];
+        for (const w of expiredWaits) {
+          console.log(removedWaits.includes(w.owner) ? `removed expired wait ${w.owner}` : `expired wait ${w.owner}`);
+        }
         console.log(
-          `locks --sweep: ${result.expired.length} expired` +
-            (flags.force ? `, ${result.removed.length} removed` : ' (report-only; use --force to remove)'),
+          `locks --sweep: ${result.expired.length} lock(s), ${expiredWaits.length} wait(s) expired` +
+            (flags.force ? `, ${result.removed.length + removedWaits.length} removed` : ' (report-only; use --force to remove)'),
         );
         return 0;
       }
       const locks = await listLocks(flags.root);
+      const waits = await listWaits(flags.root);
       if (flags.json) {
-        console.log(JSON.stringify(locks.map((l) => ({ ...l, expired: isExpired(l) })), null, 2));
+        console.log(JSON.stringify({
+          locks: locks.map((l) => ({ ...l, expired: isExpired(l) })),
+          waits: waits.map((w) => ({ ...w, expired: isWaitExpired(w) }))
+        }, null, 2));
         return 0;
       }
-      if (locks.length === 0) {
-        console.log('no active locks');
+      if (locks.length === 0 && waits.length === 0) {
+        console.log('no active locks or waits');
         return 0;
       }
       for (const l of locks) {
         const expiryNote = l.expiresAt ? `, expires ${l.expiresAt}${isExpired(l) ? ' (expired)' : ''}` : '';
         console.log(`${l.owner}  ${l.paths.join(', ')}  (locked ${l.lockedAt}${expiryNote})`);
+      }
+      for (const w of waits) {
+        const expiryNote = w.expiresAt ? `, wait expires ${w.expiresAt}${isWaitExpired(w) ? ' (expired)' : ''}` : '';
+        console.log(`${w.owner}  [WAITING ON: ${w.waitingOn.join(', ')}]  ${w.paths.join(', ')}  (requested ${w.requestedAt}${expiryNote})`);
       }
       return 0;
     }

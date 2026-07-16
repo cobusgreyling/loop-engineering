@@ -159,13 +159,13 @@ export async function markWorktree(input: MarkInput): Promise<WorktreeEntry> {
 
 /** Parse a duration like "30m", "24h", "7d" into milliseconds. Shared with lock.ts's --ttl. */
 export function parseDurationMs(token: string, flag: string): number {
-  const m = /^(\d+)([mhd])$/.exec(token.trim());
+  const m = /^(\d+)([smhd])$/.exec(token.trim());
   if (!m) {
-    throw new Error(`Invalid ${flag} "${token}". Use e.g. 30m, 24h, 7d.`);
+    throw new Error(`Invalid ${flag} "${token}". Use e.g. 30s, 30m, 24h, 7d.`);
   }
   const n = Number(m[1]);
   const unit = m[2];
-  const ms = unit === 'm' ? 60_000 : unit === 'h' ? 3_600_000 : 86_400_000;
+  const ms = unit === 's' ? 1000 : unit === 'm' ? 60_000 : unit === 'h' ? 3_600_000 : 86_400_000;
   return n * ms;
 }
 
