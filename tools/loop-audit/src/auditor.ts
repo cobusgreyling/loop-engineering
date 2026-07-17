@@ -210,7 +210,7 @@ async function findSkills(root: string): Promise<string[]> {
 
 async function detectLoopActivity(root: string): Promise<{ present: boolean; evidence: string[] }> {
   const evidence: string[] = [];
-  const stateCandidates = [...STATE_FILES, 'STATE.md'];
+  const stateCandidates = [...STATE_FILES];
 
   // 1. Look for "Last run" timestamps or dated entries inside state files (strong real-usage signal)
   for (const sf of stateCandidates) {
@@ -374,9 +374,6 @@ export async function auditProject(target: string): Promise<AuditResult> {
   let safetyDocPresent = false;
   for (const f of SAFETY_FILES) {
     if (await fileExists(path.join(root, f))) { safetyDocPresent = true; break; }
-  }
-  if (!safetyDocPresent) {
-    safetyDocPresent = await fileExists(path.join(root, 'docs', 'safety.md'));
   }
 
   const mcpPresent = (await Promise.all(MCP_FILES.map(f => fileExists(path.join(root, f))))).some(Boolean) ||

@@ -392,9 +392,9 @@ server.tool(
 
     const { cost } = pattern;
     const mix = level === 'L1'
-      ? { noop: 0.7, report: 0.3, action: 0 }
+      ? { noop: 0.6, report: 0.4, action: 0 }
       : level === 'L2'
-        ? { noop: 0.6, report: 0.25, action: 0.15 }
+        ? { noop: 0.5, report: 0.3, action: 0.2 }
         : { noop: 0.4, report: 0.35, action: 0.25 };
 
     const realisticPerRun = cost.tokens_noop * mix.noop
