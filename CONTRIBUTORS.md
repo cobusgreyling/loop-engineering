@@ -2,11 +2,11 @@
 
 Thank you to everyone who shipped docs, stories, examples, and tool fixes.
 
-*Generated 2026-07-16 via `node scripts/generate-contributors.mjs` — re-run after merges.*
+*Generated 2026-07-17 via `node scripts/generate-contributors.mjs` — re-run after merges.*
 
 | Contributor | Highlights |
 |-------------|------------|
-| [@KhaiTrang1995](https://github.com/KhaiTrang1995) | #274 feat(loop-worktree): add advisory path locking to prevent multi-loop collisions<br>#273 feat(loop-context): track daily token spend across runs, add --on-exceed hook |
+| [@KhaiTrang1995](https://github.com/KhaiTrang1995) | #291 feat(loop-gate): mechanical enforcement of the path denylist + auto-merge allowlist<br>#289 fix(build): drop chmod +x from build scripts, npm handles it on install |
 | [@k-anushka14](https://github.com/k-anushka14) | #249 Add Codeium (Windsurf) appendix to primitives matrix (#228)<br>#248 Add loop-init validation checklist (#231) |
 | [@Mahizhan-S](https://github.com/Mahizhan-S) | #251 docs: added Cursor Dependency Sweeper example #222<br>#217 docs: add npx quickstart for MCP server (#201) |
 | [@50thycal](https://github.com/50thycal) | story: `quant-loop-out-of-time.md`<br>story: `quant-loop-the-verifier-problem.md` |
@@ -23,6 +23,7 @@ Thank you to everyone who shipped docs, stories, examples, and tool fixes.
 | [@jiaobotao](https://github.com/jiaobotao) | #141 Add Hermes Agent example (daily-triage) + primitives matrix column |
 | [@KevinGuo1007](https://github.com/KevinGuo1007) | #206 docs: add Zed appendix to primitives matrix |
 | [@lorenzobosio](https://github.com/lorenzobosio) | #247 docs(examples): add Hermes PR Babysitter example |
+| [@THRISHAL12345](https://github.com/THRISHAL12345) | #296 feat(loop-context): add similarity-based stagnation detection |
 | [@Zhang-986](https://github.com/Zhang-986) | #138 fix(loop-sync): honor json output flag |
 
 ## Your first PR
