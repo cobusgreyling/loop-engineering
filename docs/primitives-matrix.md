@@ -321,3 +321,56 @@ for maker/checker separation, and `.amazonq/mcp.json` for external tools.
 ### Official Documentation
 
 https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html
+
+## Appendix: Devin (Cognition)
+
+Devin is a cloud-hosted autonomous AI software engineer. Map loop primitives onto its
+Scheduled Sessions, Playbooks, Connectors, Managed Devins, and Knowledge base.
+
+| Primitive | Devin mapping |
+|-----------|--------------|
+| **Scheduling** | **Scheduled Sessions** (`Settings → Schedules`): create recurring or one-time sessions (e.g., daily 07:00 UTC). For cron syntax, invoke the [Devin API](https://docs.devin.ai/api-reference/overview) (`POST /sessions`) from a GitHub Action or systemd timer. |
+| **Run-until-done** | Devin runs until the session goal is satisfied. Pair with Devin Review: Devin opens a PR, CI runs, Devin re-enters on failure and re-pushes until tests pass. |
+| **Worktrees** | Each session runs in an **isolated VM** — parallel sessions cannot collide. For multi-branch work, create one session per branch. |
+| **Skills** | **Playbooks** (`Settings → Playbooks`): reusable prompt templates (custom system instructions), equivalent to `SKILL.md`. Attach to any session or schedule; author in the web app or extract from successful sessions. |
+| **Plugins & Connectors** | **Connectors** (`Settings → Integrations`): GitHub, GitLab, Slack, Teams, Jira, Linear. Enable GitHub/GitLab for PR writes; add read-only MCP servers for extra context. |
+| **Sub-agents** | **Managed Devins**: the primary session delegates sub-tasks to parallel Devin VMs. For maker/checker, run a separate **Devin Review** session over the diff — it reports `PASS/FAIL` without writing code. |
+| **State / Memory** | **Knowledge base** (`Settings → Knowledge`): org-wide context (style guides, patterns). Supplement with a committed `STATE.md` at the repo root that every session reads first and updates at the end. |
+| **PR-only writes** | Devin should open or update Pull Requests instead of committing directly to protected branches. All repository changes flow through PR review before merge — never push directly to `main`. |
+| **Honest gaps** | No native cron-expression UI; no CLI worktree command (VM isolation is implicit); PR merge always requires a human — Devin cannot auto-merge. |
+
+### Minimal Transfer Recipe
+
+```bash
+# 1. Create a Playbook from the loop-triage skill text
+#    Settings → Playbooks → New Playbook
+
+# 2. Seed project state
+cp starters/minimal-loop/STATE.md.example STATE.md
+
+# 3. Add project context to the Knowledge base
+#    Settings → Knowledge → New Entry (paste AGENTS.md + codebase conventions)
+
+# 4. Schedule a daily triage session
+#    Settings → Schedules → New Schedule  (see prompt below)
+```
+
+### Week-one Daily Triage (Report-Only, L1)
+
+```text
+Run loop-triage for this repository.
+
+1. Read STATE.md and the Knowledge base entries for this project.
+2. Scan open issues and PRs for High Priority and Watch List items.
+3. Update STATE.md with those sections only.
+4. Do NOT edit source code, open PRs, or commit any file other than STATE.md.
+5. Post a brief summary to the session chat for human review.
+```
+
+Graduate to L2 by adding PR creation to the Playbook — but always with a human gate:
+
+> **Human Gate (L2+):** Devin PRs must be reviewed and merged by a human.
+> Never enable auto-merge. Use Devin Review as the maker; a team member is the checker.
+> Paths on the [denylist](../docs/safety.md#path-denylist) (secrets, billing, auth) require
+> explicit human approval before any Devin session may touch them.
+
