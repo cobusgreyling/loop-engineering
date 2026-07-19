@@ -33,6 +33,12 @@ jobs:
       - name: Ensure npm supports trusted publishing (OIDC)
         run: npm install -g npm@latest
 
+      - name: Build loop-gate sibling (file: dependency)
+        working-directory: tools/loop-gate
+        run: |
+          npm ci
+          npm run build
+
       - name: Install, build, test
         working-directory: tools/mcp-server
         run: |
