@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop-mcp-server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MCP server for loop-engineering — exposes patterns, skills, state, and audit tools as runtime-queryable resources for AI agents",
   "type": "module",
   "bin": {

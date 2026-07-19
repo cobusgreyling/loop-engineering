@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop-audit",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Loop engineering readiness auditor. Compute Loop Readiness Score (L0-L3), detect activity, and get actionable suggestions. npx @cobusgreyling/loop-audit . --suggest",
   "type": "module",
   "bin": {
