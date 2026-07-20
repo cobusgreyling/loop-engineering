@@ -45,3 +45,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-07-15T09:44:51Z","pattern":"daily-triage","duration_s":9,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"29405626165"}
 {"run_id":"2026-07-16T09:50:58Z","pattern":"daily-triage","duration_s":6,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"29488647294"}
 {"run_id":"2026-07-17T09:41:37Z","pattern":"daily-triage","duration_s":4,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"29570867800"}
+{"run_id":"2026-07-20T06:25:53Z","pattern":"daily-triage","duration_s":180,"items_found":2,"actions_taken":1,"escalations":0,"tokens_estimate":45000,"readiness_score":100,"outcome":"report-only","note":"scheduled-maintenance-manual"}
