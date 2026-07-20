@@ -4,6 +4,7 @@ Real-world loop engineering — including failures. Contribute yours via [CONTRI
 
 | Story | Pattern | Takeaway |
 |-------|---------|----------|
+| [score-climbs-then-budget-burns.md](./score-climbs-then-budget-burns.md) | Daily Triage → CI Sweeper | Score ≠ permission to auto-fix; budget burn after early L2 |
 | [pr-babysitter-week-one.md](./pr-babysitter-week-one.md) | PR Babysitter | State + attempt limits + verifier |
 | [daily-triage-report-only.md](./daily-triage-report-only.md) | Daily Triage | L1 before L2 |
 | [why-we-killed-ci-sweeper.md](./why-we-killed-ci-sweeper.md) | CI Sweeper | Budget, branch allowlist, kill switch |

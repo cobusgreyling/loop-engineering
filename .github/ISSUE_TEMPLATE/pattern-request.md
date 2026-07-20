@@ -1,27 +1,16 @@
 ---
 name: Pattern request
-about: Suggest a new reusable loop pattern with production potential
-labels: pattern-request
+about: Request a new documented loop pattern
+title: "[pattern] "
+labels: ["pattern-request"]
 ---
 
-**Pattern name idea**: 
+**Pattern name** (short)
 
-**What problem does it solve?** (one paragraph)
+**Problem it solves**
 
-**Typical cadence**: 
+**Tools you care about** (Grok / Claude / Codex / Cursor / …)
 
-**Risk level** (low / medium / high):
+**Similar existing pattern?** (link under `patterns/` if any)
 
-**Target tools** (Grok / Claude Code / Codex / GitHub Actions / other):
-
-**Why this belongs in the reference** (real usage or strong signal from others):
-
-**Proposed skills** (triage, fix, verify...):
-
-**Human gates you expect**:
-
-**Any existing starter code or notes** (links, private repo redacted examples):
-
----
-
-*We will turn accepted requests into full `patterns/*.md` + `registry.yaml` entry + starter + at least one story following the template.*
+**Would you draft a PR?** yes / no / need guidance

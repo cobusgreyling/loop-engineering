@@ -1,25 +1,18 @@
 ---
-name: Share a production story (wins or failures)
-about: Real-world loop engineering experience. Failures and surprises are first-class.
-labels: story
+name: Share a production story
+about: Honest win or failure from running a loop
+title: "[story] "
+labels: ["story", "good first issue"]
 ---
 
-**Pattern(s) used**:
+**Pattern used** (Daily Triage / PR Babysitter / CI Sweeper / other)
 
-**Context** (team size, tools, repo(s), what you were trying to automate):
+**Tool** (Grok / Claude / Codex / Cursor / Opencode / other)
 
-**What worked**:
+**What worked**
 
-**What broke or surprised you** (required — honest failures make the reference valuable):
+**What failed or surprised you** (required — failures are first-class)
 
-**Metrics or qualitative outcome** (time saved, PRs merged, incidents avoided, tokens burned, etc.):
+**Actionable lesson** (one paragraph)
 
-**Actionable lesson** (one crisp paragraph others can apply):
-
-**Would you run this unattended today?** (L1 / L2 / L3 and why):
-
-**Artifacts you can share** (redacted state snippets, skill text, workflow yml, screenshots — attach or paste):
-
----
-
-Thank you. These stories are the most valuable part of the project.
+**Optional:** PR under `stories/` instead of this issue — same-day review when possible.

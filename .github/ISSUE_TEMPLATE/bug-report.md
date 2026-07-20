@@ -1,27 +1,26 @@
 ---
-name: Bug report (for the reference, starters, loop-audit, or docs)
-about: Something is broken, inaccurate, or the audit gives wrong results
-labels: bug
+name: Bug report
+about: Something is broken, inaccurate, or loop-audit gives wrong results
+title: "[bug] "
+labels: ["bug"]
 ---
 
-**Describe the bug**:
+**Describe the bug**
 
-**Steps to reproduce**:
-1. 
-2. 
+**Steps to reproduce**
+1.
+2.
 
-**Expected behavior**:
+**Expected behavior**
 
-**Actual behavior** (include output of `loop-audit --json` or command if relevant):
+**Actual behavior** (include `loop-audit --json` or command output if relevant)
 
-**Environment**:
+**Environment**
 - OS:
-- Node (for audit):
-- Tool used (Grok / Claude / Codex / GH Actions):
+- Node (for CLIs):
+- Tool (Grok / Claude / Codex / Cursor / Opencode / other):
 - Target repo (if not this one):
 
-**Additional context** (links to patterns, commits, screenshots):
+**Additional context**
 
----
-
-*If this is a pattern or safety issue, please also reference `docs/safety.md` or `docs/failure-modes.md`.*
+If this is a pattern or safety issue, reference `docs/safety.md` or `docs/failure-modes.md`.

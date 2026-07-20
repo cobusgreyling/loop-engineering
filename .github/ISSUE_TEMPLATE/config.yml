@@ -1,31 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "\u2753 Question or Discussion"
-    url: https://github.com/cobusgreyling/loop-engineering/discussions
-    about: "For general questions, ideas, or chat about loop engineering, use Discussions."
-  - name: "\ud83d\udc1b Report an issue with the docs site or showcase"
-    url: https://github.com/cobusgreyling/loop-engineering/issues/new?labels=docs
-    about: "Use the bug report template for the reference itself."
-  - name: "\ud83c\udf10 Add my project to Adopters"
+  - name: "❓ Ask anything"
+    url: https://github.com/cobusgreyling/loop-engineering/discussions/327
+    about: "Setup, scoring, safety, tool mapping — prefer Discussions for questions."
+  - name: "📣 Show your loop"
+    url: https://github.com/cobusgreyling/loop-engineering/discussions/326
+    about: "First runs, Loop Ready scores, honest failures."
+  - name: "🏷️ Add my project to Adopters"
     url: https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml
-    about: "List your loop on the showcase adopters wall and docs/adopters.md."
-  - name: "\ud83c\udf31 Good first issues (contributor quickstart)"
-    url: https://github.com/cobusgreyling/loop-engineering/discussions/123
-    about: "Scoped ~10 min–1 hr tasks. Comment I'll take this on an issue to get assigned."
-
-labels:
-  - name: "pattern-request"
-    description: "Request for a new documented loop pattern"
-    color: "0e8a16"
-  - name: "story"
-    description: "Production story or failure report"
-    color: "5319e7"
-  - name: "tooling"
-    description: "loop-audit, registry, starters, templates"
-    color: "1d76db"
-  - name: "docs"
-    description: "Documentation, primitives, checklist, showcase"
-    color: "bfd4f2"
-  - name: "good first issue"
-    description: "Good for newcomers"
-    color: "7057ff"
+    about: "List your loop on the adopters wall."
+  - name: "🌱 Good first issues"
+    url: https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+    about: "Scoped ~10 min–1 hr tasks. Comment I'll take this to get assigned."

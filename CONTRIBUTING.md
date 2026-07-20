@@ -59,9 +59,14 @@ Also add an entry to `patterns/registry.yaml`.
 
 ## Code of Conduct
 
+This project follows the [Code of Conduct](./CODE_OF_CONDUCT.md) (Contributor Covenant).
+
+In short:
+
 - Engineering over hype
 - Failures are first-class content
 - Tool-agnostic by default; tool-specific in labeled sections
+- Harassment and bad-faith participation are not tolerated
 
 ## Maintainer response (adopters & stories)
 
@@ -75,8 +80,8 @@ Automation posts a welcome comment on new story/adopter PRs (see `.github/workfl
 
 ## Community
 
-- **Questions**: [GitHub Discussions](https://github.com/cobusgreyling/loop-engineering/discussions) (preferred) or issue with label `question`
-- **Show your loop**: [Add Adopter issue](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml), Discussions, or a row in [docs/adopters.md](./docs/adopters.md)
+- **Questions**: [Ask anything](https://github.com/cobusgreyling/loop-engineering/discussions/327) (preferred) or issue with label `question`
+- **Show your loop**: [Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/326), [Add Adopter issue](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml), or a row in [docs/adopters.md](./docs/adopters.md)
 - **Loop Ready badge**: `npx @cobusgreyling/loop-audit . --badge` — paste into your README
 - **Good first issues**: look for label [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 - **Hall of fame**: [CONTRIBUTORS.md](./CONTRIBUTORS.md) — regenerate after merges with `npm run contributors:generate`
