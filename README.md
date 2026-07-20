@@ -100,20 +100,26 @@ For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agent
 | [loop-worktree](tools/loop-worktree/) | Manage isolated git worktrees per fix attempt — `npx @cobusgreyling/loop-worktree create --run-id <id> --pattern <p>` |
 | [loop-gate](tools/loop-gate/) | Mechanical enforcement of the path denylist + auto-merge allowlist from `gate.yaml` — `npx @cobusgreyling/loop-gate check --action auto-merge --paths <f1,f2,...>` |
 | [Goal Engineering](https://github.com/cobusgreyling/goal-engineering) | **Companion:** loops discover, goals finish — `/goal` + [stack cookbook](https://github.com/cobusgreyling/goal-engineering/blob/main/docs/stack-cookbook.md) (`npx @cobusgreyling/goal doctor .`) |
+| [Memory Engineering](https://github.com/cobusgreyling/memory-engineering) | **Companion:** stop re-explaining the repo — tiers, budget, Memory Ready score (`node tools/memory-init/cli.js .`) |
+| [Fleet Engineering](https://github.com/cobusgreyling/fleet-engineering) | **Companion:** govern populations of agents — registry, inbox, Fleet Ready score (`npx @cobusgreyling/fleet-init .`) |
 | [Stories](stories/) | Real wins and honest failures |
 
 ### Ecosystem stack
 
 ```
-loop-engineering  →  harness-foundry  →  outerloop
-   (patterns)         (runtime)          (governance)
+memory-engineering → loop-engineering → harness-foundry → outerloop → fleet-engineering
+   (persist)            (patterns)         (runtime)        (verdict)     (population)
 ```
 
 | Layer | You get | Start |
 |-------|---------|--------|
+| **Memory** | Tiers, recall budget, Memory Ready score | [memory-engineering](https://github.com/cobusgreyling/memory-engineering) |
 | **Design** (this repo) | Patterns, starters, Loop Ready score | `npx @cobusgreyling/loop-init .` |
 | **Runtime** | Versioned harness, traces, evolve | `npx @cobusgreyling/loop-init . --with-foundry` or [Foundry showcase](https://github.com/cobusgreyling/harness-foundry/blob/main/docs/showcase.md) |
 | **Govern** | Evidence, verdict, answerability | [outerloop](https://github.com/cobusgreyling/outerloop) |
+| **Fleet** | Registry, inbox, budgets, kill switch | `npx @cobusgreyling/fleet-init .` · [Fleet Ready](https://github.com/cobusgreyling/fleet-engineering/blob/main/docs/fleet-ready-score.md) |
+
+**Scale beyond one loop:** when agents forget across sessions, add [memory-engineering](https://github.com/cobusgreyling/memory-engineering). When you have many agents/loops on a team, add [fleet-engineering](https://github.com/cobusgreyling/fleet-engineering).
 
 **Next after Loop Ready 80+:** version the loop as a harness — `loop-init` prints the CTA automatically; `loop-audit` recommends Foundry when the score is strong but `.foundry/stack.yaml` is missing.
 | [Contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123) | **Help wanted:** 21 scoped `good first issues` — comment *I'll take this* to get assigned |
