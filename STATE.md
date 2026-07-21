@@ -1,44 +1,41 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-21T12:38:33Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-21T14:11:50Z (PR triage / scheduled maintenance)
 
 ## High Priority (loop is acting or waiting on human)
 
 - Maintain loop readiness score ≥ 58 (current: **100**, level **L3**). Harness-runtime warn: no `.foundry/stack.yaml` — optional dogfood `loop-init --with-foundry` (human).
-- **Shipped (recent):** [#324](https://github.com/cobusgreyling/loop-engineering/pull/324) Foundry funnel + npm audit 1.7.0 / init 1.5.0 + [v1.6.0](https://github.com/cobusgreyling/loop-engineering/releases/tag/v1.6.0); [#329](https://github.com/cobusgreyling/loop-engineering/pull/329) community health; [#331](https://github.com/cobusgreyling/loop-engineering/pull/331) ecosystem links; [#333](https://github.com/cobusgreyling/loop-engineering/pull/333) star-history; [#334](https://github.com/cobusgreyling/loop-engineering/pull/334) automated daily triage (sparse STATE — re-curated here).
-- **Contributor PR backlog:**
-  - [#335](https://github.com/cobusgreyling/loop-engineering/pull/335) wire loop-context circuit breaker into fix-capable patterns (@Tusm11). **NEW** — human review; fork CI may need approval.
-  - [#316](https://github.com/cobusgreyling/loop-engineering/pull/316) loop-sync requiredFiles — drop `pr-description.md`.
-  - [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init — strip scratch/`dist`.
-  - [#318](https://github.com/cobusgreyling/loop-engineering/pull/318) telemetry showcase — human gate.
-  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — **CONFLICTING** post-#324; rebase needed.
-  - [#315](https://github.com/cobusgreyling/loop-engineering/pull/315) old housekeeping — **CONFLICTING**; close.
-  - [#323](https://github.com/cobusgreyling/loop-engineering/pull/323) this curated STATE draft (rebased onto #334).
-- Issues: [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep · [#320](https://github.com/cobusgreyling/loop-engineering/issues/320) weekly report.
+- **Shipped (recent):** [#324](https://github.com/cobusgreyling/loop-engineering/pull/324) Foundry funnel + [v1.6.0](https://github.com/cobusgreyling/loop-engineering/releases/tag/v1.6.0); ecosystem/docs/star-history automation; **triage 2026-07-21:**
+  - Merged [#335](https://github.com/cobusgreyling/loop-engineering/pull/335) loop-context circuit breaker wiring (@Tusm11)
+  - Merged [#318](https://github.com/cobusgreyling/loop-engineering/pull/318) live telemetry on docs site (@THRISHAL12345)
+  - Merged [#316](https://github.com/cobusgreyling/loop-engineering/pull/316) loop-sync requiredFiles (+ dropped accidental `pr-description.md`)
+  - Closed [#315](https://github.com/cobusgreyling/loop-engineering/pull/315) superseded housekeeping draft
+- **Waiting on author (changes requested):**
+  - [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init — strip `.test-manual/`, `scratch.js`, `PR_DESCRIPTION.md`, unrelated `dist/`
+  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — rebase (conflicts), strip noise dist, add tests, clarify private vs publish
+- Issues: [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep · [#320](https://github.com/cobusgreyling/loop-engineering/issues/320) weekly report
 
 ## Watch List
 
-- Contributor failure stories; Post-Merge Cleanup production story.
-- Cursor/docs GFI: #220, #223, #224; #117–#120, #147, #173, #195, #196, #230.
-- Validate `loop-init --with-foundry` on fresh projects.
-- Optional: StackMap #300, Pluribus #262, loop.js #246; publish `docs/distribution/` drafts.
+- Contributor failure stories; Post-Merge Cleanup production story
+- Cursor/docs GFI: #220, #223, #224; #117–#120, #147, #173, #195, #196
+- Validate `loop-init --with-foundry` on fresh projects
+- Optional: StackMap #300, Pluribus #262, loop.js #246
 
-## Housekeeping (2026-07-21)
+## Housekeeping (2026-07-21 triage)
 
-- Recheck 12:38 UTC: new PR #335 (loop-context circuit breaker); main still #334; backlog otherwise unchanged.
-- Automated daily triage merged #334 (overwrote curated STATE again).
-- Pruned `automated/daily-triage-2026-07-21`.
-- Reset #323 onto main with re-curated triage (avoid multi-commit rebase thrash).
-- Main CI green; readiness 100/L3; npm current.
+- Human PR triage completed (merge 316/318/335; close 315; CHANGES_REQUESTED 317/321).
+- Main CI green; readiness 100/L3; npm current as of last release prep.
 
 ## Recent Noise
 
 - Star-history / sparse automated STATE overwrite (expected).
+- Automated daily-triage can clobber curated High Priority — re-curate after merge.
 
 ## Post-Run Critique
 
-- Friction: automated daily-triage still clobbers curated STATE — prefer merge curated #323 or teach workflow to preserve High Priority sections.
-- Still need human on contributor PRs; close #315.
+- Friction: automated daily-triage still overwrites curated STATE.
+- Adjustment: land curated maintenance after triage; consider workflow preserve-section later.
 
 ---
 Run log: Updated by daily-triage.yml and scheduled maintenance. See LOOP.md.
