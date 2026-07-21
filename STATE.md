@@ -1,6 +1,6 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-21T15:48:22Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-21T15:58:23Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
@@ -12,7 +12,7 @@ Last run: 2026-07-21T15:48:22Z (scheduled maintenance / Grok loop)
   - Closed [#315](https://github.com/cobusgreyling/loop-engineering/pull/315) superseded housekeeping draft
   - Merged [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init + goal templates (`tools/goal-init`) — consider npm publish / tag when ready
 - **Contributor PRs:**
-  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — **CONFLICTING** again after #317; author rebase needed; CI was green pre-conflict; publish workflows + npm intent still under human review.
+  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — still **CONFLICTING** post-#317; author pushed lockfile fix (`package.json vs lockfile mismatch`) but needs rebase onto main; full audit/validate not re-run (only welcome).
 - **npm:** `goal-init` 1.0.0 in-repo but **not published** yet — optional tag/publish after release-prep #332.
 - Issues: [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep · [#320](https://github.com/cobusgreyling/loop-engineering/issues/320) weekly report
 
@@ -26,6 +26,7 @@ Last run: 2026-07-21T15:48:22Z (scheduled maintenance / Grok loop)
 ## Housekeeping (2026-07-21 triage)
 
 - Recheck 15:48 UTC: **#317 merged** to main. Remaining open: #321 readiness-core, #336 housekeeping draft.
+- Recheck 15:58 UTC: #321 still conflicting; lockfile commit landed without full CI.
 - Human PR triage completed (merge 316/318/335; close 315; CHANGES_REQUESTED 317/321).
 - Main CI green; readiness 100/L3; npm current as of last release prep.
 
