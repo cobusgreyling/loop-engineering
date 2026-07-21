@@ -1,12 +1,13 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-21T12:08:44Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-21T12:38:33Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
 - Maintain loop readiness score ≥ 58 (current: **100**, level **L3**). Harness-runtime warn: no `.foundry/stack.yaml` — optional dogfood `loop-init --with-foundry` (human).
 - **Shipped (recent):** [#324](https://github.com/cobusgreyling/loop-engineering/pull/324) Foundry funnel + npm audit 1.7.0 / init 1.5.0 + [v1.6.0](https://github.com/cobusgreyling/loop-engineering/releases/tag/v1.6.0); [#329](https://github.com/cobusgreyling/loop-engineering/pull/329) community health; [#331](https://github.com/cobusgreyling/loop-engineering/pull/331) ecosystem links; [#333](https://github.com/cobusgreyling/loop-engineering/pull/333) star-history; [#334](https://github.com/cobusgreyling/loop-engineering/pull/334) automated daily triage (sparse STATE — re-curated here).
 - **Contributor PR backlog:**
+  - [#335](https://github.com/cobusgreyling/loop-engineering/pull/335) wire loop-context circuit breaker into fix-capable patterns (@Tusm11). **NEW** — human review; fork CI may need approval.
   - [#316](https://github.com/cobusgreyling/loop-engineering/pull/316) loop-sync requiredFiles — drop `pr-description.md`.
   - [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init — strip scratch/`dist`.
   - [#318](https://github.com/cobusgreyling/loop-engineering/pull/318) telemetry showcase — human gate.
@@ -24,6 +25,7 @@ Last run: 2026-07-21T12:08:44Z (scheduled maintenance / Grok loop)
 
 ## Housekeeping (2026-07-21)
 
+- Recheck 12:38 UTC: new PR #335 (loop-context circuit breaker); main still #334; backlog otherwise unchanged.
 - Automated daily triage merged #334 (overwrote curated STATE again).
 - Pruned `automated/daily-triage-2026-07-21`.
 - Reset #323 onto main with re-curated triage (avoid multi-commit rebase thrash).
