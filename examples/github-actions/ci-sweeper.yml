@@ -37,7 +37,21 @@ jobs:
           echo "- URL: ${{ github.event.workflow_run.html_url }}" >> "$FILE"
           echo "- Loop action: pending agent invocation" >> "$FILE"
 
+      - name: Circuit breaker check
+        id: circuit_breaker
+        run: |
+          npx --yes @cobusgreyling/loop-context --check --ledger loop-ledger.json \
+            --budget-from-pattern ci-sweeper --budget-level L2 || echo "tripped=true" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
       - name: Invoke fix agent
+        if: steps.circuit_breaker.outputs.tripped != 'true'
         run: |
           echo "::notice::Wire to agent: classify failure, worktree fix, verifier, open PR."
           echo "See patterns/ci-sweeper.md and docs/safety.md"
+
+      - name: Escalate (circuit breaker tripped)
+        if: steps.circuit_breaker.outputs.tripped == 'true'
+        run: |
+          echo "::warning::Circuit breaker tripped — same failure recurred or attempt cap reached."
+          echo "Escalating to human instead of retrying. See docs/safety.md#human-gates-required."

@@ -17,7 +17,7 @@ cp starters/post-merge-cleanup/LOOP.md .
 Start (Grok):
 
 ```
-/loop 1d Run post-merge-scan on merges to main (last 7d). Update post-merge-state.md. Small doc/link fixes only in worktree. Run loop-gate check before commit. Escalate refactors.
+/loop 1d Run post-merge-scan on merges to main (last 7d). Update post-merge-state.md. Small doc/link fixes only in worktree. Run loop-context --check before each retry on the same regression; run loop-gate check before commit. Escalate refactors.
 ```
 
 ## Files

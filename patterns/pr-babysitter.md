@@ -44,6 +44,20 @@ Example state entry:
 4. Write concise updates back to the PR and to state.
 5. Anything ambiguous or high-risk → surface to human with context.
 
+## Circuit Breaker
+
+This is a fix-capable (L2) pattern, so `loop-init` scaffolds the `loop-guard` skill and a seeded `loop-ledger.json` for it automatically. Run the circuit breaker before each retry attempt on a watched PR:
+
+```bash
+npx @cobusgreyling/loop-context --check --ledger loop-ledger.json \
+  --budget-from-pattern pr-babysitter --budget-level L2
+```
+
+Non-zero exit means the same failure repeated or the attempt cap was hit —
+stop and escalate to a human instead of continuing to comment/retry on the
+PR. See [docs/safety.md](../docs/safety.md).
+
+
 ## Verification Strategy
 
 - Never let the implementer sub-agent mark its own work "done".

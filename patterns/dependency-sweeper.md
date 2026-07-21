@@ -43,6 +43,21 @@ Prune merged/closed entries on every run.
 6. Update the state file and (optionally) comment on open dependency PRs.
 7. On next run, re-evaluate open items and close stale or conflicting ones.
 
+## Circuit Breaker
+
+This is a fix-capable (L2) pattern, so `loop-init` scaffolds the `loop-guard` skill and a seeded `loop-ledger.json` for it automatically. Before each retry on the same package, run the circuit breaker:
+
+```bash
+npx @cobusgreyling/loop-context --check --ledger loop-ledger.json \
+  --budget-from-pattern dependency-sweeper --budget-level L2
+```
+
+If the same failure recurs or the attempt cap is hit (see "Escalate after 2
+tries" below), it exits non-zero — stop retrying and escalate to a human
+instead of looping. See [docs/safety.md](../docs/safety.md).
+
+
+
 ## Verification Strategy
 
 - **Never** let the implementer sub-agent declare success.

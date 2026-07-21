@@ -18,8 +18,21 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Circuit breaker check
+        id: circuit_breaker
+        run: |
+          npx --yes @cobusgreyling/loop-context --check --ledger loop-ledger.json \
+            --budget-from-pattern dependency-sweeper --budget-level L2 || echo "tripped=true" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
       - name: Placeholder — wire to your agent runtime
+        if: steps.circuit_breaker.outputs.tripped != 'true'
         run: |
           echo "Run dependency-triage (npm audit / outdated)."
           echo "Patch-only fixes in worktree with verifier."
           echo "Update dependency-sweeper-state.md — escalate majors."
+
+      - name: Escalate (circuit breaker tripped)
+        if: steps.circuit_breaker.outputs.tripped == 'true'
+        run: |
+          echo "::warning::Circuit breaker tripped for this package — see docs/safety.md#human-gates-required."

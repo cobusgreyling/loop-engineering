@@ -50,6 +50,18 @@ Last run: 2026-06-09 22:00 UTC
 6. Open small PRs or batch into a single "cleanup" PR per day.
 7. Update state; prune completed items.
 
+## Circuit Breaker
+
+This is a fix-capable (L2) pattern, so `loop-init` scaffolds the `loop-guard` skill and a seeded `loop-ledger.json` for it automatically. Run the circuit breaker before each retry on the same regression:
+
+```bash
+npx @cobusgreyling/loop-context --check --ledger loop-ledger.json \
+  --budget-from-pattern post-merge-cleanup --budget-level L2
+```
+
+Non-zero exit means the same failure repeated or the attempt cap was hit —
+stop and escalate to a human. See [docs/safety.md](../docs/safety.md).
+
 ## Verification Strategy
 
 - Cleanup must not alter behavior unless explicitly removing dead code paths.
