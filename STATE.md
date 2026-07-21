@@ -1,6 +1,6 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-21T14:58:25Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-21T15:08:23Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
@@ -10,9 +10,9 @@ Last run: 2026-07-21T14:58:25Z (scheduled maintenance / Grok loop)
   - Merged [#318](https://github.com/cobusgreyling/loop-engineering/pull/318) live telemetry on docs site (@THRISHAL12345)
   - Merged [#316](https://github.com/cobusgreyling/loop-engineering/pull/316) loop-sync requiredFiles (+ dropped accidental `pr-description.md`)
   - Closed [#315](https://github.com/cobusgreyling/loop-engineering/pull/315) superseded housekeeping draft
-- **Contributor PRs:**
-  - [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init — hygiene cleanup landed; CI green; **ready for re-review**.
-  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — rebased (mergeable) but **audit CI red**: `Cannot find module '@cobusgreyling/readiness-core'` + cascade TS errors on `AuditResult` — need package link/build in monorepo CI (`npm` workspace / build order) before re-review.
+- **Contributor PRs (ready for human re-review):**
+  - [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init — hygiene cleanup + CI green; mergeable.
+  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — rebased; audit CI now green (fixed readiness-core module resolution); mergeable — still review scope (private package vs publish, dist noise policy).
 - Issues: [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep · [#320](https://github.com/cobusgreyling/loop-engineering/issues/320) weekly report
 
 ## Watch List
@@ -24,7 +24,7 @@ Last run: 2026-07-21T14:58:25Z (scheduled maintenance / Grok loop)
 
 ## Housekeeping (2026-07-21 triage)
 
-- Recheck 14:58 UTC: #321 rebased but audit fails (missing readiness-core module in build). #317 still re-review ready.
+- Recheck 15:08 UTC: both #317 and #321 CI green + mergeable — escalate to human re-review/merge decision.
 - Human PR triage completed (merge 316/318/335; close 315; CHANGES_REQUESTED 317/321).
 - Main CI green; readiness 100/L3; npm current as of last release prep.
 
