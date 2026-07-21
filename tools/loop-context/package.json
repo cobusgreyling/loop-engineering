@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop-context",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Stateful memory manager for agent loops — summarize, prune, and inject context, with a circuit breaker that escalates stagnant or no-progress runs instead of burning tokens.",
   "type": "module",
   "main": "dist/context-manager.js",

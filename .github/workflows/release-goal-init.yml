@@ -1,0 +1,63 @@
+name: Release goal-init
+
+on:
+  push:
+    tags:
+      - 'goal-init-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. goal-init-v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', github.event.inputs.tag) || github.ref }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: tools/goal-init/package-lock.json
+
+      - name: Ensure npm supports trusted publishing (OIDC)
+        run: npm install -g npm@latest
+
+      - name: Install, build, test
+        working-directory: tools/goal-init
+        run: |
+          npm ci
+          npm run build
+          npm test
+
+      - name: Skip if version already published
+        id: check
+        working-directory: tools/goal-init
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@cobusgreyling/goal-init@${VERSION}" version 2>/dev/null; then
+            echo "Version ${VERSION} already on npm — skipping publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Publishing @cobusgreyling/goal-init@${VERSION}"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm
+        if: steps.check.outputs.skip != 'true'
+        working-directory: tools/goal-init
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
