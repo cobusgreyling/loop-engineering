@@ -42,8 +42,8 @@ describe('goal-init cli', () => {
     assert.ok(await exists(path.join(testDir, '.grok', 'skills', 'goal-scoper', 'SKILL.md')));
     assert.ok(await exists(path.join(testDir, 'AGENTS.md')));
 
-    // Check output contains audit / score section
-    assert.match(stdout, /Goal Ready score/);
+    // Match live audit ("Goal Ready:") or fallback ("Goal Ready score")
+    assert.match(stdout, /Goal Ready/);
   });
 
   test('appends to existing AGENTS.md', async () => {
