@@ -8,7 +8,7 @@ Last run: 2026-07-21T20:53:36Z (scheduled maintenance / Grok loop)
 - **npm publish status:**
   - `@cobusgreyling/readiness-core@1.0.0` — **published**
   - `@cobusgreyling/loop-context@1.4.0` — **published**
-  - `@cobusgreyling/goal-init@1.0.0` — **publish failed** on tag `goal-init-v1.0.0` (test asserts `/Goal Ready:/` but CLI prints `=== Goal Ready score ===` when goal-audit is not embedded). Fix: [#341](https://github.com/cobusgreyling/loop-engineering/pull/341). Re-run release after merge.
+  - `@cobusgreyling/goal-init@1.0.0` — **publish failed** on tag `goal-init-v1.0.0` (test too strict: live audit prints `✓ Goal Ready:` vs fallback `Goal Ready score`). Fix on [#341](https://github.com/cobusgreyling/loop-engineering/pull/341) (assert `/Goal Ready/`). Re-run release after merge.
 - [#340](https://github.com/cobusgreyling/loop-engineering/pull/340) Dependabot **security** bump `fast-uri` 3.1.2→3.1.4 in mcp-server (mergeable, CI green).
 - [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep — week of 2026-07-20.
 
