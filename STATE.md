@@ -1,6 +1,6 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-21T14:11:50Z (PR triage / scheduled maintenance)
+Last run: 2026-07-21T14:48:23Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
@@ -10,9 +10,9 @@ Last run: 2026-07-21T14:11:50Z (PR triage / scheduled maintenance)
   - Merged [#318](https://github.com/cobusgreyling/loop-engineering/pull/318) live telemetry on docs site (@THRISHAL12345)
   - Merged [#316](https://github.com/cobusgreyling/loop-engineering/pull/316) loop-sync requiredFiles (+ dropped accidental `pr-description.md`)
   - Closed [#315](https://github.com/cobusgreyling/loop-engineering/pull/315) superseded housekeeping draft
-- **Waiting on author (changes requested):**
-  - [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init — strip `.test-manual/`, `scratch.js`, `PR_DESCRIPTION.md`, unrelated `dist/`
-  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — rebase (conflicts), strip noise dist, add tests, clarify private vs publish
+- **Contributor PRs:**
+  - [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init — author cleaned junk (`.test-manual/`, `scratch.js`, etc.); CI green; **ready for re-review** (still ships `tools/goal-init/dist/` like other tools).
+  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — still **CONFLICTING**; rebase + strip noise dist + tests
 - Issues: [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep · [#320](https://github.com/cobusgreyling/loop-engineering/issues/320) weekly report
 
 ## Watch List
@@ -24,6 +24,7 @@ Last run: 2026-07-21T14:11:50Z (PR triage / scheduled maintenance)
 
 ## Housekeeping (2026-07-21 triage)
 
+- Recheck 14:48 UTC: #317 pushed hygiene fix (`chore: clean up manual artifacts…`); CI pass. #321 still conflicting. Draft #336 carries this STATE/run-log.
 - Human PR triage completed (merge 316/318/335; close 315; CHANGES_REQUESTED 317/321).
 - Main CI green; readiness 100/L3; npm current as of last release prep.
 
