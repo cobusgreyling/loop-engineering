@@ -12,7 +12,8 @@ Last run: 2026-07-21T15:48:22Z (scheduled maintenance / Grok loop)
   - Closed [#315](https://github.com/cobusgreyling/loop-engineering/pull/315) superseded housekeeping draft
   - Merged [#317](https://github.com/cobusgreyling/loop-engineering/pull/317) goal-init + goal templates (`tools/goal-init`) — consider npm publish / tag when ready
 - **Contributor PRs:**
-  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — still open; CI green earlier; re-check mergeability post-#317; human merge decision on publish workflows.
+  - [#321](https://github.com/cobusgreyling/loop-engineering/pull/321) readiness-core — **CONFLICTING** again after #317; author rebase needed; CI was green pre-conflict; publish workflows + npm intent still under human review.
+- **npm:** `goal-init` 1.0.0 in-repo but **not published** yet — optional tag/publish after release-prep #332.
 - Issues: [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep · [#320](https://github.com/cobusgreyling/loop-engineering/issues/320) weekly report
 
 ## Watch List
