@@ -23,7 +23,7 @@ Last run: 2026-07-22T04:35:50Z (scheduled maintenance / Grok loop)
 - Merged [#340](https://github.com/cobusgreyling/loop-engineering/pull/340) + [#343](https://github.com/cobusgreyling/loop-engineering/pull/343) fast-uri security bumps.
 - Closed drafts #336/#342 as superseded.
 - Merged [#345](https://github.com/cobusgreyling/loop-engineering/pull/345) star-history chart (2026-07-22).
-- Open draft: this PR (#344). Main CI green; audit gates 100.
+- Open: this draft (#344) + #346 loop-cost caching. Main CI green; audit gates 100.
 
 ## Recent Noise
 
