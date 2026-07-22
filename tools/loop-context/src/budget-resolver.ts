@@ -6,9 +6,9 @@ import { spawn } from 'node:child_process';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
 
-export type BudgetScenario = 'realistic' | 'action' | 'report';
+export type BudgetScenario = 'realistic' | 'action' | 'report' | 'caching';
 
-export const VALID_BUDGET_SCENARIOS: BudgetScenario[] = ['realistic', 'action', 'report'];
+export const VALID_BUDGET_SCENARIOS: BudgetScenario[] = ['realistic', 'action', 'report', 'caching'];
 
 export function assertValidBudgetScenario(scenario: string): asserts scenario is BudgetScenario {
   if (!VALID_BUDGET_SCENARIOS.includes(scenario as BudgetScenario)) {
@@ -82,6 +82,7 @@ async function invokeLoopCost(input: BudgetFromPatternInput): Promise<LoopCostRe
   const args = ['--pattern', input.pattern, '--level', input.level ?? 'L1'];
   if (input.cadence) args.push('--cadence', input.cadence);
   if (input.conservative) args.push('--conservative');
+  if (input.scenario === 'caching') args.push('--with-caching');
 
   const { stdout, stderr, code } = await runCostCli(cli, args);
   if (code !== 0) {
@@ -109,7 +110,11 @@ export async function resolveTokenBudgetFromPattern(input: BudgetFromPatternInpu
   const parsed = await invokeLoopCost(input);
   const tokensPerRun = parsed.scenarios?.[scenario]?.tokensPerRun;
   if (typeof tokensPerRun !== 'number') {
-    throw new Error(`loop-cost output missing scenarios.${scenario}.tokensPerRun.`);
+    const hint =
+      scenario === 'caching'
+        ? ' This pattern may be missing stable_fraction in registry.yaml.'
+        : '';
+    throw new Error(`loop-cost output missing scenarios.${scenario}.tokensPerRun.${hint}`);
   }
   return tokensPerRun;
 }
