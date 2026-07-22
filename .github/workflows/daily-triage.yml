@@ -25,10 +25,14 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: tools/loop-audit/package-lock.json
+          cache-dependency-path: |
+            tools/readiness-core/package-lock.json
+            tools/loop-audit/package-lock.json
 
-      - name: Build loop-audit
+      - name: Build readiness-core + loop-audit
         run: |
+          # loop-audit depends on file:../readiness-core after #321
+          (cd tools/readiness-core && npm ci && npm run build)
           cd tools/loop-audit
           npm ci
           npm run build
