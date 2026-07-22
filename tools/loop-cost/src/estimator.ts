@@ -12,6 +12,10 @@ export interface PatternCost {
   tokens_noop: number;
   tokens_report: number;
   tokens_action: number;
+  /** Fraction (0.0-1.0) of report/action tokens that are stable, repeated
+   *  content (STATE.md, skills, system prompt) eligible for prompt caching.
+   *  Optional — patterns without it are treated as fully variable (0). */
+  stable_fraction?: number;
   suggested_daily_cap: number;
   early_exit_required: boolean;
 }
@@ -76,6 +80,7 @@ export interface EstimateInput {
   level: ReadinessLevel;
   conservative?: boolean;
   orchestration?: string;
+  withCaching?: boolean;
 }
 
 export interface EstimateResult {
@@ -93,6 +98,7 @@ export interface EstimateResult {
     report: { tokensPerRun: number; tokensPerDay: number };
     action: { tokensPerRun: number; tokensPerDay: number };
     realistic: { tokensPerRun: number; tokensPerDay: number; assumptions: string };
+    caching?: { tokensPerRun: number; tokensPerDay: number; savingsPercent: number };
   };
   warnings: string[];
 }
@@ -168,6 +174,18 @@ function formatTokens(n: number): string {
   return String(n);
 }
 
+// Anthropic prompt caching: cache reads bill at roughly 10% of base input
+// token cost. Only the stable portion of a run's tokens (STATE.md, skills,
+// system prompt — unchanged since the last cache write) benefit; the
+// variable portion (fresh scan results, diffs) still costs full price.
+const CACHE_READ_DISCOUNT = 0.1;
+
+function applyCaching(tokensPerRun: number, stableFraction: number): number {
+  const stable = tokensPerRun * stableFraction;
+  const variable = tokensPerRun - stable;
+  return Math.round(variable + stable * CACHE_READ_DISCOUNT);
+}
+
 export function estimateCost(input: EstimateInput): EstimateResult {
   assertValidLevel(input.level);
   const cadence = input.cadence ?? input.pattern.cadence;
@@ -189,6 +207,14 @@ export function estimateCost(input: EstimateInput): EstimateResult {
     cost.tokens_report * mix.report +
     actionPerRun * mix.action;
   const realisticDay = Math.round(realisticPerRun * runsPerDay);
+
+  let caching: EstimateResult['scenarios']['caching'];
+  if (input.withCaching && cost.stable_fraction) {
+    const cachedPerRun = applyCaching(realisticPerRun, cost.stable_fraction);
+    const cachedDay = Math.round(cachedPerRun * runsPerDay);
+    const savingsPercent = Math.round((1 - cachedPerRun / realisticPerRun) * 100);
+    caching = { tokensPerRun: cachedPerRun, tokensPerDay: cachedDay, savingsPercent };
+  }
 
   const warnings: string[] = [];
   if (cost.early_exit_required) {
@@ -230,6 +256,7 @@ export function estimateCost(input: EstimateInput): EstimateResult {
         tokensPerDay: realisticDay,
         assumptions: mix.assumptions,
       },
+      caching,
     },
     warnings,
   };
@@ -252,6 +279,9 @@ export function formatEstimateHuman(r: EstimateResult): string {
   lines.push(`  Full triage:         ${formatTokens(r.scenarios.report.tokensPerDay)}  (${formatTokens(r.scenarios.report.tokensPerRun)}/run)`);
   lines.push(`  Action every run:    ${formatTokens(r.scenarios.action.tokensPerDay)}  (${formatTokens(r.scenarios.action.tokensPerRun)}/run)`);
   lines.push(`  Realistic blend:     ${formatTokens(r.scenarios.realistic.tokensPerDay)}  (${r.scenarios.realistic.assumptions})`);
+  if (r.scenarios.caching) {
+    lines.push(`  With prompt caching: ${formatTokens(r.scenarios.caching.tokensPerDay)}  (${r.scenarios.caching.savingsPercent}% reduction vs. realistic blend)`);
+  }
   if (r.warnings.length) {
     lines.push('');
     lines.push('Warnings:');

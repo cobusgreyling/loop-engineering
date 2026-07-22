@@ -20,6 +20,7 @@ patterns:
       tokens_noop: 3000
       tokens_report: 80000
       tokens_action: 250000
+      stable_fraction: 0.35
       suggested_daily_cap: 2000000
       early_exit_required: true
 
@@ -41,6 +42,7 @@ patterns:
       tokens_noop: 5000
       tokens_report: 50000
       tokens_action: 200000
+      stable_fraction: 0.35
       suggested_daily_cap: 100000
       early_exit_required: false
 
@@ -62,6 +64,7 @@ patterns:
       tokens_noop: 5000
       tokens_report: 50000
       tokens_action: 200000
+      stable_fraction: 0.35
       suggested_daily_cap: 1000000
       early_exit_required: true
 
@@ -83,6 +86,7 @@ patterns:
       tokens_noop: 5000
       tokens_report: 40000
       tokens_action: 150000
+      stable_fraction: 0.35
       suggested_daily_cap: 200000
       early_exit_required: false
 
@@ -104,6 +108,7 @@ patterns:
       tokens_noop: 5000
       tokens_report: 60000
       tokens_action: 300000
+      stable_fraction: 0.35
       suggested_daily_cap: 500000
       early_exit_required: true
 
@@ -125,6 +130,7 @@ patterns:
       tokens_noop: 5000
       tokens_report: 35000
       tokens_action: 80000
+      stable_fraction: 0.35
       suggested_daily_cap: 100000
       early_exit_required: false
 
@@ -146,5 +152,6 @@ patterns:
       tokens_noop: 3000
       tokens_report: 30000
       tokens_action: 60000
+      stable_fraction: 0.35
       suggested_daily_cap: 80000
       early_exit_required: false
