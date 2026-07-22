@@ -1,6 +1,6 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-21T23:57:17Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-22T04:35:50Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
@@ -16,12 +16,14 @@ Last run: 2026-07-21T23:57:17Z (scheduled maintenance / Grok loop)
 - Optional: StackMap #300, Pluribus #262, loop.js #246; Foundry dogfood on this repo
 - Dependabot: remaining failed update attempt for `@hono/node-server` in mcp-server (noise unless it reopens)
 
-## Housekeeping (2026-07-21 night)
+## Housekeeping (2026-07-21 night → 2026-07-22)
 
+- Recheck 04:35 UTC: star-history #345 merged; pruned automation branch; npm still current; only open PR is this draft.
 - Merged [#341](https://github.com/cobusgreyling/loop-engineering/pull/341) goal-init test dual-path → **goal-init@1.0.0 on npm**.
 - Merged [#340](https://github.com/cobusgreyling/loop-engineering/pull/340) + [#343](https://github.com/cobusgreyling/loop-engineering/pull/343) fast-uri security bumps.
 - Closed drafts #336/#342 as superseded.
-- **No open PRs.** Main CI green; audit gates 100.
+- Merged [#345](https://github.com/cobusgreyling/loop-engineering/pull/345) star-history chart (2026-07-22).
+- Open draft: this PR (#344). Main CI green; audit gates 100.
 
 ## Recent Noise
 
