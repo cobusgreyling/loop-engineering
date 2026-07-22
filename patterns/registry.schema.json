@@ -94,6 +94,7 @@
               "tokens_noop": { "type": "integer", "minimum": 1000 },
               "tokens_report": { "type": "integer", "minimum": 1000 },
               "tokens_action": { "type": "integer", "minimum": 1000 },
+              "stable_fraction": { "type": "number", "minimum": 0, "maximum": 1 },
               "suggested_daily_cap": { "type": "integer", "minimum": 10000 },
               "early_exit_required": { "type": "boolean" }
             }
