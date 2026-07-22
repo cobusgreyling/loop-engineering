@@ -1,45 +1,42 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-22T09:52:09Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-22T10:02:11Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
 - Maintain loop readiness score ≥ 58 (current: **100**, level **L3**).
-- **npm packages current:** readiness-core 1.0.0 · goal-init 1.0.0 · loop-context 1.4.0 · loop-audit 1.7.0 · loop-init 1.5.0 · loop-cost 1.1.0.
-- **Contributor / docs PR backlog (human review):**
-  - [#349](https://github.com/cobusgreyling/loop-engineering/pull/349) **fix daily-triage** readiness-core build — mergeable, **CI green** (unblocks dogfood; merge first).
-  - [#350](https://github.com/cobusgreyling/loop-engineering/pull/350) Copilot primitives appendix (@adity982) — **draft**, GFI [#196](https://github.com/cobusgreyling/loop-engineering/issues/196); audit/validate need workflow approval.
-  - [#346](https://github.com/cobusgreyling/loop-engineering/pull/346) loop-cost prompt-caching estimate (@Tusm11) — mergeable, **CI green**.
-  - [#347](https://github.com/cobusgreyling/loop-engineering/pull/347) loop-context caching budget scenario (@Tusm11) — mergeable, **CI green**.
-  - [#348](https://github.com/cobusgreyling/loop-engineering/pull/348) release notes draft post-Jul-7 (@nivinlabs) — conflicts **cleared**, mergeable; checks **action_required**/BLOCKED; fork `main` → upstream `main`.
-  - [#344](https://github.com/cobusgreyling/loop-engineering/pull/344) this curated STATE draft.
+- **npm packages published:** readiness-core 1.0.0 · goal-init 1.0.0 · loop-context **1.4.0** · loop-cost **1.1.0** · loop-audit 1.7.0 · loop-init 1.5.0.
+- **Publish gap (human):** #346 / #347 merged **feature code without version bumps**. npm still serves pre-feature `loop-cost@1.1.0` / `loop-context@1.4.0`. Recommend bump + tag release (e.g. loop-cost **1.2.0**, loop-context **1.5.0**) via release workflows.
+- **Open PRs:**
+  - [#350](https://github.com/cobusgreyling/loop-engineering/pull/350) Copilot primitives appendix (@adity982) — **draft**, GFI [#196](https://github.com/cobusgreyling/loop-engineering/issues/196); workflows need approval.
+  - [#348](https://github.com/cobusgreyling/loop-engineering/pull/348) release notes draft (@nivinlabs) — mergeable/BLOCKED; scope vs [#332](https://github.com/cobusgreyling/loop-engineering/issues/332).
+  - [#344](https://github.com/cobusgreyling/loop-engineering/pull/344) this curated STATE draft (rebased onto main post-#346/#347/#349).
 - [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep — week of 2026-07-20.
 
 ## Watch List
 
+- Re-run **Daily Triage** dogfood after #349 (next scheduled weekday run, or manual workflow_dispatch).
 - Contributor failure stories; Post-Merge Cleanup production story
-- Cursor/docs GFI: #220, #223, #224; #117–#120, #147, #173, #195; #196 in flight via #350
-- Validate `loop-init --with-foundry` + `goal-init` on fresh projects
-- Optional: StackMap #300, Pluribus #262, loop.js #246; Foundry dogfood on this repo
+- Cursor/docs GFI: #220, #223, #224; #117–#120, #147, #173, #195; #196 via #350
+- Validate `loop-init --with-foundry` + `goal-init`; Foundry dogfood
+- Optional: StackMap #300, Pluribus #262, loop.js #246
 
-## Housekeeping (2026-07-22 morning → mid-day)
+## Housekeeping (2026-07-22 ~10:00 UTC)
 
-- **Daily Triage workflow failed** 2026-07-22T08:48 UTC (run 29905417836) — fix ready in **#349** (awaiting human merge).
-- **#348** rebased/updated: no longer CONFLICTING; still needs check approval; scope may overlap #332.
-- New GFI PR: **#350** docs Copilot primitives (draft; workflow approval pending).
-- Main still `463ccf5` (#345); audit gates 100; no npm publish this cycle.
+- **Merged:** [#346](https://github.com/cobusgreyling/loop-engineering/pull/346) loop-cost prompt-caching, [#347](https://github.com/cobusgreyling/loop-engineering/pull/347) loop-context caching budget, [#349](https://github.com/cobusgreyling/loop-engineering/pull/349) daily-triage readiness-core build.
+- Main HEAD: `8a776a0`. Main CI green on merge commits.
+- Audit gates 100. No version/tag publish this cycle (L1 escalate only).
+- Remote branch `fix/daily-triage-readiness-core-build` pruned after merge.
 
 ## Recent Noise
 
 - StackMap #300.
-- Dependabot residual moderate alert if still open.
+- Dependabot moderate alert if still open.
 
 ## Post-Run Critique
 
-- Merge #349 before next weekday Daily Triage (re-run dogfood after merge).
-- Related pair #346+#347 should be reviewed together (cost estimate + context budget scenario).
-- #348 vs #332: prefer human release prep over raw RELEASE_NOTES_DRAFT churn if overlapping.
-- #350 draft: approve workflows so audit/validate can run before review.
+- Feature PRs that change published CLIs should include package.json bumps + RELEASE.md rows in the same PR (same lesson as goal-init release gap).
+- #348 vs #332 still needs human coordination.
 
 ---
 Run log: Updated by daily-triage.yml and scheduled maintenance. See LOOP.md.
