@@ -67,8 +67,8 @@ npx @cobusgreyling/loop-worktree list
 
 | Package | On npm now | This PR / tag | Action |
 |---------|------------|---------------|--------|
-| `@cobusgreyling/loop-cost` | 1.1.0 | **1.2.0** → `loop-cost-v1.2.0` | **Publish after merge** |
-| `@cobusgreyling/loop-context` | 1.4.0 | **1.5.0** → `loop-context-v1.5.0` | **Publish after merge** (depends on cost 1.2.0 for dep range) |
+| `@cobusgreyling/loop-cost` | **1.2.0** | `loop-cost-v1.2.0` | **Published** |
+| `@cobusgreyling/loop-context` | **1.5.0** | `loop-context-v1.5.0` | **Published** |
 | `@cobusgreyling/loop-audit` | 1.7.0 | — | No change |
 | `@cobusgreyling/loop-init` | 1.5.0 | — | No change |
 | `@cobusgreyling/loop-worktree` | 1.2.0 | — | Already published |
@@ -82,20 +82,11 @@ npx @cobusgreyling/loop-worktree list
 
 ### Suggested publish steps
 
-1. Merge this PR (versions + notes + STATE).
-2. Tag and push (triggers release workflows):
-
-```bash
-git tag loop-cost-v1.2.0
-git push origin loop-cost-v1.2.0
-git tag loop-context-v1.5.0
-git push origin loop-context-v1.5.0
-```
-
-3. Confirm Actions → Release loop-cost / Release loop-context are green.
-4. `npm view @cobusgreyling/loop-cost version` → `1.2.0`; same for `loop-context` → `1.5.0`.
-5. Human: fold this draft into discussion/announce for [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) when ready.
-6. Supersedes contributor draft [#348](https://github.com/cobusgreyling/loop-engineering/pull/348) (stale checklist).
+1. ~~Merge version bump PR #352~~ done.
+2. ~~Tag `loop-cost-v1.2.0` + `loop-context-v1.5.0`~~ done; release workflows green.
+3. ~~`npm view` → 1.2.0 / 1.5.0~~ confirmed.
+4. Human: fold this draft into discussion/announce for [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) when ready.
+5. Superseded contributor draft [#348](https://github.com/cobusgreyling/loop-engineering/pull/348) (closed).
 
 ---
 
