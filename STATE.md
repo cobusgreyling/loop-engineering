@@ -1,6 +1,6 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-22T09:43:53Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-22T09:52:09Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
@@ -11,7 +11,7 @@ Last run: 2026-07-22T09:43:53Z (scheduled maintenance / Grok loop)
   - [#350](https://github.com/cobusgreyling/loop-engineering/pull/350) Copilot primitives appendix (@adity982) — **draft**, GFI [#196](https://github.com/cobusgreyling/loop-engineering/issues/196); audit/validate need workflow approval.
   - [#346](https://github.com/cobusgreyling/loop-engineering/pull/346) loop-cost prompt-caching estimate (@Tusm11) — mergeable, **CI green**.
   - [#347](https://github.com/cobusgreyling/loop-engineering/pull/347) loop-context caching budget scenario (@Tusm11) — mergeable, **CI green**.
-  - [#348](https://github.com/cobusgreyling/loop-engineering/pull/348) release notes draft post-Jul-7 (@nivinlabs) — **CONFLICTING**; no checks yet.
+  - [#348](https://github.com/cobusgreyling/loop-engineering/pull/348) release notes draft post-Jul-7 (@nivinlabs) — conflicts **cleared**, mergeable; checks **action_required**/BLOCKED; fork `main` → upstream `main`.
   - [#344](https://github.com/cobusgreyling/loop-engineering/pull/344) this curated STATE draft.
 - [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) release prep — week of 2026-07-20.
 
@@ -24,10 +24,10 @@ Last run: 2026-07-22T09:43:53Z (scheduled maintenance / Grok loop)
 
 ## Housekeeping (2026-07-22 morning → mid-day)
 
-- **Daily Triage workflow failed** 2026-07-22T08:48 UTC (run 29905417836) — root cause: readiness-core not built; fix ready in **#349** (awaiting human merge).
-- New GFI PR: **#350** docs Copilot primitives (draft; first-time contributor workflows need approval).
-- Star-history [#345](https://github.com/cobusgreyling/loop-engineering/pull/345) merged; caching pair #346/#347 CI green; #348 conflicts.
-- Main CI green; audit gates 100; no npm publish needed this cycle.
+- **Daily Triage workflow failed** 2026-07-22T08:48 UTC (run 29905417836) — fix ready in **#349** (awaiting human merge).
+- **#348** rebased/updated: no longer CONFLICTING; still needs check approval; scope may overlap #332.
+- New GFI PR: **#350** docs Copilot primitives (draft; workflow approval pending).
+- Main still `463ccf5` (#345); audit gates 100; no npm publish this cycle.
 
 ## Recent Noise
 
@@ -38,7 +38,7 @@ Last run: 2026-07-22T09:43:53Z (scheduled maintenance / Grok loop)
 
 - Merge #349 before next weekday Daily Triage (re-run dogfood after merge).
 - Related pair #346+#347 should be reviewed together (cost estimate + context budget scenario).
-- #348 release notes may duplicate #332 work — coordinate or close after re-scope.
+- #348 vs #332: prefer human release prep over raw RELEASE_NOTES_DRAFT churn if overlapping.
 - #350 draft: approve workflows so audit/validate can run before review.
 
 ---
