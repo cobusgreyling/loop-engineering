@@ -1,6 +1,6 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-07-22T06:55:47Z (scheduled maintenance / Grok loop)
+Last run: 2026-07-22T09:32:49Z (scheduled maintenance / Grok loop)
 
 ## High Priority (loop is acting or waiting on human)
 
@@ -20,8 +20,9 @@ Last run: 2026-07-22T06:55:47Z (scheduled maintenance / Grok loop)
 - Validate `loop-init --with-foundry` + `goal-init` on fresh projects
 - Optional: StackMap #300, Pluribus #262, loop.js #246; Foundry dogfood on this repo
 
-## Housekeeping (2026-07-22 morning)
+## Housekeeping (2026-07-22 morning → mid-day)
 
+- **Daily Triage workflow failed** 2026-07-22T08:48 UTC (run 29905417836) — investigate before next weekday run.
 - Star-history [#345](https://github.com/cobusgreyling/loop-engineering/pull/345) merged overnight; automation branch pruned earlier.
 - New overnight PRs: #346, #347 (caching cost/budget tooling), #348 (stale-ish release notes — conflicts).
 - Main CI green; audit gates 100; no npm publish needed this cycle.
