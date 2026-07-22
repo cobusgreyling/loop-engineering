@@ -261,6 +261,41 @@ A Gemini CLI daily triage loop:
 
 https://github.com/google-gemini/gemini-cli
 
+## Appendix: GitHub Copilot
+
+GitHub Copilot spans an interactive CLI and a cloud coding agent. Keep the
+loop's durable state in the repository, use PRs as the cloud agent's write
+boundary, and retain a human merge gate.
+
+| Primitive | GitHub Copilot mapping |
+|-----------|------------------------|
+| Automations / Scheduling | In an interactive Copilot CLI session, experimental [`/every` and `/after`](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/schedule-prompts) schedule recurring or delayed prompts; `/loop` aliases `/every`. These schedules run only while that session is active. Use cron, Task Scheduler, or GitHub Actions with `copilot -p` for unattended cadence. |
+| Skills | Put project skills in `.github/skills/<name>/SKILL.md`, `.agents/skills/`, or `.claude/skills/`; personal skills live in `~/.copilot/skills/` or `~/.agents/skills/`. See [Adding agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). Use `.github/agents/*.md` for specialist custom agents. |
+| State | Commit `STATE.md` as the portable source of truth. Session history or Copilot memory may supplement it, but every scheduled run should read and update the same repository file. |
+| Worktrees / isolation | Copilot CLI can create a worktree with `/worktree`. The cloud agent performs its task in an isolated sandbox and returns changes on a pull request branch; use one task/branch per independent change. |
+| Verification split | Let Copilot create the draft PR, then run CI and have a human review the diff. A separate Copilot code review can add comments, but it does not replace required human approval. By default, a user with write access must approve GitHub Actions runs on cloud-agent PRs. |
+| Connectors | Configure MCP servers and repository tools with the least privilege needed for discovery or validation. Do not grant write tools to the week-one report-only loop. |
+| Honest gaps | CLI schedules are not durable after the interactive session closes. Cloud-agent writes are PR-oriented, its internet access is restricted, workflow runs may await approval, and the agent cannot approve or merge its own pull request. |
+
+### Week-one Daily Triage (report-only)
+
+```text
+Run Daily Triage for this repository.
+
+1. Read AGENTS.md (if present) and STATE.md before doing anything else.
+2. Inspect open issues and pull requests for High Priority and Watch List items.
+3. Update only the High Priority and Watch List sections of STATE.md.
+4. Do not edit source code, workflow files, issue content, or pull requests.
+5. Report what changed and any item that needs a human decision.
+```
+
+For later code-changing levels, assign bounded work to the cloud agent and
+review the resulting draft PR. Follow GitHub's guidance to
+[review Copilot output](https://docs.github.com/en/copilot/how-tos/copilot-on-github/use-copilot-agents/review-copilot-output):
+inspect the diff, approve workflow execution only after reviewing workflow
+changes, request revisions as needed, and merge only after a human checker is
+satisfied. Never enable auto-merge as a substitute for this gate.
+
 ## Appendix: Amazon Q Developer CLI
 
 Amazon Q Developer CLI (`q chat`) is a terminal-based agent, AWS-native, with custom agent
