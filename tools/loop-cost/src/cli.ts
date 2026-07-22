@@ -23,6 +23,7 @@ function parseArgs(argv: string[]) {
   let json = false;
   let list = false;
   let orchestration = 'single';
+  let withCaching = false;
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -33,10 +34,11 @@ function parseArgs(argv: string[]) {
     else if (a === '--conservative') conservative = true;
     else if (a === '--json') json = true;
     else if (a === '--list') list = true;
+    else if (a === '--with-caching') withCaching = true;
     else if (a === '--help' || a === '-h') return { help: true as const };
   }
 
-  return { help: false as const, pattern, cadence, level, conservative, json, list, orchestration };
+  return { help: false as const, pattern, cadence, level, conservative, json, list, orchestration, withCaching };
 }
 
 async function loadRegistry(): Promise<RegistryDoc> {
@@ -75,6 +77,8 @@ Options:
                          Multi-agent action cost: single (default),
                          maker-checker, parallel:N, debate:R
   --conservative         Use slower cadence from ranges (e.g. 15m not 5m)
+  --with-caching         Show estimate with prompt caching applied
+                         (requires stable_fraction in the pattern's cost block)
   --json                 Machine-readable output
   --list                 List pattern ids
   -h, --help             This help
@@ -123,6 +127,7 @@ Examples:
     level: args.level,
     conservative: args.conservative,
     orchestration: args.orchestration,
+    withCaching: args.withCaching,
   });
 
   if (args.json) console.log(JSON.stringify(result, null, 2));
