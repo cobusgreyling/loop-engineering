@@ -189,6 +189,48 @@ aider --read diff.patch --read STATE.md \
 
 Transfer recipe: copy the tool-agnostic `SKILL.md` + state schema from this repo; map scheduling to cron, systemd, or CI until Aider is wrapped by a richer loop scheduler.
 
+## Appendix: Continue.dev
+
+Continue is available in VS Code and as the `cn` CLI. For loop work, the CLI's
+[headless mode](https://docs.continue.dev/cli/headless-mode) is the portable
+surface: it runs one prompt to completion and prints the final response, while
+the IDE extension is better suited to attended Agent or Plan sessions.
+
+| Primitive | Continue.dev mapping |
+|-----------|----------------------|
+| Scheduling | Continue has no first-class durable scheduler. Use cron, a systemd timer, or GitHub Actions to invoke `cn -p "..."`; keep the prompt, config, and state file in the repository so every run starts from the same contract. |
+| Run-until-done | `cn -p "<bounded goal and stop condition>"` runs a single headless task to completion. Use explicit validation in the prompt and a separate verifier run; Continue does not provide a durable `/goal`-style objective that survives arbitrary restarts. |
+| Skills | Put always-on project guidance in [`.continue/rules/`](https://docs.continue.dev/customize/deep-dives/rules), or load a rule/agent at launch with `--rule` / `--agent`. A repository `AGENTS.md` can hold the portable instructions, but Continue Rules are the native reusable guidance primitive rather than `SKILL.md`. |
+| Worktrees | No built-in worktree isolation. Create a standard `git worktree` per task, start one `cn` process in each worktree, and review each branch independently. |
+| Sub-agents / maker-checker | Continue does not expose a native sub-agent team or dedicated verifier role. Run the maker and checker as separate `cn` sessions (preferably in separate worktrees); give the checker read-only permissions and the current diff. TUI `/fork` forks conversation history, not an isolated coding worker. |
+| State / memory | `cn --resume` restores a previous session, but portable loop state should live in a committed `STATE.md` that every scheduled prompt reads. Use session history for convenience, not as the only durable queue or audit trail. |
+| Plugins / MCP | Configure MCP servers in `config.yaml` / `.continue/mcpServers`, attach one with `--mcp`, and restrict tools with [`--allow`, `--ask`, and `--exclude`](https://docs.continue.dev/cli/tool-permissions). Keep credentials in environment-backed secrets, never in prompts or `STATE.md`. |
+| Honest gaps | No native cron scheduler, durable cross-run goal, automatic worktree isolation, first-class sub-agents, or built-in state-file convention. Continue's [upstream repository is read-only after its final 2.0.0 release](https://docs.continue.dev/), so pin the version and validate any external automation around it. |
+
+Week-one Daily Triage, report-only:
+
+```bash
+cn -p --readonly --silent "
+Run a Daily Triage for this repository.
+Read AGENTS.md and STATE.md if they exist, inspect the current git status and diff,
+and report High Priority items, Watch List items, and evidence for each finding.
+Do not edit files, run fixes, commit, push, or open issues or pull requests.
+" > continue-daily-triage-report.md
+```
+
+The shell writes only the report artifact; Continue remains in read-only mode.
+Review the report before promoting any item to implementation.
+
+> **Human gate (L2+):** a person must approve the selected issue, allowed paths,
+> validation plan, and final diff before enabling write tools or opening a PR.
+> Keep secrets, authentication, billing, deployment, and destructive data paths
+> behind explicit per-run approval, and use a separate read-only checker session.
+
+For an L2 maker/checker handoff, run the maker in a dedicated worktree with only
+the minimum required write permissions. Then start a fresh `cn --readonly`
+session in that worktree and ask it to review `git diff`, `STATE.md`, and the
+issue acceptance criteria without editing files.
+
 ## Appendix: Zed
 
 Zed is editor-hosted rather than a standalone loop scheduler, so map the same primitives from [Choosing a Tool](#choosing-a-tool) onto [Agent Panel](https://zed.dev/docs/ai/agent-panel) threads, [Instructions](https://zed.dev/docs/ai/instructions), [Skills](https://zed.dev/docs/ai/skills), [Agent Profiles](https://zed.dev/docs/ai/agent-profiles), [Tool Permissions](https://zed.dev/docs/ai/tool-permissions), [MCP](https://zed.dev/docs/ai/mcp) servers, [Terminal Threads](https://zed.dev/docs/ai/terminal-threads), [Tasks](https://zed.dev/docs/tasks), and [Parallel Agents](https://zed.dev/docs/ai/parallel-agents) worktrees.
@@ -373,4 +415,3 @@ Graduate to L2 by adding PR creation to the Playbook — but always with a human
 > Never enable auto-merge. Use Devin Review as the maker; a team member is the checker.
 > Paths on the [denylist](../docs/safety.md#path-denylist) (secrets, billing, auth) require
 > explicit human approval before any Devin session may touch them.
-
