@@ -5,6 +5,10 @@ export interface PatternCost {
     tokens_noop: number;
     tokens_report: number;
     tokens_action: number;
+    /** Fraction (0.0-1.0) of report/action tokens that are stable, repeated
+     *  content (STATE.md, skills, system prompt) eligible for prompt caching.
+     *  Optional — patterns without it are treated as fully variable (0). */
+    stable_fraction?: number;
     suggested_daily_cap: number;
     early_exit_required: boolean;
 }
@@ -42,6 +46,7 @@ export interface EstimateInput {
     level: ReadinessLevel;
     conservative?: boolean;
     orchestration?: string;
+    withCaching?: boolean;
 }
 export interface EstimateResult {
     patternId: string;
@@ -70,6 +75,11 @@ export interface EstimateResult {
             tokensPerRun: number;
             tokensPerDay: number;
             assumptions: string;
+        };
+        caching?: {
+            tokensPerRun: number;
+            tokensPerDay: number;
+            savingsPercent: number;
         };
     };
     warnings: string[];

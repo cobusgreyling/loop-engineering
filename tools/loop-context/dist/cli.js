@@ -150,8 +150,10 @@ Options:
                             estimate instead of typing a number. Ignored if
                             --token-budget is also given (explicit wins).
   --budget-level <L1|L2|L3> Readiness level for --budget-from-pattern (default: L1)
-  --budget-scenario <realistic|action|report>
-                            Which loop-cost scenario to use (default: realistic)
+  --budget-scenario <realistic|action|report|caching>
+                            Which loop-cost scenario to use (default: realistic).
+                            caching requires stable_fraction set on the pattern
+                            in registry.yaml (see loop-cost --with-caching).
   --budget-cadence <spec>   Cadence override passed through to loop-cost
   --budget-conservative     Use the slower cadence in a range (loop-cost flag)
   --daily-budget-from-pattern <id>

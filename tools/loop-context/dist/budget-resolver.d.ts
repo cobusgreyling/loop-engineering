@@ -1,4 +1,4 @@
-export type BudgetScenario = 'realistic' | 'action' | 'report';
+export type BudgetScenario = 'realistic' | 'action' | 'report' | 'caching';
 export declare const VALID_BUDGET_SCENARIOS: BudgetScenario[];
 export declare function assertValidBudgetScenario(scenario: string): asserts scenario is BudgetScenario;
 export interface BudgetFromPatternInput {

@@ -10,6 +10,7 @@ Uses cost metadata from `patterns/registry.yaml`.
 npx @cobusgreyling/loop-cost --pattern ci-sweeper --cadence 15m --level L2
 npx @cobusgreyling/loop-cost --pattern daily-triage --level L1 --json
 npx @cobusgreyling/loop-cost --list
+npx @cobusgreyling/loop-cost --pattern daily-triage --level L1 --with-caching
 ```
 
 **From this repo:**
@@ -30,6 +31,7 @@ npm test
 | `--orchestration` | Multi-agent action cost: `single` (default), `maker-checker`, `parallel:N`, `debate:R` |
 | `--conservative` | Use slower cadence from ranges |
 | `--json` | Machine-readable output |
+| `--with-caching` | Add a **caching** scenario: apply cache-read discount to the stable (cacheable) fraction of report/action tokens from `stable_fraction` in `registry.yaml` |
 
 ## Scenarios
 
@@ -39,6 +41,7 @@ Each estimate includes:
 - **Full triage** — every run does a full scan
 - **Action every run** — implementer + verifier every time (worst case)
 - **Realistic blend** — level-based mix (documented in output)
+- **Caching** (opt-in via `--with-caching`) — discounts the stable portion of tokens using Anthropic-style cache-read pricing (~10% of base input); omitted when a pattern has no `stable_fraction`
 
 Pair with `loop-budget.md` (scaffolded by `loop-init`) and `loop-audit` cost observability checks.
 

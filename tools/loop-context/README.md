@@ -89,7 +89,7 @@ loop-context --check --ledger run.json --budget-from-pattern ci-sweeper --budget
 |------|---------|---------|
 | `--budget-from-pattern <id>` | none | Pattern id to look up in `loop-cost`'s registry |
 | `--budget-level <L1\|L2\|L3>` | `L1` | Readiness level passed to `loop-cost` |
-| `--budget-scenario <realistic\|action\|report>` | `realistic` | Which `loop-cost` scenario to use as the cap |
+| `--budget-scenario <realistic\|action\|report\|caching>` | `realistic` | Which `loop-cost` scenario to use as the cap (`caching` requires `stable_fraction` on the pattern and passes `--with-caching` to `loop-cost`) |
 | `--budget-cadence <spec>` | pattern default | Cadence override passed through to `loop-cost` |
 | `--budget-conservative` | off | Use the slower cadence in a range (`loop-cost`'s own flag) |
 

@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop-cost",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Estimate token budgets and daily costs for loop engineering patterns. By cadence, readiness level (L1/L2/L3), and coding agent tool.",
   "type": "module",
   "bin": {

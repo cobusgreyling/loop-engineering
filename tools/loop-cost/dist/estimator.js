@@ -100,6 +100,16 @@ function formatTokens(n) {
         return `${Math.round(n / 1_000)}k`;
     return String(n);
 }
+// Anthropic prompt caching: cache reads bill at roughly 10% of base input
+// token cost. Only the stable portion of a run's tokens (STATE.md, skills,
+// system prompt — unchanged since the last cache write) benefit; the
+// variable portion (fresh scan results, diffs) still costs full price.
+const CACHE_READ_DISCOUNT = 0.1;
+function applyCaching(tokensPerRun, stableFraction) {
+    const stable = tokensPerRun * stableFraction;
+    const variable = tokensPerRun - stable;
+    return Math.round(variable + stable * CACHE_READ_DISCOUNT);
+}
 export function estimateCost(input) {
     assertValidLevel(input.level);
     const cadence = input.cadence ?? input.pattern.cadence;
@@ -117,6 +127,13 @@ export function estimateCost(input) {
         cost.tokens_report * mix.report +
         actionPerRun * mix.action;
     const realisticDay = Math.round(realisticPerRun * runsPerDay);
+    let caching;
+    if (input.withCaching && cost.stable_fraction) {
+        const cachedPerRun = applyCaching(realisticPerRun, cost.stable_fraction);
+        const cachedDay = Math.round(cachedPerRun * runsPerDay);
+        const savingsPercent = Math.round((1 - cachedPerRun / realisticPerRun) * 100);
+        caching = { tokensPerRun: cachedPerRun, tokensPerDay: cachedDay, savingsPercent };
+    }
     const warnings = [];
     if (cost.early_exit_required) {
         warnings.push('Early-exit triage is required — empty watchlist should exit in <5k tokens.');
@@ -152,6 +169,7 @@ export function estimateCost(input) {
                 tokensPerDay: realisticDay,
                 assumptions: mix.assumptions,
             },
+            caching,
         },
         warnings,
     };
@@ -173,6 +191,9 @@ export function formatEstimateHuman(r) {
     lines.push(`  Full triage:         ${formatTokens(r.scenarios.report.tokensPerDay)}  (${formatTokens(r.scenarios.report.tokensPerRun)}/run)`);
     lines.push(`  Action every run:    ${formatTokens(r.scenarios.action.tokensPerDay)}  (${formatTokens(r.scenarios.action.tokensPerRun)}/run)`);
     lines.push(`  Realistic blend:     ${formatTokens(r.scenarios.realistic.tokensPerDay)}  (${r.scenarios.realistic.assumptions})`);
+    if (r.scenarios.caching) {
+        lines.push(`  With prompt caching: ${formatTokens(r.scenarios.caching.tokensPerDay)}  (${r.scenarios.caching.savingsPercent}% reduction vs. realistic blend)`);
+    }
     if (r.warnings.length) {
         lines.push('');
         lines.push('Warnings:');

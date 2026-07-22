@@ -4,7 +4,7 @@ import { access } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
-export const VALID_BUDGET_SCENARIOS = ['realistic', 'action', 'report'];
+export const VALID_BUDGET_SCENARIOS = ['realistic', 'action', 'report', 'caching'];
 export function assertValidBudgetScenario(scenario) {
     if (!VALID_BUDGET_SCENARIOS.includes(scenario)) {
         throw new Error(`Invalid --budget-scenario: ${scenario}. Valid: ${VALID_BUDGET_SCENARIOS.join(', ')}`);
@@ -60,6 +60,8 @@ async function invokeLoopCost(input) {
         args.push('--cadence', input.cadence);
     if (input.conservative)
         args.push('--conservative');
+    if (input.scenario === 'caching')
+        args.push('--with-caching');
     const { stdout, stderr, code } = await runCostCli(cli, args);
     if (code !== 0) {
         throw new Error(stderr.trim() || `loop-cost exited with code ${code}.`);
@@ -84,7 +86,10 @@ export async function resolveTokenBudgetFromPattern(input) {
     const parsed = await invokeLoopCost(input);
     const tokensPerRun = parsed.scenarios?.[scenario]?.tokensPerRun;
     if (typeof tokensPerRun !== 'number') {
-        throw new Error(`loop-cost output missing scenarios.${scenario}.tokensPerRun.`);
+        const hint = scenario === 'caching'
+            ? ' This pattern may be missing stable_fraction in registry.yaml.'
+            : '';
+        throw new Error(`loop-cost output missing scenarios.${scenario}.tokensPerRun.${hint}`);
     }
     return tokensPerRun;
 }
