@@ -1,23 +1,12 @@
-# Release notes draft — since `loop-context-v1.2.0`
+# Release notes draft — since `loop-mcp-server-v1.0.0`
 
 **Status:** Draft for human review ([#181](https://github.com/cobusgreyling/loop-engineering/issues/181)). Edit before publishing a discussion post or tagging packages.
 
-**Last published:** [Discussion #294](https://github.com/cobusgreyling/loop-engineering/discussions/294) (2026-07-16) — `loop-context` 1.2.0, `loop-worktree` 1.1.0.
-
-**Window:** 2026-07-16 → 2026-07-22 (next tag)
+**Window:** 2026-07-06 → 2026-07-22
 
 ---
 
 ## Highlights
-
-_(changelog-drafter will fill from merges since `loop-context-v1.2.0`)_
-
-### Pending npm publish
-
-| Package | PR | What ships |
-|---------|-----|------------|
-| `@cobusgreyling/loop-worktree` **1.2.0** | [#292](https://github.com/cobusgreyling/loop-engineering/pull/292) | Wait queue (`--wait`) + deadlock detection on path locks (@THRISHAL12345) |
-| `@cobusgreyling/loop-gate` **1.0.0** | [#291](https://github.com/cobusgreyling/loop-engineering/pull/291) | Mechanical denylist + auto-merge allowlist from `gate.yaml` (@KhaiTrang1995) |
 
 ### New: `loop-worktree` CLI ([#190](https://github.com/cobusgreyling/loop-engineering/pull/190))
 
@@ -63,26 +52,16 @@ New `star-history` docs page with a GitHub token UI for rendering chart SVGs ([#
 
 ---
 
-## Try it
-
-```bash
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
-npx @cobusgreyling/loop-audit . --suggest
-npx @cobusgreyling/loop-worktree list
-npx @cobusgreyling/loop-worktree create fix-123 --branch fix/issue-123
-```
-
----
-
 ## npm publish checklist
+
+No version bumps required unless you want to ship `loop-worktree` to npm.
 
 | Package | Current | Action |
 |---------|---------|--------|
 | `@cobusgreyling/loop-mcp-server` | 1.0.0 | No change |
 | `@cobusgreyling/loop-audit` | 1.5.3 | No change |
 | `@cobusgreyling/loop-init` | 1.3.3 | No change |
-| `@cobusgreyling/loop-worktree` | 1.1.0 → **1.2.0** | Publish from [#292](https://github.com/cobusgreyling/loop-engineering/pull/292) |
-| `@cobusgreyling/loop-gate` | — → **1.0.0** | First publish from [#291](https://github.com/cobusgreyling/loop-engineering/pull/291) |
+| `loop-worktree` | repo-only | Optional first publish + `loop-worktree-v*` tag |
 
 ---
 
@@ -91,4 +70,4 @@ npx @cobusgreyling/loop-worktree create fix-123 --branch fix/issue-123
 1. Review and edit this draft.
 2. Post summary to [Discussions](https://github.com/cobusgreyling/loop-engineering/discussions/new?category=announcements).
 3. Close [#181](https://github.com/cobusgreyling/loop-engineering/issues/181) when published.
-4. Publish `@cobusgreyling/loop-worktree@1.2.0` and `@cobusgreyling/loop-gate@1.0.0` when ready; tag accordingly.
+4. (Optional) Tag `loop-worktree-v1.0.0` if npm publish is desired — add `release-loop-worktree.yml` first.
