@@ -7,6 +7,7 @@ Copy-pasteable loop patterns for Cursor, using **Automations** (cloud cron) or m
 | Daily Triage | 1d–2h (Automation or manual) | Low | [daily-triage.md](daily-triage.md) |
 | Constraints | Every loop run (before triage) | Low | [constraints.md](constraints.md) |
 | PR Babysitter | On cadence (Automation or manual) | Medium | [pr-babysitter.md](pr-babysitter.md) |
+| CI Sweeper | 15m or failing-check trigger; report-only first | Medium | [ci-sweeper.md](ci-sweeper.md) |
 | Dependency Sweeper | 6h report, patch-only after tuning | Medium | [dependency-sweeper.md](dependency-sweeper.md) |
 | Post-Merge Cleanup | 1d (Automation or manual) | Low | [post-merge-cleanup.md](post-merge-cleanup.md) |
 
