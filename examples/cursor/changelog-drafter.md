@@ -20,13 +20,15 @@ cp starters/changelog-drafter/changelog-drafter-state.md.example \
   changelog-drafter-state.md
 ```
 
-Put the two-file write allowlist and publish denylist in `.cursor/rules/` as
-always-on constraints. Use the least-privilege repository access available; the
-Automation does not need release, tag, Discussions, or merge permissions.
+Record the two-file write scope and publish denylist in `.cursor/rules/` as
+always-on instructions. These rules are advisory rather than an enforced file
+sandbox, so back them with the narrowest available tool and repository scopes.
+The Automation does not need release, tag, Discussions, or merge permissions.
 
 ## Automation prompt (week one — draft only)
 
-Create a daily or release-label-triggered Automation with a prompt like:
+Create a daily Automation, or use a supported GitHub or webhook trigger tied to
+the release workflow, with a prompt like:
 
 ```text
 Read AGENTS.md, changelog-drafter-state.md, and the existing release-note style.
@@ -49,10 +51,13 @@ Stop and request human review when sources conflict or attribution is unclear.
 ```
 
 Review the diff after every run. Cursor Automations are managed outside the
-repository, so keep the prompt and `.cursor/rules/` in version control and use
-repository permissions as the enforceable boundary. Automations can
-[open PRs by default](https://cursor.com/changelog/06-18-26); explicitly disable
-that capability while this loop is draft-only.
+repository, so keep the prompt and `.cursor/rules/` in version control for
+review, but treat tool scopes and repository credentials as the enforceable
+boundary. Automations can
+[open PRs by default](https://cursor.com/changelog/06-18-26). Remove that tool
+where the configuration allows; otherwise run without credentials that can push
+branches or open or merge PRs, and export the two-file diff as an artifact for a
+human to apply.
 
 ## Human publish gate
 
