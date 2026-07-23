@@ -25,18 +25,22 @@ jobs:
           cache-dependency-path: tools/loop-audit/package-lock.json
 
       - name: Build, test & run loop-audit on the reference + starters
+        env:
+          LOOP_AUDIT_OUTPUT_FILE: ${{ runner.temp }}/audit.json
         run: bash scripts/ci-audit-gates.sh
 
       - name: Comment PR with loop readiness score
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
+        env:
+          LOOP_AUDIT_OUTPUT_FILE: ${{ runner.temp }}/audit.json
         uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
             let data;
             try {
-              data = JSON.parse(fs.readFileSync('/tmp/audit.json', 'utf8'));
+              data = JSON.parse(fs.readFileSync(process.env.LOOP_AUDIT_OUTPUT_FILE, 'utf8'));
             } catch (e) {
               core.setFailed('Could not read audit JSON for PR comment');
               return;

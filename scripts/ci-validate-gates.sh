@@ -2,14 +2,19 @@
 # Pattern/registry validation gates — shared by validate-patterns.yml and daily-triage.yml
 set -euo pipefail
 
+VALIDATE_TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/loop-engineering-validate.XXXXXX")"
+trap 'rm -rf "$VALIDATE_TMP_DIR"' EXIT
+REGISTRY_FILE="$VALIDATE_TMP_DIR/registry.txt"
+PATTERN_FILES="$VALIDATE_TMP_DIR/files.txt"
+
 echo "Patterns declared in registry:"
-grep '^\s*-\s*id:' patterns/registry.yaml | sed 's/.*id: //' | sort > /tmp/registry.txt
+grep '^\s*-\s*id:' patterns/registry.yaml | sed 's/.*id: //' | sort > "$REGISTRY_FILE"
 echo "Pattern markdown files:"
-ls patterns/*.md | xargs -n1 basename | sed 's/.md$//' | grep -v README | sort > /tmp/files.txt
-echo "=== Registry ==="; cat /tmp/registry.txt
-echo "=== Files ==="; cat /tmp/files.txt
-comm -23 /tmp/files.txt /tmp/registry.txt | grep . && (echo "ERROR: pattern md file(s) missing from registry.yaml"; exit 1) || echo "All pattern files registered ✓"
-comm -23 /tmp/registry.txt /tmp/files.txt | grep . && (echo "ERROR: registry entry without matching .md"; exit 1) || echo "No orphan registry entries ✓"
+ls patterns/*.md | xargs -n1 basename | sed 's/.md$//' | grep -v README | sort > "$PATTERN_FILES"
+echo "=== Registry ==="; cat "$REGISTRY_FILE"
+echo "=== Files ==="; cat "$PATTERN_FILES"
+comm -23 "$PATTERN_FILES" "$REGISTRY_FILE" | grep . && (echo "ERROR: pattern md file(s) missing from registry.yaml"; exit 1) || echo "All pattern files registered ✓"
+comm -23 "$REGISTRY_FILE" "$PATTERN_FILES" | grep . && (echo "ERROR: registry entry without matching .md"; exit 1) || echo "No orphan registry entries ✓"
 
 echo "Checking that key sections exist in patterns (lightweight)"
 for f in patterns/*.md; do
