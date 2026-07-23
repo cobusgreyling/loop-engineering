@@ -2,9 +2,11 @@
 
 This example maps the CI Sweeper loop to Cursor while keeping week one
 report-only. Cursor [Automations](https://cursor.com/changelog/03-05-26) can run
-on schedules or GitHub events in a managed cloud sandbox. Cursor does not expose
-a repository-owned `/loop` or cron manifest, so use a GitHub Action or another
-external scheduler when the cadence must live with the repository.
+on schedules or GitHub events in a managed cloud sandbox. Cursor also has a
+local [`/loop` skill](https://cursor.com/changelog/shared-canvases) for
+long-running agents, but it does not create a repository-owned, reviewable
+schedule manifest. Use a GitHub Action or another external scheduler when the
+cadence must live with the repository.
 
 ## Setup
 
@@ -48,11 +50,13 @@ Escalate security, release, permissions, secrets, and infrastructure failures.
 Stop after reporting when the root cause is ambiguous.
 ```
 
-Review the state file after every run. A prompt is not a permission boundary:
-keep write-capable MCP tools disabled and use GitHub branch protection and
-least-privilege repository access. Cursor Automations can
-[open PRs by default](https://cursor.com/changelog/06-18-26), so explicitly
-disable that capability for the report-only phase.
+Review the state file after every run. A prompt and `.cursor/rules` are not
+permission boundaries: remove write-capable MCP and PR-opening tools where the
+configuration allows, then use GitHub branch protection and least-privilege
+repository access as backstops. Cursor Automations can
+[open PRs by default](https://cursor.com/changelog/06-18-26). If that capability
+cannot be removed, do not grant credentials that can push branches or open or
+merge PRs; export the state change as an artifact for a human to apply instead.
 
 ## L2 fix attempts (only after tuning)
 
