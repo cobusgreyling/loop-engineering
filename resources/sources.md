@@ -47,6 +47,12 @@ These provide important context and guardrails for loop design.
 - **Open-Spek** — [open-spek/loop](https://github.com/open-spek/loop), [open-spek.github.io](https://open-spek.github.io) (July 2026)
   An independently-developed, differently-scoped use of the term "loop engineering": a test-gated, fresh-context loop that turns a frozen Spek — the complete knowledge required to recreate a piece of software — into a verified implementation, one milestone at a time, rather than a scheduled maintenance cadence. First proof: [open-spek/jsonq](https://github.com/open-spek/jsonq) (21 iterations, 252 tests, 100 percent coverage, 0 human-edited lines). Not a pattern for this repo's registry — cross-linked here because the term collides across both projects and readers of either may otherwise conflate them.
 
+## Ecosystem Maps & Knowledge Graphs
+
+- **StackMap** — [loop-engineering on StackMap](https://stackmap.shipwithai.xyz/repos/cobusgreyling/loop-engineering) ([Interactive Graph](https://stackmap.shipwithai.xyz/?focus=loop-engineering)) (July 2026)
+  Curated knowledge graph of open-source AI/agent tools. Maps `loop-engineering` in context with related agent frameworks and gateways (`bemyagent`, `squid`, `atook`, `lynkr`). Closes [#300](https://github.com/cobusgreyling/loop-engineering/issues/300).
+
+
 ## How This Repo Relates
 
 We treat the above sources as the current best articulation of the idea and aim to turn the abstract framework into practical, copyable patterns, templates, and tool-specific guidance (with special attention to the Grok Build TUI, which has strong native support for the primitives).
