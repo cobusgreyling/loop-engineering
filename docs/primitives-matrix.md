@@ -231,6 +231,44 @@ the minimum required write permissions. Then start a fresh `cn --readonly`
 session in that worktree and ask it to review `git diff`, `STATE.md`, and the
 issue acceptance criteria without editing files.
 
+## Appendix: Cline
+
+Cline spans editor extensions and a headless CLI/SDK. The loop primitives differ
+by surface: durable schedules and persistent agent teams are available in the
+CLI, SDK, and Kanban, while VS Code and JetBrains remain attended editor
+sessions for those capabilities.
+
+| Primitive | Cline mapping |
+|-----------|---------------|
+| Scheduling | The CLI has a first-class, hub-backed scheduler: [`cline schedule create`](https://docs.cline.bot/cli/scheduling) stores cron jobs that survive process restarts and run independently of a terminal. This is not currently available in the VS Code or JetBrains extensions; use the CLI/SDK scheduler or an external cron/Action for those surfaces. |
+| Skills / rules | Put on-demand `SKILL.md` packages in [`.cline/skills/<name>/`](https://docs.cline.bot/customization/skills) (workspace) or `~/.cline/skills/` (global). Put always-on project instructions in [`.clinerules/`](https://docs.cline.bot/customization/cline-rules); Cline also detects `AGENTS.md`. |
+| State | Cline persists sessions, schedule runs, and CLI/SDK team state, but it has no native `STATE.md` convention. Commit `STATE.md` at the repo root and make every scheduled prompt read the same file when the state must be portable, reviewable, and shared across tools. Cline team state under `~/.cline/data/teams/<team-name>/` supplements rather than replaces repository state. |
+| Maker / checker split | [Agent teams](https://docs.cline.bot/cli/agent-teams) provide a coordinator, specialists, and a persistent task board in CLI/SDK/Kanban; [experimental subagents](https://docs.cline.bot/features/subagents) can handle bounded research. For an independent checker, use a second approval-gated Plan session or a separately restricted SDK agent over the maker's diff—team membership alone does not enforce verifier independence. |
+| MCP | Configure and inspect servers with [`cline mcp`](https://docs.cline.bot/cli/cli-reference); CLI MCP settings live in `~/.cline/data/settings/cline_mcp_settings.json`. Keep MCP tools disabled or approval-gated for week-one triage, and never put credentials in prompts, rules, or `STATE.md`. |
+| Honest gaps | No first-class `STATE.md`; schedules and persistent teams are not available in the editor extensions; CLI team state is machine-local; and Cline's CLI can auto-approve tools, so a report-only prompt is not a substitute for an explicit permission boundary. |
+
+Week-one Daily Triage, report-only:
+
+```bash
+cline --plan --auto-approve false --json --cwd "$PWD" \
+  "Run a Daily Triage for this repository.
+Read AGENTS.md and STATE.md if present.
+Inspect repository state and report High Priority items, Watch List items,
+and evidence for each finding.
+Do not edit files, run fixes, commit, push, or write through MCP tools.
+If any required action would write, stop and report the proposed action." \
+  > cline-daily-triage-report.jsonl
+```
+
+This writes the one-shot Plan session's CLI event stream to the report artifact.
+Automatic tool approval is disabled, so review each request and deny any write
+before turning the prompt into a durable schedule.
+
+> **Human gate (L2+):** approve the selected issue, allowed paths, command/MCP
+> policy, and final diff before enabling edits or unattended runs. Run the
+> checker with write tools disabled or approval-gated; never treat a teammate's
+> self-review as independent verification.
+
 ## Appendix: Zed
 
 Zed is editor-hosted rather than a standalone loop scheduler, so map the same primitives from [Choosing a Tool](#choosing-a-tool) onto [Agent Panel](https://zed.dev/docs/ai/agent-panel) threads, [Instructions](https://zed.dev/docs/ai/instructions), [Skills](https://zed.dev/docs/ai/skills), [Agent Profiles](https://zed.dev/docs/ai/agent-profiles), [Tool Permissions](https://zed.dev/docs/ai/tool-permissions), [MCP](https://zed.dev/docs/ai/mcp) servers, [Terminal Threads](https://zed.dev/docs/ai/terminal-threads), [Tasks](https://zed.dev/docs/tasks), and [Parallel Agents](https://zed.dev/docs/ai/parallel-agents) worktrees.
