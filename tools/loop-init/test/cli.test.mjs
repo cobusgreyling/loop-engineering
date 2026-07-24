@@ -173,6 +173,28 @@ test('loop-init scaffolds circuit breaker for pr-babysitter (opencode paths)', a
   }
 });
 
+test('loop-init scaffolds explicit unknown readiness states for pr-babysitter', async () => {
+  const skillPaths = {
+    grok: ['.grok', 'skills', 'pr-review-triage', 'SKILL.md'],
+    claude: ['.claude', 'skills', 'pr-review-triage', 'SKILL.md'],
+    codex: ['.codex', 'skills', 'pr-review-triage', 'SKILL.md'],
+    opencode: ['skills', 'pr-review-triage', 'SKILL.md'],
+  };
+
+  for (const [tool, skillParts] of Object.entries(skillPaths)) {
+    const dir = await mkdtemp(path.join(tmpdir(), `loop-init-pr-readiness-${tool}-`));
+    try {
+      await exec('node', [CLI, dir, '--pattern', 'pr-babysitter', '--tool', tool]);
+      const skill = await readFile(path.join(dir, ...skillParts), 'utf8');
+      assert.match(skill, /passing \| failing \| pending \| absent\/unknown/);
+      assert.match(skill, /zero checks|no check runs/i);
+      assert.match(skill, /mergeable[\s\S]*does\s+not mean[\s\S]*ready/i);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  }
+});
+
 test('loop-init does NOT scaffold circuit breaker for report-only daily-triage', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-nocb-'));
   try {

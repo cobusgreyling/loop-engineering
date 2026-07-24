@@ -5,7 +5,11 @@ Last run: never
 ## Watched PRs
 
 <!-- - #1234 (branch-name)
-  Status: CI red | changes requested | ready
+  Checks: passing | failing | pending | absent/unknown
+  Required-check policy: known and satisfied | known and unsatisfied | unknown
+  Reviews: approved 1 | changes requested | review required | absent/unknown
+  Mergeability: clean | conflicts | unknown
+  Ready to merge: yes | no — reason
   Attempts: 0/3
   Last action: —
   Human decision: —

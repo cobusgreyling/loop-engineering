@@ -27,7 +27,11 @@ Keep a small `pr-babysitter-state.md` (or a Linear board / GitHub project view) 
 Example state entry:
 ```markdown
 - #1234 (feat/auth-refresh)
-  Status: Changes requested by @reviewer
+  Checks: passing (unit, lint)
+  Required-check policy: known and satisfied
+  Reviews: changes requested by @reviewer
+  Mergeability: clean
+  Ready to merge: no — changes requested
   Last action: Loop proposed minimal diff for comment X
   Human decision: Approved the diff, asked for one more test
 ```
@@ -37,9 +41,15 @@ Example state entry:
 1. Discover open PRs authored by the team (or all PRs the user cares about).
 2. For each PR:
    - Run triage skill.
-   - If CI is red → spawn sub-agent with `minimal-fix` skill to address the failure.
+   - Classify checks as passing, failing, pending, or absent/unknown; record
+     whether the repository's required-check policy is known.
+   - If checks are failing → spawn sub-agent with `minimal-fix` skill to address
+     the failure. If pending → wait. If absent/unknown → establish repository
+     policy or escalate instead of assuming green.
    - If review comments exist and are actionable → propose minimal patches.
-   - If ready (all checks green, approvals present, no blocking comments) → add "ready to merge" label or ping human.
+   - If ready (known policy satisfied, required approvals present, no changes
+     requested or blocking comments, and no merge conflict) → add "ready to
+     merge" label or ping human.
 3. For PRs that have been idle too long → suggest close or hand-off.
 4. Write concise updates back to the PR and to state.
 5. Anything ambiguous or high-risk → surface to human with context.
@@ -93,6 +103,9 @@ PR. See [docs/safety.md](../docs/safety.md).
 ## Failure Modes & Mitigations
 
 - **Loop proposes bad fixes** → Strong verifier sub-agent (maker/checker) + human review gate for anything beyond trivial.
+- **Missing checks look green** → Represent zero returned checks as
+  `absent/unknown`; a clean/mergeable PR is not ready until repository policy
+  is known and all review/check gates are satisfied.
 - **Infinite rebase loops** → Limit number of automated rebase attempts per PR.
 - **Stale state** → The loop should prune closed/merged PRs on every run.
 - **Notification fatigue** → Use selective notifications (only when human action is truly required).

@@ -4,7 +4,14 @@ Open PRs tracked: 0
 Attempt counts: {}
 
 ## Watch List
-- <!-- Add open PRs here -->
+<!-- - #1234 (branch-name)
+  Checks: passing | failing | pending | absent/unknown
+  Required-check policy: known and satisfied | known and unsatisfied | unknown
+  Reviews: approved 1 | changes requested | review required | absent/unknown
+  Mergeability: clean | conflicts | unknown
+  Ready to merge: yes | no — reason
+  Last action: —
+-->
 
 ## Fix History (L2+)
 - <!-- Record attempt count and outcome per PR -->
