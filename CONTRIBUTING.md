@@ -13,7 +13,7 @@ This repo is a **practical engineering reference**, not a hype collection. We we
 | Starter kit | `starters/` |
 | Doc improvement | `docs/` |
 
-## Contribution ladder
+## Contribution Ladder
 
 Start small — every merged PR counts.
 
@@ -68,7 +68,7 @@ In short:
 - Tool-agnostic by default; tool-specific in labeled sections
 - Harassment and bad-faith participation are not tolerated
 
-## Maintainer response (adopters & stories)
+## Maintainer Response (Adopters & Stories)
 
 PRs that only touch `stories/`, `docs/adopters.md`, or the [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) template get **same-day review** when possible:
 
@@ -83,7 +83,7 @@ Automation posts a welcome comment on new story/adopter PRs (see `.github/workfl
 - **Questions**: [Ask anything](https://github.com/cobusgreyling/loop-engineering/discussions/327) (preferred) or issue with label `question`
 - **Show your loop**: [Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/326), [Add Adopter issue](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml), or a row in [docs/adopters.md](./docs/adopters.md)
 - **Loop Ready badge**: `npx @cobusgreyling/loop-audit . --badge` — paste into your README
-- **Good first issues**: look for label [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+- **Good first issues**: look for the label [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 - **Hall of fame**: [CONTRIBUTORS.md](./CONTRIBUTORS.md) — regenerate after merges with `npm run contributors:generate`
 - **Security**: see [SECURITY.md](./SECURITY.md) — do not file public issues for exploitable vulnerabilities
 
