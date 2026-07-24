@@ -21,7 +21,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-06-23T10:51:06Z","pattern":"daily-triage","duration_s":9,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"28020882266"}
 {"run_id":"2026-06-24T10:37:45Z","pattern":"daily-triage","duration_s":4,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"28092607194"}
 {"run_id":"2026-06-25T10:31:13Z","pattern":"daily-triage","duration_s":9,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"28163927037"}
 {"run_id":"2026-06-26T10:40:30Z","pattern":"daily-triage","duration_s":9,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"28232942820"}
@@ -50,3 +49,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-07-22T12:52:20Z","pattern":"scheduled-maintenance","duration_s":300,"items_found":1,"actions_taken":2,"escalations":0,"tokens_estimate":15000,"readiness_score":100,"outcome":"report-only","note":"confirmed npm loop-cost 1.2.0 + loop-context 1.5.0; STATE open-PR queue empty; #348 closed"}
 {"run_id":"2026-07-23T08:48:16Z","pattern":"daily-triage","duration_s":10,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"29992416287"}
 {"run_id":"2026-07-23T10:05:00Z","pattern":"pr-housekeeping","duration_s":420,"items_found":7,"actions_taken":3,"escalations":0,"tokens_estimate":80000,"readiness_score":100,"outcome":"fix-proposed","merged":[355,356,357],"open_remaining":[362,360,359,358],"notes":"docs batch merged; tooling left for human review"}
+{"run_id":"2026-07-24T08:47:32Z","pattern":"daily-triage","duration_s":16,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"30080160209"}
