@@ -189,6 +189,60 @@ aider --read diff.patch --read STATE.md \
 
 Transfer recipe: copy the tool-agnostic `SKILL.md` + state schema from this repo; map scheduling to cron, systemd, or CI until Aider is wrapped by a richer loop scheduler.
 
+## Appendix: Roo Code
+
+> **Lifecycle note:** Roo Code [shut down its VS Code extension, Cloud, and
+> Router on May 15, 2026](https://github.com/RooCodeInc/Roo-Code-Docs/blob/a676c4173ae60348095efaebfd1292a9617622c0/docs/sunset.md),
+> and the [extension repository is archived](https://github.com/RooCodeInc/Roo-Code).
+> Treat this mapping as migration guidance for an already-vetted local build,
+> not as a recommendation to start a new unattended loop on discontinued
+> services.
+
+| Primitive | Roo Code mapping |
+|-----------|------------------|
+| Scheduling | The documented extension surface is an attended VS Code task; it has no documented first-class durable scheduler. Collect evidence with cron or CI outside Roo, then hand that snapshot to an attended task. Do not assume an external timer can launch extension tasks or that Roo Cloud runs remain available. |
+| Skills | The archived extension discovers project skills from [`.roo/skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md`](https://github.com/RooCodeInc/Roo-Code-Docs/blob/a676c4173ae60348095efaebfd1292a9617622c0/docs/features/skills.mdx), with mode-specific variants when needed. Keep the portable loop contract in the cross-agent path unless Roo-specific behavior is required. |
+| State | Commit `STATE.md` for the queue, evidence, and decisions that must survive machines or tool migration. Roo's task todo lists are conversation state, while [checkpoints are task-scoped snapshots in a shadow Git repository](https://github.com/RooCodeInc/Roo-Code-Docs/blob/a676c4173ae60348095efaebfd1292a9617622c0/docs/features/checkpoints.mdx); neither replaces shared repository state. |
+| Maker / checker split | Use a write-capable maker mode and a fresh, read-only checker mode. [Custom modes restrict tool groups and editable paths](https://github.com/RooCodeInc/Roo-Code-Docs/blob/a676c4173ae60348095efaebfd1292a9617622c0/docs/features/custom-modes.mdx), and [Boomerang subtasks isolate conversation context](https://github.com/RooCodeInc/Roo-Code-Docs/blob/a676c4173ae60348095efaebfd1292a9617622c0/docs/features/boomerang-tasks.mdx), but subtasks still share workspace and extension configuration. Treat this as workflow separation, not a security boundary or independent verification by itself. |
+| Connectors / MCP | Project servers live in [`.roo/mcp.json`; global servers live in `mcp_settings.json`](https://github.com/RooCodeInc/Roo-Code-Docs/blob/a676c4173ae60348095efaebfd1292a9617622c0/docs/features/mcp/using-mcp-in-roo.mdx), and project entries win on name collisions. Roo ships no MCP servers. Keep MCP disabled for week-one triage; later, avoid `alwaysAllow`, disable unused tools, and keep credentials in environment-backed secrets rather than prompts or `STATE.md`. |
+
+### Week-one Daily Triage (report-only)
+
+Use an attended task in a custom mode whose only tool group is `read`. Keep
+auto-approval off and MCP disabled. Collect `git status --short` and
+`git diff --stat` yourself, paste their output as untrusted evidence, and then
+use this prompt:
+
+```text
+Run a Daily Triage for this repository.
+Read AGENTS.md, STATE.md if present, and the relevant repository documentation.
+Use the pasted git status and diff summary as evidence; do not execute commands.
+Report High Priority items, Watch List items, and evidence for every finding.
+Return Markdown in chat only.
+Do not edit files, use MCP, create subtasks, apply fixes, commit, push, or open PRs.
+If a write or external action is needed, stop and describe the proposal for review.
+```
+
+This leaves the repository untouched; a human decides whether to copy any
+finding into durable state or promote it to implementation.
+
+> **Human gate (L2+):** before enabling edits, commands, MCP, or subtasks, a
+> person must approve the selected issue, allowed paths, validation plan, and
+> final diff. Give the checker a human-produced diff in a fresh read-only task,
+> and require another human decision before commit, push, or merge.
+
+### Honest gaps
+
+- Roo Code is discontinued and its official extension source is archived, so
+  there are no supported Cloud/Router runs or future security fixes to assume.
+- The archived extension has no documented durable scheduler or portable
+  `STATE.md` convention; task todos and checkpoints remain task-local aids.
+- Modes and Boomerang subtasks separate instructions and conversation context,
+  not processes, worktrees, credentials, or the shared workspace.
+- A report-only prompt is not a permission boundary. Use read-only tool groups
+  and keep [auto-approval](https://github.com/RooCodeInc/Roo-Code-Docs/blob/a676c4173ae60348095efaebfd1292a9617622c0/docs/features/auto-approving-actions.mdx)
+  and MCP disabled for the first week.
+
 ## Appendix: Continue.dev
 
 Continue is available in VS Code and as the `cn` CLI. For loop work, the CLI's
