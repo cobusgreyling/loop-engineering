@@ -350,3 +350,117 @@ test('loop-init --help documents --with-fleet', async () => {
   assert.match(stdout, /--with-fleet/);
   assert.match(stdout, /fleet-engineering registry and inbox/);
 });
+
+const SCAFFOLD_PATTERNS = {
+  'daily-triage': {
+    state: 'STATE.md',
+    primarySkill: 'loop-triage',
+    fixCapable: false,
+    intake: false,
+  },
+  'pr-babysitter': {
+    state: 'pr-babysitter-state.md',
+    primarySkill: 'pr-review-triage',
+    fixCapable: true,
+    intake: false,
+  },
+  'ci-sweeper': {
+    state: 'ci-sweeper-state.md',
+    primarySkill: 'ci-triage',
+    fixCapable: true,
+    intake: false,
+  },
+  'dependency-sweeper': {
+    state: 'dependency-sweeper-state.md',
+    primarySkill: 'dependency-triage',
+    fixCapable: true,
+    intake: false,
+  },
+  'post-merge-cleanup': {
+    state: 'post-merge-state.md',
+    primarySkill: 'post-merge-scan',
+    fixCapable: true,
+    intake: false,
+  },
+  'changelog-drafter': {
+    state: 'changelog-drafter-state.md',
+    primarySkill: 'changelog-scan',
+    fixCapable: false,
+    intake: false,
+  },
+  'issue-triage': {
+    state: 'issue-triage-state.md',
+    primarySkill: 'issue-triage',
+    fixCapable: false,
+    intake: true,
+  },
+};
+
+const SCAFFOLD_TOOLS = {
+  grok: ['.grok', 'skills'],
+  claude: ['.claude', 'skills'],
+  codex: ['.codex', 'skills'],
+  opencode: ['skills'],
+};
+
+async function expectPathExists(...parts) {
+  await access(path.join(...parts));
+}
+
+async function expectPathMissing(...parts) {
+  await assert.rejects(() => access(path.join(...parts)));
+}
+
+for (const [pattern, contract] of Object.entries(SCAFFOLD_PATTERNS)) {
+  for (const [tool, skillRoot] of Object.entries(SCAFFOLD_TOOLS)) {
+    test(`loop-init scaffold matrix: ${pattern} for ${tool}`, async () => {
+      const dir = await mkdtemp(path.join(tmpdir(), `loop-init-matrix-${pattern}-${tool}-`));
+      try {
+        const { stdout } = await exec('node', [
+          CLI,
+          dir,
+          '--pattern',
+          pattern,
+          '--tool',
+          tool,
+        ]);
+
+        assert.match(stdout, new RegExp(`loop-init: ${pattern}`));
+        await expectPathExists(dir, contract.state);
+        await expectPathExists(dir, 'AGENTS.md');
+        await expectPathExists(dir, 'loop-budget.md');
+        await expectPathExists(dir, 'loop-run-log.md');
+        await expectPathExists(dir, 'loop-constraints.md');
+        await expectPathExists(dir, ...skillRoot, contract.primarySkill, 'SKILL.md');
+        await expectPathExists(dir, ...skillRoot, 'loop-budget', 'SKILL.md');
+        await expectPathExists(dir, ...skillRoot, 'loop-constraints', 'SKILL.md');
+
+        if (tool === 'opencode') {
+          await expectPathExists(dir, 'opencode.json');
+        }
+
+        if (contract.fixCapable) {
+          await expectPathExists(dir, 'loop-ledger.json');
+          await expectPathExists(dir, ...skillRoot, 'minimal-fix', 'SKILL.md');
+          await expectPathExists(dir, ...skillRoot, 'loop-guard', 'SKILL.md');
+
+          const ledger = JSON.parse(await readFile(path.join(dir, 'loop-ledger.json'), 'utf8'));
+          assert.equal(ledger.pattern, pattern);
+          assert.match(ledger.level, /^L[12]$/);
+          assert.deepEqual(ledger.attempts, []);
+        } else {
+          await expectPathMissing(dir, 'loop-ledger.json');
+          await expectPathMissing(dir, ...skillRoot, 'loop-guard', 'SKILL.md');
+        }
+
+        if (contract.intake) {
+          await expectPathExists(dir, ...skillRoot, 'loop-intake', 'SKILL.md');
+        } else {
+          await expectPathMissing(dir, ...skillRoot, 'loop-intake', 'SKILL.md');
+        }
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
+  }
+}
