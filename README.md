@@ -79,6 +79,7 @@ For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agent
 - [Examples by Tool](#examples-by-tool)
 - [Operating & Safety](#operating--safety)
 - [Caveats](#caveats)
+- [Help wanted](#help-wanted)
 - [Contributing](#contributing)
 - [Sources](#sources)
 - [License](#license)
@@ -130,7 +131,12 @@ memory-engineering → loop-engineering → harness-foundry → outerloop → fl
 **Scale beyond one loop:** when agents forget across sessions, add [memory-engineering](https://github.com/cobusgreyling/memory-engineering). When you have many agents/loops on a team, add [fleet-engineering](https://github.com/cobusgreyling/fleet-engineering).
 
 **Next after Loop Ready 80+:** version the loop as a harness — `loop-init` prints the CTA automatically; `loop-audit` recommends Foundry when the score is strong but `.foundry/stack.yaml` is missing.
-| [Contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123) | **Help wanted:** 21 scoped `good first issues` — comment *I'll take this* to get assigned |
+
+### Community & announcements
+
+| Discussion | Summary |
+|------------|---------|
+| [Contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123) | **Help wanted:** open `good first issues` — comment *I'll take this* to get assigned · see [Help wanted](#help-wanted) |
 | [Community update](https://github.com/cobusgreyling/loop-engineering/discussions/145) | **July 4:** 5.5k stars, traffic sources, contributor merges |
 | [Community week (Jul 8)](https://github.com/cobusgreyling/loop-engineering/discussions/219) | loop-worktree npm, MCP quickstart, tool appendices |
 | [npm update (Jul 16)](https://github.com/cobusgreyling/loop-engineering/discussions/294) | `loop-context` 1.2.0 + `loop-worktree` 1.1.0 — daily budget, path locks |
@@ -291,20 +297,22 @@ Addy Osmani:
 
 ## Help wanted
 
-**First PR?** Start with the [contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123) — ~10 min to ~1 hr tasks with same-day review on stories and adopters. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for everyone who has shipped so far.
+**First PR?** Pick one open issue below. Stories and adopters get **same-day review** when possible. See [CONTRIBUTORS.md](CONTRIBUTORS.md) and the [contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123).
 
-| Pick one | Issue |
-|----------|-------|
-| ~10 min | [#120 — Add your project to adopters](https://github.com/cobusgreyling/loop-engineering/issues/120) |
-| ~15 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) |
-| ~20 min | [#119 — PR Babysitter failure story](https://github.com/cobusgreyling/loop-engineering/issues/119) |
-| ~30 min | [#117 — Continue.dev](https://github.com/cobusgreyling/loop-engineering/issues/117) · [#147 — Cline](https://github.com/cobusgreyling/loop-engineering/issues/147) |
-| ~30 min | [#195 — Roo Code](https://github.com/cobusgreyling/loop-engineering/issues/195) · [#196 — GitHub Copilot](https://github.com/cobusgreyling/loop-engineering/issues/196) |
-| ~40 min | [#220 — Cursor CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/220) · [#223 — Cursor Changelog Drafter](https://github.com/cobusgreyling/loop-engineering/issues/223) |
-| ~40 min | [#224 — Cursor Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/224) |
-| Hubs | [Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/326) · [Ask anything](https://github.com/cobusgreyling/loop-engineering/discussions/327) |
+**14 open** [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)s (refreshed Jul 2026). Comment **"I'll take this"** for assignment.
 
-Comment **"I'll take this"** on any [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for assignment.
+| Time | Issue | What you ship |
+|------|-------|---------------|
+| ~10 min | [#120 — Adopters list](https://github.com/cobusgreyling/loop-engineering/issues/120) | One row in `docs/adopters.md` (or [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) template) |
+| ~15–20 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) · [#119 — PR Babysitter failure](https://github.com/cobusgreyling/loop-engineering/issues/119) · [#392 — CI Sweeper story](https://github.com/cobusgreyling/loop-engineering/issues/392) | Honest `stories/` write-up + index row |
+| ~25–30 min | [#389 — loop-action QUICKSTART](https://github.com/cobusgreyling/loop-engineering/issues/389) · [#390 — loop-sandbox QUICKSTART](https://github.com/cobusgreyling/loop-engineering/issues/390) · [#391 — loop-gate QUICKSTART](https://github.com/cobusgreyling/loop-engineering/issues/391) | Doc subsection + links to tool READMEs |
+| ~40 min | [#384 — Windsurf CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/384) · [#385 — Windsurf Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/385) · [#386 — Windsurf Dependency Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/386) | Fill pattern-coverage gaps in `examples/windsurf/` |
+| ~40–45 min | [#387 — Hermes CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/387) · [#388 — Hermes Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/388) | Fill pattern-coverage gaps in `examples/hermes/` |
+| ~45–60 min | [#393 — Harden loop-action quoting](https://github.com/cobusgreyling/loop-engineering/issues/393) | Safer `inputs.command` handling in `tools/loop-action` |
+| Anytime | Templates | [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) · [Share a story](https://github.com/cobusgreyling/loop-engineering/issues/new?template=share-story.yml) |
+| Hubs | Discussions | [Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/326) · [Ask anything](https://github.com/cobusgreyling/loop-engineering/discussions/327) |
+
+Maintainers re-seed the backlog with `bash scripts/create-good-first-issues.sh` (idempotent; skips existing titles). Prefer [live open GFI filter](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) over this table if a row looks stale.
 
 ## Contributing
 

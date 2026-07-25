@@ -58,5 +58,18 @@ create_issue "Share your loop-worktree week-two story" "good first issue,story" 
 create_issue "Share your multi-loop failure story" "good first issue,story" "$BODY_DIR/multi-loop-failure-story.md"
 create_issue "Add loop-init validation checklist doc" "good first issue,docs" "$BODY_DIR/loop-init-validation-checklist.md"
 
+# Wave 4 — coverage gaps after Jul 2026 merges (Hermes/Windsurf, new tools, stories)
+create_issue "Add Windsurf CI Sweeper example doc" "good first issue,docs" "$BODY_DIR/windsurf-ci-sweeper-example.md"
+create_issue "Add Windsurf Issue Triage example doc" "good first issue,docs" "$BODY_DIR/windsurf-issue-triage-example.md"
+create_issue "Add Windsurf Dependency Sweeper example doc" "good first issue,docs" "$BODY_DIR/windsurf-dependency-sweeper-example.md"
+create_issue "Add Hermes CI Sweeper example doc" "good first issue,docs" "$BODY_DIR/hermes-ci-sweeper-example.md"
+create_issue "Add Hermes Issue Triage example doc" "good first issue,docs" "$BODY_DIR/hermes-issue-triage-example.md"
+create_issue "Add loop-action subsection to QUICKSTART" "good first issue,docs" "$BODY_DIR/quickstart-loop-action.md"
+create_issue "Add loop-sandbox subsection to QUICKSTART" "good first issue,docs" "$BODY_DIR/quickstart-loop-sandbox.md"
+create_issue "Add loop-gate subsection to QUICKSTART" "good first issue,docs" "$BODY_DIR/quickstart-loop-gate.md"
+create_issue "Share a CI Sweeper production story" "good first issue,story" "$BODY_DIR/ci-sweeper-story.md"
+create_issue "Share a Changelog Drafter week-one story" "good first issue,story" "$BODY_DIR/changelog-drafter-story.md"
+create_issue "Harden loop-action command invocation (safe quoting)" "good first issue,tooling" "$BODY_DIR/harden-loop-action-command.md"
+
 echo "Done. Open backlog:"
 echo "https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
