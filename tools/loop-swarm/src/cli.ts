@@ -15,16 +15,24 @@ async function main() {
     allowPositionals: true
   });
 
-  if (values.help || positionals.length === 0 || positionals[0] !== 'run') {
-    console.log(`
+  if (positionals.length === 0 || positionals[0] !== 'run' || values.help) {
+    const isHelp = values.help;
+    const msg = `
 Usage: loop-swarm run [options] -- <command>
 
 Options:
   --count, -n   Number of parallel agents to spawn (default: 3)
   --shell       Execute the command inside a shell
   --help, -h    Show this help message
-`);
-    process.exit(0);
+`;
+    if (!isHelp) {
+      console.error('❌ Missing or invalid subcommand. Must use "run".');
+      console.error(msg);
+      process.exit(1);
+    } else {
+      console.log(msg);
+      process.exit(0);
+    }
   }
 
   // Find the -- separator manually if parseArgs doesn't handle it easily

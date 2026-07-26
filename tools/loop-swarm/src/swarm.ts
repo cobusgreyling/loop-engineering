@@ -19,47 +19,59 @@ export interface ConsensusResult {
 export async function runSwarm(root: string, command: string, args: string[], options: SwarmOptions): Promise<ConsensusResult> {
   const { count, ...sandboxOptions } = options;
 
-  console.log(`\n🐝 Launching loop-swarm with ${count} concurrent agents...`);
+  console.log(`\n🐝 Launching loop-swarm with ${count} sequential agents (serialized to prevent worktree races)...`);
 
-  const promises: Promise<SandboxResult>[] = [];
+  const results: SandboxResult[] = [];
   for (let i = 0; i < count; i++) {
-    promises.push(runInSandbox(root, command, args, sandboxOptions));
+    console.log(`\n▶️ Agent ${i + 1}/${count}`);
+    results.push(await runInSandbox(root, command, args, sandboxOptions));
   }
-
-  // Wait for all to finish
-  const results = await Promise.all(promises);
 
   console.log(`\n🧠 Analyzing swarm results...`);
 
-  // Group by hash
-  const patches = results.filter(r => r.patchFile !== null && r.hasChanges).map(r => r.patchFile as string);
+  // Filter out runs that failed (non-zero exitCode)
+  const successfulRuns = results.filter(r => r.exitCode === 0);
+  const failedRuns = count - successfulRuns.length;
   
-  if (patches.length === 0) {
-    console.log(`ℹ️ No changes were produced by any agent in the swarm.`);
-    return {
-      reached: true, // Trivially reached consensus on "no changes"
-      majorityHash: null,
-      majorityCount: count, // All returned no changes
-      totalPatches: 0,
-      consensusPatchFile: null,
-      divergentPatches: []
-    };
+  if (failedRuns > 0) {
+    console.log(`⚠️ ${failedRuns} agent(s) failed with non-zero exit codes. They are excluded from consensus voting.`);
   }
 
+  // Count identical patches among successful runs
   const hashCounts: Record<string, { count: number; files: string[] }> = {};
+  
+  let noChangeCount = 0;
 
-  for (const patchFile of patches) {
-    const buffer = await readFile(patchFile);
+  for (const r of successfulRuns) {
+    if (!r.hasChanges || !r.patchFile) {
+      noChangeCount++;
+      continue;
+    }
+    const buffer = await readFile(r.patchFile);
     const hash = createHash('sha256').update(buffer).digest('hex');
     
     if (!hashCounts[hash]) {
       hashCounts[hash] = { count: 0, files: [] };
     }
     hashCounts[hash].count++;
-    hashCounts[hash].files.push(patchFile);
+    hashCounts[hash].files.push(r.patchFile);
   }
 
-  // Find majority
+  const threshold = Math.floor(count / 2) + 1; // Strict majority of total launched agents
+
+  if (noChangeCount >= threshold) {
+    console.log(`✅ Consensus reached! ${noChangeCount}/${count} agents produced NO changes (success).`);
+    return {
+      reached: true,
+      majorityHash: null,
+      majorityCount: noChangeCount,
+      totalPatches: successfulRuns.length - noChangeCount,
+      consensusPatchFile: null,
+      divergentPatches: []
+    };
+  }
+
+  // Find majority among patches
   let maxCount = 0;
   let majorityHash: string | null = null;
   for (const [hash, data] of Object.entries(hashCounts)) {
@@ -69,8 +81,6 @@ export async function runSwarm(root: string, command: string, args: string[], op
     }
   }
 
-  const threshold = Math.floor(count / 2) + 1; // Strict majority
-  
   const divergentPatches = Object.values(hashCounts).flatMap(d => d.files);
 
   if (maxCount >= threshold && majorityHash) {
@@ -86,19 +96,20 @@ export async function runSwarm(root: string, command: string, args: string[], op
       reached: true,
       majorityHash,
       majorityCount: maxCount,
-      totalPatches: patches.length,
+      totalPatches: successfulRuns.length - noChangeCount,
       consensusPatchFile,
       divergentPatches: divergentPatches.filter(f => !hashCounts[majorityHash!].files.includes(f))
     };
   }
 
-  console.log(`❌ Swarm failed to reach consensus. (Highest agreement: ${maxCount}/${count})`);
+  const maxAgreement = Math.max(maxCount, noChangeCount);
+  console.log(`❌ Swarm failed to reach consensus. (Highest agreement: ${maxAgreement}/${count})`);
   
   return {
     reached: false,
     majorityHash: null,
-    majorityCount: maxCount,
-    totalPatches: patches.length,
+    majorityCount: maxAgreement,
+    totalPatches: successfulRuns.length - noChangeCount,
     consensusPatchFile: null,
     divergentPatches
   };
