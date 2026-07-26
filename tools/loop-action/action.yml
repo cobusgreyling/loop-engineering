@@ -43,7 +43,6 @@ runs:
       run: |
         script_path="$(mktemp "${RUNNER_TEMP:-/tmp}/loop-action-command.XXXXXX")"
         printf '%s\n' "$LOOP_COMMAND" > "$script_path"
-        chmod +x "$script_path"
         echo "script-path=$script_path" >> "$GITHUB_OUTPUT"
       shell: bash
 
@@ -54,9 +53,9 @@ runs:
         LOOP_SANDBOX_SHELL: ${{ inputs.sandbox-shell }}
       run: |
         if [ "$LOOP_SANDBOX_SHELL" == "true" ]; then
-          npx --yes @cobusgreyling/loop-sandbox run --shell -- bash "$LOOP_SCRIPT_PATH"
+          npx --yes @cobusgreyling/loop-sandbox run --shell -- bash -eo pipefail "$LOOP_SCRIPT_PATH"
         else
-          npx --yes @cobusgreyling/loop-sandbox run -- bash "$LOOP_SCRIPT_PATH"
+          npx --yes @cobusgreyling/loop-sandbox run -- bash -eo pipefail "$LOOP_SCRIPT_PATH"
         fi
       shell: bash
 
@@ -64,5 +63,5 @@ runs:
       if: ${{ inputs.sandbox != 'true' }}
       env:
         LOOP_SCRIPT_PATH: ${{ steps.write_command.outputs.script-path }}
-      run: bash "$LOOP_SCRIPT_PATH"
+      run: bash -eo pipefail "$LOOP_SCRIPT_PATH"
       shell: bash
