@@ -1,13 +1,13 @@
 {
-  "name": "@cobusgreyling/loop-sandbox",
+  "name": "@cobusgreyling/loop-swarm",
   "version": "1.0.0",
-  "description": "The ultimate L2 safety mechanism. Diverts agent execution into an ephemeral git worktree, captures their changes as a .patch file, and destroys the sandbox.",
+  "description": "Multi-agent consensus sandboxing for extreme high-confidence loop operations.",
   "type": "module",
   "bin": {
-    "loop-sandbox": "./dist/cli.js"
+    "loop-swarm": "dist/cli.js"
   },
-  "main": "./dist/sandbox.js",
-  "types": "./dist/sandbox.d.ts",
+  "main": "dist/swarm.js",
+  "types": "dist/swarm.d.ts",
   "files": [
     "dist",
     "README.md"
@@ -25,21 +25,22 @@
     "loop-engineering",
     "ai-agents",
     "coding-agents",
-    "sandbox",
-    "security"
+    "swarm",
+    "consensus"
   ],
   "author": "Cobus Greyling",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cobusgreyling/loop-engineering.git",
-    "directory": "tools/loop-sandbox"
+    "directory": "tools/loop-swarm"
   },
   "homepage": "https://cobusgreyling.github.io/loop-engineering/",
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
+    "@cobusgreyling/loop-sandbox": "^1.0.0",
     "@cobusgreyling/loop-worktree": "^1.2.0"
   },
   "devDependencies": {
