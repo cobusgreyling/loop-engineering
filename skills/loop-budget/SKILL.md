@@ -13,7 +13,7 @@ Run at the **start** and **end** of every loop iteration.
 2. Read recent entries in `loop-run-log.md` (last 24h).
 3. Sum `tokens_estimate` for the active pattern today.
 4. If spend ≥ 80% of the pattern's daily cap → **report-only mode** (no sub-agents, no auto-fix).
-5. If spend ≥ 100% or `loop-pause-all` is set → **exit immediately** with a one-line note in STATE.md.
+5. If spend ≥ 90% and High Priority items remain in `STATE.md`, yield to the [budget-negotiator](../budget-negotiator/SKILL.md) skill (if installed). Otherwise, if spend ≥ 100% or `loop-pause-all` is set → **exit immediately** with a one-line note in STATE.md.
 6. If watchlist/state has no actionable items → **exit in <5k tokens** (do not spawn sub-agents).
 
 ## End of run
