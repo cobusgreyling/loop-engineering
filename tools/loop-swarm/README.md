@@ -4,7 +4,7 @@ Multi-agent consensus sandboxing for extreme high-confidence loop operations.
 
 `loop-swarm` runs an agent command multiple times sequentially in separate, isolated `loop-sandbox` worktrees. It then extracts the resulting `.patch` files from each run, hashes them, and automatically determines if a majority consensus was reached.
 
-If an agent produces non-deterministic results, `loop-swarm` acts as an L3 safety net by ensuring that only changes verified by multiple parallel agent runs are proposed.
+If an agent produces non-deterministic results, `loop-swarm` acts as an L3 safety net by ensuring that only changes verified by multiple sequential agent runs are proposed.
 
 > [!IMPORTANT]
 > This tool implements an **ephemeral git worktree isolation** safety boundary. It is NOT an OS-level sandbox or container. For full details on the threat model, please read [Safety Boundaries](../../docs/safety.md).
@@ -33,3 +33,4 @@ npx @cobusgreyling/loop-swarm run --count 3 -- npx my-agent run --task "Refactor
 - **Byte-Identical Consensus**: Consensus relies on exact `SHA-256` hashing of the patch bytes. If two agents arrive at semantically identical code but with different whitespace or comment ordering, `loop-swarm` will consider them divergent.
 - **Shared Stdio**: The sequential agents share the parent process's standard IO. 
 - **Time Penalty**: Because execution is currently serialized to maintain safety guarantees on the manifest, running an agent with `--count 3` will take roughly 3x as long as running it once.
+- **SIGINT Handling**: Because `loop-sandbox` runs in-process, its signal handler will exit the entire process on `SIGINT`. A signal during an agent run exits the entire swarm rather than allowing swarm-owned cleanup. This is a v1 limitation until subprocessing is implemented.

@@ -81,3 +81,75 @@ test('loop-swarm handles all-failed agents properly', async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('loop-swarm handles 2-of-3 majority with 1 divergent patch', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'loop-swarm-test-'));
+  try {
+    await setupGit(root);
+
+    const counterFile = join(tmpdir(), 'loop-swarm-counter-' + Math.random().toString().slice(2));
+    await writeFile(counterFile, '0');
+
+    const scriptPath = join(root, 'agent.cjs');
+    await writeFile(scriptPath, `
+      const fs = require('fs');
+      const counterFile = '${counterFile.replace(/\\/g, '\\\\')}';
+      const counter = parseInt(fs.readFileSync(counterFile, 'utf8'), 10);
+      fs.writeFileSync(counterFile, (counter + 1).toString());
+      if (counter === 2) {
+        fs.writeFileSync('changes.txt', 'divergent data\\n');
+      } else {
+        fs.writeFileSync('changes.txt', 'majority data\\n');
+      }
+    `);
+    
+    const result = spawnSync('node', [cliPath, 'run', '--count', '3', '--', 'node', scriptPath], {
+      cwd: root,
+      encoding: 'utf8'
+    });
+
+    assert.strictEqual(result.status, 0, 'CLI should succeed on 2-of-3 majority');
+    assert.match(result.stdout, /Consensus reached! 2\/3/);
+
+    const patchStat = await stat(join(root, '.loop-sandbox', 'patches', 'consensus.patch'));
+    assert.ok(patchStat.size > 0, 'consensus.patch should be created');
+
+    await rm(counterFile, { force: true });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loop-swarm handles exit-code-0 no-op majority', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'loop-swarm-test-'));
+  try {
+    await setupGit(root);
+
+    const counterFile = join(tmpdir(), 'loop-swarm-counter-' + Math.random().toString().slice(2));
+    await writeFile(counterFile, '0');
+
+    const scriptPath = join(root, 'agent.cjs');
+    await writeFile(scriptPath, `
+      const fs = require('fs');
+      const counterFile = '${counterFile.replace(/\\/g, '\\\\')}';
+      const counter = parseInt(fs.readFileSync(counterFile, 'utf8'), 10);
+      fs.writeFileSync(counterFile, (counter + 1).toString());
+      if (counter === 2) {
+        fs.writeFileSync('changes.txt', 'some change\\n');
+      }
+    `);
+    
+    const result = spawnSync('node', [cliPath, 'run', '--count', '3', '--', 'node', scriptPath], {
+      cwd: root,
+      encoding: 'utf8'
+    });
+
+    assert.strictEqual(result.status, 0, 'CLI should succeed on no-op majority');
+    assert.match(result.stdout, /Consensus reached! 2\/3 agents produced NO changes/);
+
+    await rm(counterFile, { force: true });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+

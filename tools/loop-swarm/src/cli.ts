@@ -21,7 +21,7 @@ async function main() {
 Usage: loop-swarm run [options] -- <command>
 
 Options:
-  --count, -n   Number of parallel agents to spawn (default: 3)
+  --count, -n   Number of sequential agents to spawn (default: 3)
   --shell       Execute the command inside a shell
   --help, -h    Show this help message
 `;
