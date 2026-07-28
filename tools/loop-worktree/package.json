@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop-worktree",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Manage isolated git worktrees for loop engineering attempts: create, mark, cleanup, and reconcile one worktree per fix attempt.",
   "type": "module",
   "bin": {
@@ -8,6 +8,27 @@
   },
   "main": "dist/worktree.js",
   "types": "dist/worktree.d.ts",
+  "typesVersions": {
+    "*": {
+      "lock": [
+        "dist/lock.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/worktree.d.ts",
+      "import": "./dist/worktree.js",
+      "default": "./dist/worktree.js"
+    },
+    "./lock": {
+      "types": "./dist/lock.d.ts",
+      "import": "./dist/lock.js",
+      "default": "./dist/lock.js"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
     "README.md"

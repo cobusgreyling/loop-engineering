@@ -4,7 +4,14 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { lockPaths, unlockOwner, listLocks, sweepExpiredLocks, pathsOverlap, isExpired } from '../dist/lock.js';
+import {
+  lockPaths,
+  unlockOwner,
+  listLocks,
+  sweepExpiredLocks,
+  pathsOverlap,
+  isExpired,
+} from '@cobusgreyling/loop-worktree/lock';
 
 async function freshDir() {
   return mkdtemp(path.join(tmpdir(), 'loop-worktree-lock-'));
@@ -166,7 +173,7 @@ test('lockPaths with --wait queues and acquires lock when released', async () =>
 
   // Ensure the wait intent is written
   await new Promise(r => setTimeout(r, 50));
-  const { listWaits } = await import('../dist/lock.js');
+  const { listWaits } = await import('@cobusgreyling/loop-worktree/lock');
   const waits = await listWaits(dir);
   assert.equal(waits.length, 1);
   assert.equal(waits[0].owner, 'dependency-sweeper');
@@ -194,7 +201,7 @@ test('lockPaths with --wait times out', async () => {
   );
   assert.ok(Date.now() - start >= 1000);
 
-  const { listWaits } = await import('../dist/lock.js');
+  const { listWaits } = await import('@cobusgreyling/loop-worktree/lock');
   assert.equal((await listWaits(dir)).length, 0);
 });
 
@@ -221,4 +228,3 @@ test('lockPaths deadlock detection aborts cycle immediately', async () => {
   await unlockOwner(dir, 'B');
   await pA;
 });
-

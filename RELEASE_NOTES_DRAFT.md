@@ -71,7 +71,7 @@ npx @cobusgreyling/loop-worktree list
 | `@cobusgreyling/loop-context` | **1.5.0** | `loop-context-v1.5.0` | **Published** |
 | `@cobusgreyling/loop-audit` | 1.7.0 | — | No change |
 | `@cobusgreyling/loop-init` | 1.5.0 | — | No change |
-| `@cobusgreyling/loop-worktree` | 1.2.0 | — | Already published |
+| `@cobusgreyling/loop-worktree` | 1.2.0 | `loop-worktree-v1.3.0` | Publish 1.3.0 after merge (public `./lock` subpath) |
 | `@cobusgreyling/loop-gate` | 1.0.0 | — | Already published |
 | `@cobusgreyling/goal-init` | 1.0.0 | — | Already published |
 | `@cobusgreyling/readiness-core` | 1.0.0 | — | Already published |

@@ -19,6 +19,19 @@ npm install
 npm test
 ```
 
+## Library API
+
+ESM consumers can use the worktree API from the package root and the lock
+coordinator from its supported `lock` subpath:
+
+```js
+import { createWorktree, cleanupWorktrees } from '@cobusgreyling/loop-worktree';
+import { lockPaths, unlockOwner } from '@cobusgreyling/loop-worktree/lock';
+```
+
+The `lock` subpath is the stable programmatic entry point for tools that need
+advisory path locking without importing private files under `dist/`.
+
 ## Commands
 
 ```bash
