@@ -13,6 +13,8 @@ This repo ships public npm packages from `tools/`. **Front door for users:** `@c
 | `@cobusgreyling/loop-context` | `tools/loop-context` | `loop-context-v*` |
 | `@cobusgreyling/loop-mcp-server` | `tools/mcp-server` | `loop-mcp-server-v*` |
 | `@cobusgreyling/loop-worktree` | `tools/loop-worktree` | `loop-worktree-v*` |
+| `@cobusgreyling/loop-sandbox` | `tools/loop-sandbox` | `loop-sandbox-v*` |
+| `@cobusgreyling/loop-swarm` | `tools/loop-swarm` | `loop-swarm-v*` |
 | `@cobusgreyling/loop-gate` | `tools/loop-gate` | `loop-gate-v*` |
 | `@cobusgreyling/goal-audit` | `tools/goal-audit` | `goal-audit-v*` |
 | `@cobusgreyling/goal-init` | `tools/goal-init` | `goal-init-v*` |
@@ -32,6 +34,8 @@ Link npm to GitHub, then for **each package** on [npmjs.com](https://www.npmjs.c
 | `@cobusgreyling/loop-context` | `cobusgreyling/loop-engineering` | `release-loop-context.yml` |
 | `@cobusgreyling/loop-mcp-server` | `cobusgreyling/loop-engineering` | `release-loop-mcp-server.yml` |
 | `@cobusgreyling/loop-worktree` | `cobusgreyling/loop-engineering` | `release-loop-worktree.yml` |
+| `@cobusgreyling/loop-sandbox` | `cobusgreyling/loop-engineering` | `release-loop-sandbox.yml` |
+| `@cobusgreyling/loop-swarm` | `cobusgreyling/loop-engineering` | `release-loop-swarm.yml` |
 | `@cobusgreyling/loop-gate` | `cobusgreyling/loop-engineering` | `release-loop-gate.yml` |
 | `@cobusgreyling/goal-audit` | `cobusgreyling/loop-engineering` | `release-goal-audit.yml` |
 | `@cobusgreyling/goal-init` | `cobusgreyling/loop-engineering` | `release-goal-init.yml` |

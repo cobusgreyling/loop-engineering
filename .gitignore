@@ -54,3 +54,4 @@ state.json
 !starters/**/.codex/**
 *.session
 !tools/loop-sync/dist/
+*.tgz

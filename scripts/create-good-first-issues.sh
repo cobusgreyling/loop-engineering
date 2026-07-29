@@ -73,3 +73,9 @@ create_issue "Harden loop-action command invocation (safe quoting)" "good first 
 
 echo "Done. Open backlog:"
 echo "https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
+# Wave 5 — post 2026-07-29 tools (swarm, MiniMax, lock API, sandbox stories)
+create_issue "Add loop-swarm subsection to QUICKSTART" "good first issue,docs" "$BODY_DIR/quickstart-loop-swarm.md"
+create_issue "Add MiniMax foundry flags to QUICKSTART" "good first issue,docs" "$BODY_DIR/quickstart-minimax-foundry.md"
+create_issue "Document public loop-worktree lock import in QUICKSTART" "good first issue,docs" "$BODY_DIR/quickstart-worktree-lock-import.md"
+create_issue "Share a loop-sandbox production story" "good first issue,story" "$BODY_DIR/loop-sandbox-story.md"
+create_issue "Add budget-negotiator skill discoverability to docs" "good first issue,docs" "$BODY_DIR/budget-negotiator-docs.md"

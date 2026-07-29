@@ -6,6 +6,8 @@
   "bin": {
     "loop-sandbox": "./dist/cli.js"
   },
+  "main": "./dist/sandbox.js",
+  "types": "./dist/sandbox.d.ts",
   "files": [
     "dist",
     "README.md"

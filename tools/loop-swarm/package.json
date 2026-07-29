@@ -1,0 +1,49 @@
+{
+  "name": "@cobusgreyling/loop-swarm",
+  "version": "1.0.0",
+  "description": "Multi-agent consensus sandboxing for extreme high-confidence loop operations.",
+  "type": "module",
+  "bin": {
+    "loop-swarm": "./dist/cli.js"
+  },
+  "main": "dist/swarm.js",
+  "types": "dist/swarm.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "prepublishOnly": "npm test",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "loop-engineering",
+    "ai-agents",
+    "coding-agents",
+    "swarm",
+    "consensus"
+  ],
+  "author": "Cobus Greyling",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cobusgreyling/loop-engineering.git",
+    "directory": "tools/loop-swarm"
+  },
+  "homepage": "https://cobusgreyling.github.io/loop-engineering/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@cobusgreyling/loop-sandbox": "file:../loop-sandbox"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

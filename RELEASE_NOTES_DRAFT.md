@@ -1,96 +1,114 @@
-# Release notes draft — since Discussion #294
+# Release notes draft — week of 2026-07-29 (updated 2026-07-29)
 
 **Status:** Draft for human review ([#332](https://github.com/cobusgreyling/loop-engineering/issues/332)). Edit before publishing a discussion post or tagging packages.
 
-**Last published:** [Discussion #294](https://github.com/cobusgreyling/loop-engineering/discussions/294) (2026-07-16) — `loop-context` 1.2.0, `loop-worktree` 1.1.0.
+**Last published discussion:** [Discussion #294](https://github.com/cobusgreyling/loop-engineering/discussions/294) (2026-07-16) — `loop-context` 1.2.0, `loop-worktree` 1.1.0.
 
-**Window:** 2026-07-16 → 2026-07-22
+**Window:** 2026-07-16 → 2026-07-29
 
 ---
 
 ## Highlights
 
-### Prompt caching cost model ([#346](https://github.com/cobusgreyling/loop-engineering/pull/346), [#347](https://github.com/cobusgreyling/loop-engineering/pull/347))
+### Prompt caching cost model (published)
 
-- **`loop-cost` 1.2.0** — `--with-caching` scenario + `stable_fraction` on patterns in `registry.yaml` (cache-read discount on stable report/action tokens).
-- **`loop-context` 1.5.0** — `--budget-scenario caching` resolves a cap from the new scenario (shells out with `--with-caching`).
+- **`loop-cost` 1.2.0** (published) — `--with-caching` scenario + `stable_fraction` on patterns ([#346](https://github.com/cobusgreyling/loop-engineering/pull/346), [#347](https://github.com/cobusgreyling/loop-engineering/pull/347)). Thanks [@Tusm11](https://github.com/Tusm11).
+- **`loop-context` 1.5.0** (published) — `--budget-scenario caching` + frustration circuit breaker.
 
-```bash
-npx @cobusgreyling/loop-cost --pattern daily-triage --level L1 --with-caching
-npx @cobusgreyling/loop-context --check --ledger run.json \
-  --budget-from-pattern daily-triage --budget-level L1 --budget-scenario caching
-```
+### Public worktree lock API
 
-Thanks [@Tusm11](https://github.com/Tusm11).
+- **`loop-worktree` 1.3.0** — public `./lock` subpath export for advisory path locking ([#407](https://github.com/cobusgreyling/loop-engineering/pull/407)). Thanks [@shixi-li](https://github.com/shixi-li).
+  - Tag: `loop-worktree-v1.3.0` (ready once this PR is on main)
 
-### Circuit breaker + packages already on npm
+### MiniMax + memory bridge (`loop-init` 1.6.0)
+
+- `--model-provider minimax` for `--with-foundry` implementer stacks, with `--region` / `--model` ([#418](https://github.com/cobusgreyling/loop-engineering/pull/418)). Thanks [@octo-patch](https://github.com/octo-patch).
+- `--with-memory` memory-engineering bridge scaffold ([#359](https://github.com/cobusgreyling/loop-engineering/pull/359)).
+
+### Audit self-heal (`loop-audit` 1.8.0)
+
+- `--auto-fix` self-heal for missing repo structure + memory readiness signals ([#358](https://github.com/cobusgreyling/loop-engineering/pull/358), [#359](https://github.com/cobusgreyling/loop-engineering/pull/359)).
+
+### MCP runtime tools (`loop-mcp-server` 1.2.0)
+
+- `loop_audit_score` + `loop_check_breaker` tools ([#360](https://github.com/cobusgreyling/loop-engineering/pull/360)).
+
+### New packages — first publish
 
 | Package | Version | Notes |
 |---------|---------|--------|
-| `@cobusgreyling/loop-context` | **1.4.0** (live) → **1.5.0** (this batch) | Frustration circuit breaker [#337](https://github.com/cobusgreyling/loop-engineering/pull/337); caching scenario this batch |
-| `@cobusgreyling/loop-cost` | **1.1.0** (live) → **1.2.0** (this batch) | Prompt-caching estimate this batch |
-| `@cobusgreyling/loop-audit` | **1.7.0** | Live |
-| `@cobusgreyling/loop-init` | **1.5.0** | Live |
-| `@cobusgreyling/loop-worktree` | **1.2.0** | Wait queue + deadlock detection [#292](https://github.com/cobusgreyling/loop-engineering/pull/292); published |
-| `@cobusgreyling/loop-gate` | **1.0.0** | First publish from [#291](https://github.com/cobusgreyling/loop-engineering/pull/291); live |
-| `@cobusgreyling/goal-init` | **1.0.0** | First publish |
-| `@cobusgreyling/readiness-core` | **1.0.0** | First publish (build before loop-audit in CI) |
+| `@cobusgreyling/loop-sandbox` | **1.0.0** | Ephemeral worktree isolation + advisory lock ([#370](https://github.com/cobusgreyling/loop-engineering/pull/370), [#399](https://github.com/cobusgreyling/loop-engineering/pull/399)) |
+| `@cobusgreyling/loop-swarm` | **1.0.0** | Multi-agent majority consensus over sandboxes ([#398](https://github.com/cobusgreyling/loop-engineering/pull/398)). Thanks [@THRISHAL12345](https://github.com/THRISHAL12345). |
 
-### Docs appendices (primitives matrix)
+Publish **sandbox before swarm** (swarm depends on `@cobusgreyling/loop-sandbox@^1.0.0`).
 
-| PR | Contributor | Tool |
-|----|-------------|------|
-| [#351](https://github.com/cobusgreyling/loop-engineering/pull/351) | @shixi-li | Continue.dev (closes #117) |
-| [#350](https://github.com/cobusgreyling/loop-engineering/pull/350) | @adity982 | GitHub Copilot (closes #196) |
+### L3 budget negotiator skill
 
-### Other notable merges (window)
+- `budget-negotiator` skill integrated with `loop-budget` + human safety gates ([#400](https://github.com/cobusgreyling/loop-engineering/pull/400)). Thanks [@THRISHAL12345](https://github.com/THRISHAL12345).
 
-- `loop-worktree` npm path + macOS gc fix [#204](https://github.com/cobusgreyling/loop-engineering/pull/204)
-- Star-history docs + chart automation [#193](https://github.com/cobusgreyling/loop-engineering/pull/193), [#205](https://github.com/cobusgreyling/loop-engineering/pull/205), [#192](https://github.com/cobusgreyling/loop-engineering/pull/192)
-- Daily triage CI: build readiness-core before loop-audit [#349](https://github.com/cobusgreyling/loop-engineering/pull/349)
-- Community docs/stories: multi-loop coordination, Opencode constraints, Hermes examples
+### Docs wave (Windsurf + QUICKSTART)
+
+| PR | Contributor | Topic |
+|----|-------------|--------|
+| [#419](https://github.com/cobusgreyling/loop-engineering/pull/419) | @AIMindCrafter | CI Sweeper production story |
+| [#417](https://github.com/cobusgreyling/loop-engineering/pull/417) | @AIMindCrafter | `loop-sandbox` QUICKSTART |
+| [#416](https://github.com/cobusgreyling/loop-engineering/pull/416) | @AIMindCrafter | `loop-action` QUICKSTART |
+| [#413](https://github.com/cobusgreyling/loop-engineering/pull/413)–[#415](https://github.com/cobusgreyling/loop-engineering/pull/415) | @AIMindCrafter | Windsurf CI / Issue / Dependency sweepers |
+| [#409](https://github.com/cobusgreyling/loop-engineering/pull/409) | @k-anushka14 | Merge-gate subsection in QUICKSTART (closes #391) |
+
+### Earlier window (already noted)
+
+- Memory bridge + Cursor examples + CI reliability ([#355](https://github.com/cobusgreyling/loop-engineering/pull/355)–[#362](https://github.com/cobusgreyling/loop-engineering/pull/362))
+- Primitives matrix: Continue.dev, Copilot, Cline, Roo Code
 
 ---
 
-## Try it
+## Package status (as of 2026-07-29)
+
+| Package | On npm (before this batch) | Target | Action |
+|---------|----------------------------|--------|--------|
+| `@cobusgreyling/loop-cost` | **1.2.0** | 1.2.0 | Done |
+| `@cobusgreyling/loop-context` | **1.5.0** | 1.5.0 | Done |
+| `@cobusgreyling/loop-worktree` | **1.2.0** | **1.3.0** | Tag `loop-worktree-v1.3.0` (version already on main) |
+| `@cobusgreyling/loop-init` | **1.5.0** | **1.6.0** | Version bump in this PR → tag `loop-init-v1.6.0` |
+| `@cobusgreyling/loop-audit` | **1.7.0** | **1.8.0** | Version bump in this PR → tag `loop-audit-v1.8.0` |
+| `@cobusgreyling/loop-mcp-server` | **1.1.0** | **1.2.0** | Version bump in this PR → tag `loop-mcp-server-v1.2.0` |
+| `@cobusgreyling/loop-sandbox` | — | **1.0.0** | First publish → tag `loop-sandbox-v1.0.0` |
+| `@cobusgreyling/loop-swarm` | — | **1.0.0** | First publish after sandbox → tag `loop-swarm-v1.0.0` |
+| `@cobusgreyling/loop-gate` | **1.0.0** | 1.0.0 | No change |
+| `@cobusgreyling/loop` | **0.1.2** | 0.1.2 | No change |
+
+### Suggested publish sequence (human gate — tags only)
+
+1. Merge this version / release-workflow PR.
+2. Tag in order:
+   ```bash
+   git tag loop-worktree-v1.3.0 && git push origin loop-worktree-v1.3.0
+   git tag loop-audit-v1.8.0 && git push origin loop-audit-v1.8.0
+   git tag loop-init-v1.6.0 && git push origin loop-init-v1.6.0
+   git tag loop-mcp-server-v1.2.0 && git push origin loop-mcp-server-v1.2.0
+   git tag loop-sandbox-v1.0.0 && git push origin loop-sandbox-v1.0.0
+   # after sandbox is on npm:
+   git tag loop-swarm-v1.0.0 && git push origin loop-swarm-v1.0.0
+   ```
+3. Confirm with `npm view @cobusgreyling/<pkg> version`.
+4. Fold this draft into a GitHub Discussion; close [#332](https://github.com/cobusgreyling/loop-engineering/issues/332).
+
+---
+
+## Try it (after publish)
 
 ```bash
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
-npx @cobusgreyling/loop-audit . --suggest
-npx @cobusgreyling/loop-cost --pattern daily-triage --level L1 --with-caching
-npx @cobusgreyling/loop-worktree list
+npx @cobusgreyling/loop-worktree --help
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --with-foundry --model-provider minimax
+npx @cobusgreyling/loop-audit . --auto-fix
+npx @cobusgreyling/loop-sandbox --help
+npx @cobusgreyling/loop-swarm run --count 3 -- echo "demo"
 ```
-
----
-
-## npm publish checklist (2026-07-22)
-
-| Package | On npm now | This PR / tag | Action |
-|---------|------------|---------------|--------|
-| `@cobusgreyling/loop-cost` | **1.2.0** | `loop-cost-v1.2.0` | **Published** |
-| `@cobusgreyling/loop-context` | **1.5.0** | `loop-context-v1.5.0` | **Published** |
-| `@cobusgreyling/loop-audit` | 1.7.0 | — | No change |
-| `@cobusgreyling/loop-init` | 1.5.0 | — | No change |
-| `@cobusgreyling/loop-worktree` | 1.2.0 | — | Already published |
-| `@cobusgreyling/loop-gate` | 1.0.0 | — | Already published |
-| `@cobusgreyling/goal-init` | 1.0.0 | — | Already published |
-| `@cobusgreyling/readiness-core` | 1.0.0 | — | Already published |
-| `@cobusgreyling/loop-mcp-server` | 1.1.0* | — | No change (*confirm if needed) |
-| `@cobusgreyling/loop-sync` | 1.0.0* | — | No change |
-
-\* Verify with `npm view @cobusgreyling/<pkg> version` before any announce.
-
-### Suggested publish steps
-
-1. ~~Merge version bump PR #352~~ done.
-2. ~~Tag `loop-cost-v1.2.0` + `loop-context-v1.5.0`~~ done; release workflows green.
-3. ~~`npm view` → 1.2.0 / 1.5.0~~ confirmed.
-4. Human: fold this draft into discussion/announce for [#332](https://github.com/cobusgreyling/loop-engineering/issues/332) when ready.
-5. Superseded contributor draft [#348](https://github.com/cobusgreyling/loop-engineering/pull/348) (closed).
 
 ---
 
 ## Housekeeping
 
-- PR triage 2026-07-22: merged #351/#350; closed #344 superseded; held then superseded #348.
-- Feature PRs must include `package.json` bumps + this checklist row in the same change (lesson from #346/#347 gap).
+- PR triage 2026-07-29: merged docs wave + #398/#400/#407/#418; #409 additive rework; #365 release draft refresh superseded by this file.
+- Feature PRs should include `package.json` bumps in the same change (lesson from unpublished features sitting on main at old versions).

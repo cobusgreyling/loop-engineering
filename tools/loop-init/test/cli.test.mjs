@@ -271,6 +271,134 @@ test('loop-init --help documents --with-foundry', async () => {
   assert.match(stdout, /harness-foundry|implementer|minimal/);
 });
 
+test('loop-init --with-foundry --model-provider minimax emits MiniMax provider primitive', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-minimax-'));
+  try {
+    const { stdout } = await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'grok',
+      '--with-foundry',
+      '--model-provider',
+      'minimax',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /primitive: model\/minimax/);
+    assert.match(stack, /model: MiniMax-M3/);
+    assert.match(stack, /- id: MiniMax-M3/);
+    assert.match(stack, /- id: MiniMax-M2\.7/);
+    assert.match(stack, /region: global_en/);
+    // global endpoint
+    assert.match(stack, /https:\/\/api\.minimax\.io\/v1/);
+    // CN endpoint
+    assert.match(stack, /https:\/\/api\.minimaxi\.com\/v1/);
+    assert.doesNotMatch(stack, /model\/anthropic/);
+    assert.match(stdout, /preset: implementer/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init --with-foundry minimax --region cn_zh selects CN region and model', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-minimax-cn-'));
+  try {
+    await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'grok',
+      '--with-foundry',
+      '--model-provider',
+      'minimax',
+      '--region',
+      'cn_zh',
+      '--model',
+      'MiniMax-M2.7',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /region: cn_zh/);
+    assert.match(stack, /model: MiniMax-M2\.7/);
+    // both regional endpoints remain available in config
+    assert.match(stack, /global_en:/);
+    assert.match(stack, /cn_zh:/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init --with-foundry anthropic provider is unchanged (default)', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-default-'));
+  try {
+    await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'grok',
+      '--with-foundry',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /model\/anthropic/);
+    assert.doesNotMatch(stack, /model\/minimax/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init rejects unknown model provider', async () => {
+  await assert.rejects(
+    () =>
+      exec('node', [
+        CLI,
+        '.',
+        '--pattern',
+        'ci-sweeper',
+        '--tool',
+        'grok',
+        '--with-foundry',
+        '--model-provider',
+        'not-a-provider',
+        '--dry-run',
+      ]),
+    (err) =>
+      err.stderr?.includes('Unknown model provider') ||
+      err.message?.includes('Unknown model provider'),
+  );
+});
+
+test('loop-init rejects unknown minimax model', async () => {
+  await assert.rejects(
+    () =>
+      exec('node', [
+        CLI,
+        '.',
+        '--pattern',
+        'ci-sweeper',
+        '--tool',
+        'grok',
+        '--with-foundry',
+        '--model-provider',
+        'minimax',
+        '--model',
+        'not-a-model',
+        '--dry-run',
+      ]),
+    (err) => err.stderr?.includes('Unknown model') || err.message?.includes('Unknown model'),
+  );
+});
+
+test('loop-init --help documents --model-provider minimax', async () => {
+  const { stdout } = await exec('node', [CLI, '--help']);
+  assert.match(stdout, /--model-provider/);
+  assert.match(stdout, /minimax/);
+});
+
 test('loop-init prints memory CTA without --with-memory', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-mem-cta-'));
   try {

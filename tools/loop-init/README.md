@@ -38,6 +38,23 @@ npx @cobusgreyling/harness-foundry init --from loop-engineering:daily-triage
 
 Every `loop-init` run prints a Foundry CTA; when Loop Ready is **≥ 80**, the CTA is emphasized as the next step after design.
 
+### Interface provider (implementer preset)
+
+The `implementer` preset defaults to the built-in interface primitive. Pass `--model-provider minimax` to emit a `model/minimax` provider primitive instead. The generated stack always carries both regional endpoints and both model options, so you can switch region/model without regenerating:
+
+```bash
+npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
+npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
+```
+
+| Flag | Values | Default |
+|------|--------|---------|
+| `--model-provider` | `anthropic`, `minimax` | `anthropic` |
+| `--region` | `global_en`, `cn_zh` | `global_en` |
+| `--model` | `MiniMax-M3`, `MiniMax-M2.7` | `MiniMax-M3` |
+
+MiniMax model options and both endpoints (`global_en` → `https://api.minimax.io`, `cn_zh` → `https://api.minimaxi.com`) are written into `.foundry/stack.yaml`.
+
 ## Patterns
 
 | Pattern | Default state file |

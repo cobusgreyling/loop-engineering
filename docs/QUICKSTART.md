@@ -146,6 +146,33 @@ LOOP_PROJECT_ROOT=/path/to/your/project node dist/index.js
 
 See [tools/mcp-server/README.md](../tools/mcp-server/README.md) for resources and tools.
 
+## 4b. Set the merge gate (30 seconds)
+
+Before any loop can auto-merge, it needs a `gate.yaml` defining what's off-limits and what's safe to merge unattended. Copy the starter from [templates/gate.yaml.template](../templates/gate.yaml.template) into your repo root as `gate.yaml`:
+
+```yaml
+version: 1
+denylist:
+  - "src/auth/**"
+  - "**/*.env"
+autoMergeAllowlist:
+  - "docs/**"
+  - "**/*.md"
+```
+
+This is **not** a free-form list of gates — `denylist` and `autoMergeAllowlist` are fixed keys `loop-gate` checks against (there's also an optional `maxFiles` cap — see the full template for details).
+
+Enforce it mechanically before any auto-merge action:
+
+```bash
+npx @cobusgreyling/loop gate check --action auto-merge --paths <f1,f2,...>
+# same as: npx @cobusgreyling/loop-gate check --action auto-merge --paths <f1,f2,...>
+```
+
+Exit `0` = allowed · `2` = escalate to a human. Already running `loop-audit --auto-fix`? It emits a loadable `gate.yaml` for you automatically — no need to hand-write one.
+
+See [tools/loop-gate/README.md](../tools/loop-gate/README.md) for the full policy schema and [docs/safety.md](./safety.md) for the risk/mitigation model this gate enforces.
+
 ## 5. Run your first loop — report only (2 minutes)
 
 ### Grok
@@ -200,6 +227,26 @@ No `loop-init --tool windsurf` yet — copy skills and state from any starter, t
 
 Workflow examples under [examples/github-actions/](../examples/github-actions/) are schema-complete; you wire the agent invocation (Codex API, `repository_dispatch`, etc.). Start with report-only outputs to a state file or issue comment.
 
+### GitHub Actions composite action (`loop-action`)
+
+For CI/CD workflows, use the official GitHub Composite Action [`tools/loop-action`](../tools/loop-action/README.md) to automatically run readiness audits (`loop-audit`), enforce circuit breakers (`loop-context`), and isolate execution in worktrees (`loop-sandbox`):
+
+```yaml
+- uses: cobusgreyling/loop-engineering/tools/loop-action@main
+  with:
+    pattern: 'ci-sweeper'
+    level: 'L1'            # L1 (report-only) -> L2 -> L3
+    sandbox: 'false'       # set 'true' for ephemeral worktree isolation (L2)
+    command: |
+      npx grok-cli run --skill .grok/skills/ci-sweeper/SKILL.md
+```
+
+> **Week-one rule:** report-only mode (`level: 'L1'`). No auto-fix, no auto-merge. Review generated state output before enabling actions.
+>
+> **Note on `command`:** Unquoted multi-arg command strings can be fragile when parsed by shell runners. Prefer multi-line `command: |` blocks or a single script path (e.g. `scripts/run-agent.sh`).
+>
+> See [tools/loop-action/README.md](../tools/loop-action/README.md) and [docs/safety.md](./safety.md) for action inputs, security guardrails, and permission boundaries.
+
 ## 6. Read the output, commit state (1 minute)
 
 Open `STATE.md`. Did the loop capture real priorities? Edit anything wrong — you're still the engineer.
@@ -238,6 +285,26 @@ npx @cobusgreyling/loop-worktree list
 
 Pair with the [circuit breaker](#circuit-breaker-for-l2-loops-optional) above: when `loop-context --check` exits `2`, mark the worktree `escalated` before handing off to a human. The two tools stay independent — see [tools/loop-worktree/README.md](../tools/loop-worktree/README.md).
 
+### Ephemeral worktree isolation (`loop-sandbox`)
+
+To run an agent command in a temporary, isolated git worktree and capture its changes as a reviewable `.patch` file without touching your working tree, use `loop-sandbox` ([tools/loop-sandbox/README.md](../tools/loop-sandbox/README.md)). It automatically spawns a clean worktree from HEAD, executes your process, captures all edits (including untracked files) into a `.patch` file, and destroys the worktree so your repo stays pristine.
+
+```bash
+# Run an agent command in an ephemeral sandbox
+npx @cobusgreyling/loop-sandbox run -- npx my-agent
+
+# Optional --shell to run raw shell commands (e.g. bash -c)
+npx @cobusgreyling/loop-sandbox run --shell -- bash -c "echo 'fix' > file.txt"
+
+# List and review generated patches before applying
+npx @cobusgreyling/loop-sandbox review
+git apply .loop-sandbox/patches/<patch-id>.patch
+```
+
+> **Windows compatibility:** On Windows, npm `.cmd` shims (`npx`, `tsc`, etc.) that fail with `ENOENT` are automatically retried through a shell, so you do not need to pass `--shell` just for `npx`.
+>
+> **Safety note:** `loop-sandbox` provides worktree isolation, but process execution retains OS-level filesystem and network access — see [docs/safety.md](./safety.md). Always inspect patch files before running `git apply`.
+
 ## Copy-paste cheat sheet
 
 ```bash
@@ -267,6 +334,10 @@ LOOP_PROJECT_ROOT=. npx @cobusgreyling/loop-mcp-server
 npx @cobusgreyling/loop-worktree create --run-id <id> --pattern <pattern>
 npx @cobusgreyling/loop-worktree mark --run-id <id> --status rejected
 npx @cobusgreyling/loop-worktree cleanup --older-than 24h
+
+# Ephemeral worktree isolation + patch capture
+npx @cobusgreyling/loop-sandbox run -- <command>
+npx @cobusgreyling/loop-sandbox review
 ```
 
 ## Learn the why (optional, 10 minutes)

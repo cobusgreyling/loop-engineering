@@ -2,6 +2,12 @@
 
 All notable changes to `@cobusgreyling/loop-audit` are documented here.
 
+## [1.8.0] - 2026-07-29
+
+### Added
+- `--auto-fix` self-heal for missing repository structure (STATE, LOOP, budgets, gate.yaml, etc.)
+- Memory-engineering readiness signals and `--with-memory` recommendations
+
 ## [1.7.0] - 2026-07-20
 
 ### Added

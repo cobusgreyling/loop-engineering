@@ -34,8 +34,9 @@ jobs:
       - name: Test, build & publish
         working-directory: tools/loop-init
         run: |
-          # Build monorepo sibling first — declared ^range may not be on npm yet
+          # Build monorepo siblings first — declared ^range may not be on npm yet
           # when cutting audit + init in the same release window.
+          (cd ../readiness-core && npm ci && npm run build)
           (cd ../loop-audit && npm ci && npm run build)
           cp package.json package.json.release-bak
           cp package-lock.json package-lock.json.release-bak
@@ -52,4 +53,5 @@ jobs:
           # package.json keeps registry range (^1.x) for the published tarball
           npm publish --access public --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # OIDC trusted publishing — do not set NODE_AUTH_TOKEN (it overrides OIDC)
+          NPM_CONFIG_PROVENANCE: "true"
