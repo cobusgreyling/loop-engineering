@@ -67,6 +67,7 @@ Always require human for:
 - Dependency upgrades (supply chain risk)
 - Changes touching >N files (suggest N=10)
 - Third attempt failed on same item
+- Token budget extension requests: L3 loops using [`budget-negotiator`](../skills/budget-negotiator/SKILL.md) to request extra token budget when nearing daily caps. Agents **cannot** self-raise caps in `loop-budget.md` — a human must explicitly approve and edit `loop-budget.md`.
 
 ## Secrets in Prompts & Logs
 
