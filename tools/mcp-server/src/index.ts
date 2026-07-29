@@ -8,6 +8,7 @@ import { readFile } from 'node:fs/promises';
 import { loadGateConfig, checkGate } from '@cobusgreyling/loop-gate';
 import { auditProject } from '@cobusgreyling/loop-audit/dist/auditor.js';
 import { checkCircuitBreaker, DEFAULT_BREAKER, Ledger } from '@cobusgreyling/loop-context';
+import { estimateCost } from '@cobusgreyling/loop-cost/dist/estimator.js';
 import {
   resolveProjectRoot,
   loadRegistry,
@@ -398,51 +399,32 @@ server.tool(
       };
     }
 
-    const effectiveCadence = cadence ?? pattern.cadence;
-    const parts = effectiveCadence.split('-').map(p => p.trim());
-    let runsPerDay: number;
+    let result;
     try {
-      const intervals = parts.map(p => {
-        const m = p.match(/^(\d+)([mhd])$/);
-        if (!m) throw new Error(`Invalid interval: ${p}`);
-        const ms: Record<string, number> = { m: 60_000, h: 3_600_000, d: 86_400_000 };
-        return Number(m[1]) * ms[m[2]];
-      });
-      runsPerDay = Math.floor(86_400_000 / Math.min(...intervals));
+      result = estimateCost({ pattern, level, cadence });
     } catch {
-      return { content: [{ type: 'text' as const, text: `Invalid cadence: ${effectiveCadence}` }] };
+      return { content: [{ type: 'text' as const, text: `Invalid cadence: ${cadence ?? pattern.cadence}` }] };
     }
 
-    const { cost } = pattern;
-    const mix = level === 'L1'
-      ? { noop: 0.6, report: 0.4, action: 0 }
-      : level === 'L2'
-        ? { noop: 0.5, report: 0.3, action: 0.2 }
-        : { noop: 0.4, report: 0.35, action: 0.25 };
-
-    const realisticPerRun = cost.tokens_noop * mix.noop
-      + cost.tokens_report * mix.report
-      + cost.tokens_action * mix.action;
-    const realisticPerDay = Math.round(realisticPerRun * runsPerDay);
-
     const fmt = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${Math.round(n / 1_000)}k` : String(n);
+    const { scenarios, suggestedDailyCap } = result;
 
     const lines = [
       `## Cost Estimate: ${pattern.name}`,
-      `- **Cadence:** ${effectiveCadence} (${runsPerDay} runs/day)`,
+      `- **Cadence:** ${result.cadence} (${result.runsPerDay} runs/day)`,
       `- **Level:** ${level}`,
-      `- **Daily cap:** ${fmt(cost.suggested_daily_cap)}`,
+      `- **Daily cap:** ${fmt(suggestedDailyCap)}`,
       '',
       '| Scenario | Per Run | Per Day |',
       '|----------|---------|---------|',
-      `| No-op | ${fmt(cost.tokens_noop)} | ${fmt(cost.tokens_noop * runsPerDay)} |`,
-      `| Report | ${fmt(cost.tokens_report)} | ${fmt(cost.tokens_report * runsPerDay)} |`,
-      `| Action | ${fmt(cost.tokens_action)} | ${fmt(cost.tokens_action * runsPerDay)} |`,
-      `| **Realistic** | **${fmt(Math.round(realisticPerRun))}** | **${fmt(realisticPerDay)}** |`,
+      `| No-op | ${fmt(scenarios.noop.tokensPerRun)} | ${fmt(scenarios.noop.tokensPerDay)} |`,
+      `| Report | ${fmt(scenarios.report.tokensPerRun)} | ${fmt(scenarios.report.tokensPerDay)} |`,
+      `| Action | ${fmt(scenarios.action.tokensPerRun)} | ${fmt(scenarios.action.tokensPerDay)} |`,
+      `| **Realistic** | **${fmt(scenarios.realistic.tokensPerRun)}** | **${fmt(scenarios.realistic.tokensPerDay)}** |`,
     ];
 
-    if (realisticPerDay > cost.suggested_daily_cap) {
-      lines.push('', `> Warning: realistic estimate exceeds daily cap of ${fmt(cost.suggested_daily_cap)}`);
+    if (scenarios.realistic.tokensPerDay > suggestedDailyCap) {
+      lines.push('', `> Warning: realistic estimate exceeds daily cap of ${fmt(suggestedDailyCap)}`);
     }
 
     return { content: [{ type: 'text' as const, text: lines.join('\n') }] };

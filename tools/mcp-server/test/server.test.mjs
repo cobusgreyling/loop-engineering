@@ -52,6 +52,26 @@ async function setup() {
       tokens_action: 200000
       suggested_daily_cap: 100000
       early_exit_required: false
+  - id: ci-sweeper
+    name: CI Sweeper
+    file: ci-sweeper.md
+    goal: Keep CI green
+    cadence: 1d-2h
+    risk: low
+    tools: [grok, claude-code]
+    skills: [ci-triage]
+    state: STATE.md
+    phases: [report, act-small-wins, escalate]
+    human_gates: [design-decisions]
+    starter: starters/minimal-loop
+    week_one_mode: L1
+    token_cost: low
+    cost:
+      tokens_noop: 5000
+      tokens_report: 50000
+      tokens_action: 200000
+      suggested_daily_cap: 100000
+      early_exit_required: true
 `,
   );
 
@@ -194,7 +214,7 @@ test('loadRegistry parses YAML correctly', async () => {
   try {
     const registry = await loadRegistry(root);
     assert.ok(registry);
-    assert.equal(registry.patterns.length, 1);
+    assert.equal(registry.patterns.length, 2);
     assert.equal(registry.patterns[0].id, 'daily-triage');
     assert.equal(registry.patterns[0].cost.tokens_noop, 5000);
   } finally {
@@ -416,6 +436,25 @@ test('loop_estimate_cost tool computes a cost table', async () => {
     const text = res.get(1).result.content[0].text;
     assert.ok(text.includes('Cost Estimate'));
     assert.ok(text.includes('runs/day'));
+  } finally {
+    await cleanup();
+  }
+});
+
+test('loop_estimate_cost accounts for early_exit_required instead of a flat mix', async () => {
+  const root = await setup();
+  try {
+    const res = await callServer(root, [{
+      id: 1, method: 'tools/call',
+      params: { name: 'loop_estimate_cost', arguments: { patternId: 'ci-sweeper', level: 'L2' } },
+    }]);
+    const text = res.get(1).result.content[0].text;
+    // ci-sweeper has early_exit_required: true and the same token costs as
+    // daily-triage; loop-cost's realisticMix uses {noop:.85,report:.1,action:.05}
+    // for L2 early-exit, giving ~19k tokens/run realistic — not the ~58k a flat
+    // non-early-exit mix ({noop:.5,report:.3,action:.2}) would produce.
+    assert.match(text, /\*\*19k\*\*/);
+    assert.ok(!text.includes('58k'));
   } finally {
     await cleanup();
   }

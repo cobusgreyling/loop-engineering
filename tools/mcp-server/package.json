@@ -45,6 +45,7 @@
   "dependencies": {
     "@cobusgreyling/loop-audit": "file:../loop-audit",
     "@cobusgreyling/loop-context": "file:../loop-context",
+    "@cobusgreyling/loop-cost": "file:../loop-cost",
     "@cobusgreyling/loop-gate": "file:../loop-gate",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "minimatch": "^10.2.5",
