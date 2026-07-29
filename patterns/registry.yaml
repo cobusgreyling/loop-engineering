@@ -96,7 +96,7 @@ patterns:
     goal: Discover, safely apply, and verify dependency + vulnerability updates with human gates on risky changes
     cadence: 6h-1d
     risk: medium
-    tools: [grok, claude-code, codex, openclaw, opencode, github-actions]
+    tools: [grok, claude-code, codex, openclaw, opencode, github-actions, windsurf]
     skills: [dependency-triage, minimal-fix, loop-verifier]
     state: dependency-sweeper-state.md
     phases: [scan, triage-risk, patch-safe, verify-worktree, escalate-risky]
