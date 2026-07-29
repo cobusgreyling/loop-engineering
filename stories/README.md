@@ -19,6 +19,7 @@ Real-world loop engineering — including failures. Contribute yours via [CONTRI
 | [ky-cut-surface-generation-vs-consequence.md](./ky-cut-surface-generation-vs-consequence.md) | Philosophy → loop bridge | Generation ≠ consequence; preserve the cut surface |
 | [loop-worktree-week-two.md](./loop-worktree-week-two.md) | PR Babysitter + loop-worktree | Pair worktrees with `loop-context --check`; exact `outcome: failure` enum |
 | [ci-sweeper-symptom-patching-and-circuit-breaker.md](./ci-sweeper-symptom-patching-and-circuit-breaker.md) | CI Sweeper | Symptom masking via test timeout inflation; denylist test setup files + `loop-context` circuit breaker |
+| [loop-sandbox-ephemeral-isolation.md](./loop-sandbox-ephemeral-isolation.md) | CI Sweeper + loop-sandbox | Ephemeral worktree patch capture prevents hallucinated file deletions from dirtying working tree |
 
 **Template for new stories:**
 
