@@ -301,12 +301,14 @@ Addy Osmani:
 
 **First PR?** Pick one open issue below. Stories and adopters get **same-day review** when possible. See [CONTRIBUTORS.md](CONTRIBUTORS.md) and the [contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123).
 
-**6 open** [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)s (refreshed 2026-07-29). Comment **"I'll take this"** for assignment.
+**11 open** [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)s (refreshed 2026-07-29). Comment **"I'll take this"** for assignment.
 
 | Time | Issue | What you ship |
 |------|-------|---------------|
 | ~10 min | [#120 — Adopters list](https://github.com/cobusgreyling/loop-engineering/issues/120) | One row in `docs/adopters.md` (or [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) template) |
-| ~15–20 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) · [#119 — PR Babysitter failure](https://github.com/cobusgreyling/loop-engineering/issues/119) | Honest `stories/` write-up + index row |
+| ~15–20 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) · [#119 — PR Babysitter failure](https://github.com/cobusgreyling/loop-engineering/issues/119) · [#427 — loop-sandbox story](https://github.com/cobusgreyling/loop-engineering/issues/427) | Honest `stories/` write-up + index row |
+| ~20–25 min | [#425 — MiniMax foundry flags](https://github.com/cobusgreyling/loop-engineering/issues/425) · [#426 — worktree lock import](https://github.com/cobusgreyling/loop-engineering/issues/426) | Additive QUICKSTART notes for MiniMax + public `loop-worktree/lock` |
+| ~25–30 min | [#424 — loop-swarm QUICKSTART](https://github.com/cobusgreyling/loop-engineering/issues/424) · [#428 — budget-negotiator docs](https://github.com/cobusgreyling/loop-engineering/issues/428) | Discoverability for swarm consensus + L3 budget negotiation |
 | ~40–45 min | [#387 — Hermes CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/387) · [#388 — Hermes Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/388) | Fill pattern-coverage gaps in `examples/hermes/` |
 | Anytime | Templates | [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) · [Share a story](https://github.com/cobusgreyling/loop-engineering/issues/new?template=share-story.yml) |
 | Hubs | Discussions | [Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/326) · [Ask anything](https://github.com/cobusgreyling/loop-engineering/discussions/327) |
