@@ -1,12 +1,13 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, writeFile, mkdir, access, realpath } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, realpath, rename, open, unlink, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const run = promisify(execFile);
 
 export const MANIFEST_DIR = '.loop-worktrees';
 export const MANIFEST_FILE = path.posix.join(MANIFEST_DIR, 'manifest.json');
+const MANIFEST_MUTEX_FILE = path.posix.join(MANIFEST_DIR, '.manifest.mutex');
 
 export type WorktreeStatus = 'active' | 'rejected' | 'escalated' | 'merged' | 'stale';
 
@@ -79,6 +80,44 @@ async function assertGitRepo(root: string): Promise<void> {
   }
 }
 
+async function withManifestMutex<T>(root: string, fn: () => Promise<T>): Promise<T> {
+  const dir = path.join(root, MANIFEST_DIR);
+  await mkdir(dir, { recursive: true });
+  const mutexPath = path.join(root, MANIFEST_MUTEX_FILE);
+  const deadline = Date.now() + 30000;
+  for (;;) {
+    try {
+      const handle = await open(mutexPath, 'wx');
+      await handle.close();
+      break;
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+
+      try {
+        const st = await stat(mutexPath);
+        if (Date.now() - st.mtimeMs > 30000) {
+          await unlink(mutexPath).catch(() => {});
+          continue;
+        }
+      } catch {
+        continue;
+      }
+
+      if (Date.now() > deadline) {
+        throw new Error(
+          `Timed out waiting for manifest mutex (${MANIFEST_MUTEX_FILE}). If no other loop-worktree process is running, delete it manually.`,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25 + Math.random() * 50));
+    }
+  }
+  try {
+    return await fn();
+  } finally {
+    await unlink(mutexPath).catch(() => {});
+  }
+}
+
 export async function readManifest(root: string): Promise<Manifest> {
   const file = path.join(root, MANIFEST_FILE);
   if (!(await exists(file))) return emptyManifest();
@@ -94,7 +133,9 @@ export async function writeManifest(root: string, manifest: Manifest): Promise<v
   const dir = path.join(root, MANIFEST_DIR);
   await mkdir(dir, { recursive: true });
   const file = path.join(root, MANIFEST_FILE);
-  await writeFile(file, `${JSON.stringify(manifest, null, 2)}\n`);
+  const tmpFile = `${file}.tmp.${Date.now()}.${Math.random().toString(36).slice(2)}`;
+  await writeFile(tmpFile, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  await rename(tmpFile, file);
 }
 
 export interface CreateInput {
@@ -109,31 +150,41 @@ export async function createWorktree(input: CreateInput): Promise<WorktreeEntry>
   const base = input.base ?? 'main';
   await assertGitRepo(root);
 
-  const manifest = await readManifest(root);
-  const existing = manifest.worktrees.find((w) => w.id === runId);
-  if (existing && existing.status === 'active') {
-    throw new Error(`Run id "${runId}" already has an active worktree at ${existing.path}.`);
-  }
+  return withManifestMutex(root, async () => {
+    const manifest = await readManifest(root);
+    const existing = manifest.worktrees.find((w) => w.id === runId);
+    if (existing && existing.status === 'active') {
+      throw new Error(`Run id "${runId}" already has an active worktree at ${existing.path}.`);
+    }
 
-  const relPath = path.posix.join(MANIFEST_DIR, runId);
-  const branch = `loop/${runId}`;
-  // `git worktree add -b <branch> <path> <base>` creates the branch and checks it
-  // out in an isolated worktree. Forward-slash paths are accepted on all platforms.
-  await git(['worktree', 'add', '-b', branch, relPath, base], root);
+    const relPath = path.posix.join(MANIFEST_DIR, runId);
+    const branch = `loop/${runId}`;
+    // `git worktree add -b <branch> <path> <base>` creates the branch and checks it
+    // out in an isolated worktree. Forward-slash paths are accepted on all platforms.
+    await git(['worktree', 'add', '-b', branch, relPath, base], root);
 
-  const entry: WorktreeEntry = {
-    id: runId,
-    path: relPath,
-    branch,
-    baseBranch: base,
-    pattern,
-    createdAt: new Date().toISOString(),
-    status: 'active',
-  };
-  manifest.worktrees = manifest.worktrees.filter((w) => w.id !== runId);
-  manifest.worktrees.push(entry);
-  await writeManifest(root, manifest);
-  return entry;
+    const entry: WorktreeEntry = {
+      id: runId,
+      path: relPath,
+      branch,
+      baseBranch: base,
+      pattern,
+      createdAt: new Date().toISOString(),
+      status: 'active',
+    };
+
+    try {
+      manifest.worktrees = manifest.worktrees.filter((w) => w.id !== runId);
+      manifest.worktrees.push(entry);
+      await writeManifest(root, manifest);
+    } catch (writeErr) {
+      await git(['worktree', 'remove', '--force', relPath], root).catch(() => {});
+      await git(['branch', '-D', branch], root).catch(() => {});
+      throw writeErr;
+    }
+
+    return entry;
+  });
 }
 
 export interface MarkInput {
@@ -147,14 +198,17 @@ export async function markWorktree(input: MarkInput): Promise<WorktreeEntry> {
   if (!VALID_STATUSES.includes(status)) {
     throw new Error(`Invalid status "${status}". Use one of: ${VALID_STATUSES.join(', ')}.`);
   }
-  const manifest = await readManifest(root);
-  const entry = manifest.worktrees.find((w) => w.id === runId);
-  if (!entry) {
-    throw new Error(`No worktree with run id "${runId}" in ${MANIFEST_FILE}.`);
-  }
-  entry.status = status;
-  await writeManifest(root, manifest);
-  return entry;
+
+  return withManifestMutex(root, async () => {
+    const manifest = await readManifest(root);
+    const entry = manifest.worktrees.find((w) => w.id === runId);
+    if (!entry) {
+      throw new Error(`No worktree with run id "${runId}" in ${MANIFEST_FILE}.`);
+    }
+    entry.status = status;
+    await writeManifest(root, manifest);
+    return entry;
+  });
 }
 
 /** Parse a duration like "30m", "24h", "7d" into milliseconds. Shared with lock.ts's --ttl. */
@@ -185,33 +239,36 @@ export interface CleanupResult {
 export async function cleanupWorktrees(input: CleanupInput): Promise<CleanupResult> {
   const { root } = input;
   await assertGitRepo(root);
-  const statuses = input.statuses ?? CLEANUP_DEFAULT_STATUSES;
-  const cutoff = input.olderThan ? Date.now() - parseDurationMs(input.olderThan, '--older-than') : undefined;
 
-  const manifest = await readManifest(root);
-  const removed: WorktreeEntry[] = [];
-  const skipped: { entry: WorktreeEntry; reason: string }[] = [];
+  return withManifestMutex(root, async () => {
+    const statuses = input.statuses ?? CLEANUP_DEFAULT_STATUSES;
+    const cutoff = input.olderThan ? Date.now() - parseDurationMs(input.olderThan, '--older-than') : undefined;
 
-  for (const entry of manifest.worktrees) {
-    if (!statuses.includes(entry.status)) continue;
-    if (cutoff !== undefined && Date.parse(entry.createdAt) > cutoff) continue;
+    const manifest = await readManifest(root);
+    const removed: WorktreeEntry[] = [];
+    const skipped: { entry: WorktreeEntry; reason: string }[] = [];
 
-    const args = ['worktree', 'remove', entry.path];
-    if (input.force) args.push('--force');
-    try {
-      // Without --force, git refuses to remove a worktree with uncommitted or
-      // untracked changes. We surface that refusal instead of forcing data loss.
-      await git(args, root);
-      removed.push(entry);
-    } catch (err) {
-      skipped.push({ entry, reason: (err as Error).message });
+    for (const entry of manifest.worktrees) {
+      if (!statuses.includes(entry.status)) continue;
+      if (cutoff !== undefined && Date.parse(entry.createdAt) > cutoff) continue;
+
+      const args = ['worktree', 'remove', entry.path];
+      if (input.force) args.push('--force');
+      try {
+        // Without --force, git refuses to remove a worktree with uncommitted or
+        // untracked changes. We surface that refusal instead of forcing data loss.
+        await git(args, root);
+        removed.push(entry);
+      } catch (err) {
+        skipped.push({ entry, reason: (err as Error).message });
+      }
     }
-  }
 
-  const removedIds = new Set(removed.map((e) => e.id));
-  manifest.worktrees = manifest.worktrees.filter((w) => !removedIds.has(w.id));
-  await writeManifest(root, manifest);
-  return { removed, skipped };
+    const removedIds = new Set(removed.map((e) => e.id));
+    manifest.worktrees = manifest.worktrees.filter((w) => !removedIds.has(w.id));
+    await writeManifest(root, manifest);
+    return { removed, skipped };
+  });
 }
 
 /** Paths (repo-relative, posix) of every worktree git currently knows about. */
@@ -246,33 +303,36 @@ export interface GcResult {
 export async function gc(input: GcInput): Promise<GcResult> {
   const { root } = input;
   await assertGitRepo(root);
-  const manifest = await readManifest(root);
-  const onDisk = await gitWorktreePaths(root);
-  const managedOnDisk = onDisk.filter((p) => p.startsWith(`${MANIFEST_DIR}/`));
-  const manifestPaths = new Set(manifest.worktrees.map((w) => w.path));
 
-  const orphans = managedOnDisk.filter((p) => !manifestPaths.has(p));
-  const dropped = manifest.worktrees.filter((w) => !onDisk.includes(w.path));
+  return withManifestMutex(root, async () => {
+    const manifest = await readManifest(root);
+    const onDisk = await gitWorktreePaths(root);
+    const managedOnDisk = onDisk.filter((p) => p.startsWith(`${MANIFEST_DIR}/`));
+    const manifestPaths = new Set(manifest.worktrees.map((w) => w.path));
 
-  const removedOrphans: string[] = [];
-  if (input.force) {
-    for (const orphan of orphans) {
-      try {
-        await git(['worktree', 'remove', '--force', orphan], root);
-        removedOrphans.push(orphan);
-      } catch {
-        // Leave it reported as an orphan if git still refuses.
+    const orphans = managedOnDisk.filter((p) => !manifestPaths.has(p));
+    const dropped = manifest.worktrees.filter((w) => !onDisk.includes(w.path));
+
+    const removedOrphans: string[] = [];
+    if (input.force) {
+      for (const orphan of orphans) {
+        try {
+          await git(['worktree', 'remove', '--force', orphan], root);
+          removedOrphans.push(orphan);
+        } catch {
+          // Leave it reported as an orphan if git still refuses.
+        }
       }
     }
-  }
 
-  if (dropped.length > 0) {
-    const droppedIds = new Set(dropped.map((e) => e.id));
-    manifest.worktrees = manifest.worktrees.filter((w) => !droppedIds.has(w.id));
-    await writeManifest(root, manifest);
-  }
+    if (dropped.length > 0) {
+      const droppedIds = new Set(dropped.map((e) => e.id));
+      manifest.worktrees = manifest.worktrees.filter((w) => !droppedIds.has(w.id));
+      await writeManifest(root, manifest);
+    }
 
-  return { orphans, dropped, removedOrphans };
+    return { orphans, dropped, removedOrphans };
+  });
 }
 
 export interface ListInput {

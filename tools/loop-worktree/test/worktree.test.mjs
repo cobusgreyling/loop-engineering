@@ -180,3 +180,74 @@ test('cleanup honors --older-than', async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('concurrent creates with different run IDs retain both manifest entries', async () => {
+  const dir = await initRepo();
+  try {
+    const results = await Promise.allSettled([
+      createWorktree({ root: dir, runId: 'run-a', pattern: 'ci-sweeper' }),
+      createWorktree({ root: dir, runId: 'run-b', pattern: 'ci-sweeper' }),
+    ]);
+
+    assert.equal(results[0].status, 'fulfilled');
+    assert.equal(results[1].status, 'fulfilled');
+
+    const manifest = await readManifest(dir);
+    assert.equal(manifest.worktrees.length, 2);
+    const ids = manifest.worktrees.map((w) => w.id).sort();
+    assert.deepEqual(ids, ['run-a', 'run-b']);
+
+    assert.ok(await exists(path.join(dir, '.loop-worktrees', 'run-a')));
+    assert.ok(await exists(path.join(dir, '.loop-worktrees', 'run-b')));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('concurrent creates with same run ID produce exactly one success and no orphaned Git worktree', async () => {
+  const dir = await initRepo();
+  try {
+    const results = await Promise.allSettled([
+      createWorktree({ root: dir, runId: 'same-id', pattern: 'ci-sweeper' }),
+      createWorktree({ root: dir, runId: 'same-id', pattern: 'ci-sweeper' }),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === 'fulfilled');
+    const rejected = results.filter((r) => r.status === 'rejected');
+    assert.equal(fulfilled.length, 1);
+    assert.equal(rejected.length, 1);
+
+    const manifest = await readManifest(dir);
+    assert.equal(manifest.worktrees.length, 1);
+    assert.equal(manifest.worktrees[0].id, 'same-id');
+
+    const clean = await gc({ root: dir });
+    assert.equal(clean.orphans.length, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('concurrent create and mark operations do not lose entries or fields', async () => {
+  const dir = await initRepo();
+  try {
+    await createWorktree({ root: dir, runId: 'run-a', pattern: 'ci-sweeper' });
+    const results = await Promise.allSettled([
+      createWorktree({ root: dir, runId: 'run-b', pattern: 'ci-sweeper' }),
+      markWorktree({ root: dir, runId: 'run-a', status: 'rejected' }),
+    ]);
+
+    assert.equal(results[0].status, 'fulfilled');
+    assert.equal(results[1].status, 'fulfilled');
+
+    const manifest = await readManifest(dir);
+    assert.equal(manifest.worktrees.length, 2);
+    const entryA = manifest.worktrees.find((w) => w.id === 'run-a');
+    const entryB = manifest.worktrees.find((w) => w.id === 'run-b');
+    assert.equal(entryA.status, 'rejected');
+    assert.equal(entryB.status, 'active');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
