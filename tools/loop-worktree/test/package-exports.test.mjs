@@ -52,10 +52,23 @@ test('packed package exposes the public lock subpath and keeps legacy deep impor
   const parsed = JSON.parse(stdout.slice(jsonStart));
   const packed = Array.isArray(parsed) ? parsed : [parsed];
   assert.equal(packed.length, 1);
-  assert.ok(
-    packed[0].files.some((file) => file.path === 'dist/lock.d.ts'),
-    'packed lock subpath should include its declarations',
-  );
+  const tarball = path.join(temp, packed[0].filename);
+  assert.ok(packed[0].filename, 'npm pack should report a tarball filename');
+  // Prefer files[] when present; otherwise inspect the tarball (npm@latest may omit files).
+  if (Array.isArray(packed[0].files)) {
+    assert.ok(
+      packed[0].files.some((file) => file.path === 'dist/lock.d.ts'),
+      'packed lock subpath should include its declarations',
+    );
+  } else {
+    const { stdout: tarList } = await run('tar', ['-tzf', tarball], {
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    assert.ok(
+      tarList.split('\n').some((line) => line.endsWith('dist/lock.d.ts') || line.endsWith('/dist/lock.d.ts') || line === 'package/dist/lock.d.ts'),
+      `tarball missing dist/lock.d.ts; listing:\n${tarList}`,
+    );
+  }
 
   const consumer = path.join(temp, 'consumer');
   await mkdir(consumer);
