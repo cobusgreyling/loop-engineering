@@ -1,5 +1,14 @@
 # Changelog — @cobusgreyling/loop-mcp-server
 
+## 1.2.0 — 2026-07-29
+
+- `loop_audit_score` tool for runtime Loop Ready scoring
+- `loop_check_breaker` tool for circuit-breaker ledger checks
+
+## 1.1.0
+
+- Prior release (runtime lookup tools)
+
 ## 1.0.0 — 2026-07-06
 
 - Initial npm release
