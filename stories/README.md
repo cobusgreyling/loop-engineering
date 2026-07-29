@@ -18,6 +18,7 @@ Real-world loop engineering — including failures. Contribute yours via [CONTRI
 | [quant-loop-out-of-time.md](./quant-loop-out-of-time.md) | Quant research (domain) | Strategy passed research, failed out-of-time data |
 | [ky-cut-surface-generation-vs-consequence.md](./ky-cut-surface-generation-vs-consequence.md) | Philosophy → loop bridge | Generation ≠ consequence; preserve the cut surface |
 | [loop-worktree-week-two.md](./loop-worktree-week-two.md) | PR Babysitter + loop-worktree | Pair worktrees with `loop-context --check`; exact `outcome: failure` enum |
+| [ci-sweeper-symptom-patching-and-circuit-breaker.md](./ci-sweeper-symptom-patching-and-circuit-breaker.md) | CI Sweeper | Symptom masking via test timeout inflation; denylist test setup files + `loop-context` circuit breaker |
 
 **Template for new stories:**
 
