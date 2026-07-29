@@ -40,7 +40,17 @@ test('packed package exposes the public lock subpath and keeps legacy deep impor
     ],
     { cwd: packageRoot, maxBuffer: 10 * 1024 * 1024 },
   );
-  const packed = JSON.parse(stdout);
+  // npm may print notices before JSON, and newer npm may return a single object.
+  const jsonStart = (() => {
+    const arr = stdout.indexOf('[');
+    const obj = stdout.indexOf('{');
+    if (arr === -1) return obj;
+    if (obj === -1) return arr;
+    return Math.min(arr, obj);
+  })();
+  assert.ok(jsonStart >= 0, `npm pack --json produced no JSON: ${stdout.slice(0, 200)}`);
+  const parsed = JSON.parse(stdout.slice(jsonStart));
+  const packed = Array.isArray(parsed) ? parsed : [parsed];
   assert.equal(packed.length, 1);
   assert.ok(
     packed[0].files.some((file) => file.path === 'dist/lock.d.ts'),

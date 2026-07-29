@@ -33,11 +33,12 @@ jobs:
       - name: Ensure npm supports trusted publishing (OIDC)
         run: npm install -g npm@latest
 
-      - name: Build loop-gate sibling (file dependency)
-        working-directory: tools/loop-gate
+      - name: Build monorepo siblings (file dependencies)
         run: |
-          npm ci
-          npm run build
+          for dir in readiness-core loop-audit loop-context loop-cost loop-gate; do
+            echo "== building tools/$dir =="
+            (cd tools/$dir && npm ci && npm run build)
+          done
 
       - name: Install, build, test
         working-directory: tools/mcp-server

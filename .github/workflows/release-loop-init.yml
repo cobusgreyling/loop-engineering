@@ -34,8 +34,9 @@ jobs:
       - name: Test, build & publish
         working-directory: tools/loop-init
         run: |
-          # Build monorepo sibling first — declared ^range may not be on npm yet
+          # Build monorepo siblings first — declared ^range may not be on npm yet
           # when cutting audit + init in the same release window.
+          (cd ../readiness-core && npm ci && npm run build)
           (cd ../loop-audit && npm ci && npm run build)
           cp package.json package.json.release-bak
           cp package-lock.json package-lock.json.release-bak

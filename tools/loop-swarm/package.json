@@ -4,7 +4,7 @@
   "description": "Multi-agent consensus sandboxing for extreme high-confidence loop operations.",
   "type": "module",
   "bin": {
-    "loop-swarm": "dist/cli.js"
+    "loop-swarm": "./dist/cli.js"
   },
   "main": "dist/swarm.js",
   "types": "dist/swarm.d.ts",

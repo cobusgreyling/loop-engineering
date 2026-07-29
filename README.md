@@ -301,18 +301,17 @@ Addy Osmani:
 
 **First PR?** Pick one open issue below. Stories and adopters get **same-day review** when possible. See [CONTRIBUTORS.md](CONTRIBUTORS.md) and the [contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123).
 
-**14 open** [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)s (refreshed Jul 2026). Comment **"I'll take this"** for assignment.
+**6 open** [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)s (refreshed 2026-07-29). Comment **"I'll take this"** for assignment.
 
 | Time | Issue | What you ship |
 |------|-------|---------------|
 | ~10 min | [#120 — Adopters list](https://github.com/cobusgreyling/loop-engineering/issues/120) | One row in `docs/adopters.md` (or [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) template) |
-| ~15–20 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) · [#119 — PR Babysitter failure](https://github.com/cobusgreyling/loop-engineering/issues/119) · [#392 — CI Sweeper story](https://github.com/cobusgreyling/loop-engineering/issues/392) | Honest `stories/` write-up + index row |
-| ~25–30 min | [#389 — loop-action QUICKSTART](https://github.com/cobusgreyling/loop-engineering/issues/389) · [#390 — loop-sandbox QUICKSTART](https://github.com/cobusgreyling/loop-engineering/issues/390) · [#391 — loop-gate QUICKSTART](https://github.com/cobusgreyling/loop-engineering/issues/391) | Doc subsection + links to tool READMEs |
-| ~40 min | [#384 — Windsurf CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/384) · [#385 — Windsurf Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/385) · [#386 — Windsurf Dependency Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/386) | Fill pattern-coverage gaps in `examples/windsurf/` |
+| ~15–20 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) · [#119 — PR Babysitter failure](https://github.com/cobusgreyling/loop-engineering/issues/119) | Honest `stories/` write-up + index row |
 | ~40–45 min | [#387 — Hermes CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/387) · [#388 — Hermes Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/388) | Fill pattern-coverage gaps in `examples/hermes/` |
-| ~45–60 min | [#393 — Harden loop-action quoting](https://github.com/cobusgreyling/loop-engineering/issues/393) | Safer `inputs.command` handling in `tools/loop-action` |
 | Anytime | Templates | [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) · [Share a story](https://github.com/cobusgreyling/loop-engineering/issues/new?template=share-story.yml) |
 | Hubs | Discussions | [Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/326) · [Ask anything](https://github.com/cobusgreyling/loop-engineering/discussions/327) |
+
+**Recently shipped (thanks!):** Windsurf examples (#384–#386), loop-action/sandbox/gate QUICKSTART (#389–#391), CI Sweeper story (#392), loop-action hardening (#393/#395).
 
 Maintainers re-seed the backlog with `bash scripts/create-good-first-issues.sh` (idempotent; skips existing titles). Prefer [live open GFI filter](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) over this table if a row looks stale.
 

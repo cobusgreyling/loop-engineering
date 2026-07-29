@@ -4,7 +4,7 @@
   "description": "Manage isolated git worktrees for loop engineering attempts: create, mark, cleanup, and reconcile one worktree per fix attempt.",
   "type": "module",
   "bin": {
-    "loop-worktree": "dist/cli.js"
+    "loop-worktree": "./dist/cli.js"
   },
   "main": "dist/worktree.js",
   "types": "dist/worktree.d.ts",
