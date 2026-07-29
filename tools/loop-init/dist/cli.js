@@ -66,6 +66,68 @@ const PATTERN_FOUNDRY_PRESET = {
     'post-merge-cleanup': 'implementer',
 };
 const FOUNDRY_SHOWCASE = 'https://github.com/cobusgreyling/harness-foundry/blob/main/docs/showcase.md';
+const MINIMAX_DEFAULT_MODEL = 'MiniMax-M3';
+const MINIMAX_DEFAULT_REGION = 'global_en';
+const MINIMAX_MODELS = [
+    {
+        id: 'MiniMax-M3',
+        contextWindow: 1_000_000,
+        inputModalities: ['text', 'image', 'video'],
+        thinking: ['adaptive', 'disabled'],
+        pricing: { input: 0.6, output: 2.4, cacheRead: 0.12, cacheWrite: null },
+    },
+    {
+        id: 'MiniMax-M2.7',
+        contextWindow: 204_800,
+        inputModalities: ['text'],
+        thinking: ['always_on'],
+        pricing: { input: 0.3, output: 1.2, cacheRead: 0.06, cacheWrite: 0.375 },
+    },
+];
+const MINIMAX_REGIONS = [
+    {
+        region: 'global_en',
+        openaiBaseUrl: 'https://api.minimax.io/v1',
+        anthropicBaseUrl: 'https://api.minimax.io/anthropic',
+        docsRoot: 'https://platform.minimax.io/docs',
+    },
+    {
+        region: 'cn_zh',
+        openaiBaseUrl: 'https://api.minimaxi.com/v1',
+        anthropicBaseUrl: 'https://api.minimaxi.com/anthropic',
+        docsRoot: 'https://platform.minimaxi.com/docs',
+    },
+];
+const MINIMAX_MODEL_IDS = MINIMAX_MODELS.map((m) => m.id);
+const MINIMAX_REGION_IDS = MINIMAX_REGIONS.map((r) => r.region);
+/** Render the `model/minimax` interface primitive for the implementer stack. */
+function minimaxInterfaceYaml(model, region) {
+    const models = MINIMAX_MODELS.map((m) => [
+        `          - id: ${m.id}`,
+        `            context_window: ${m.contextWindow}`,
+        `            input_modalities: [${m.inputModalities.join(', ')}]`,
+        `            thinking: [${m.thinking.join(', ')}]`,
+        `            pricing_usd_per_million_tokens:`,
+        `              input: ${m.pricing.input}`,
+        `              output: ${m.pricing.output}`,
+        `              cache_read: ${m.pricing.cacheRead}`,
+        `              cache_write: ${m.pricing.cacheWrite === null ? 'null' : m.pricing.cacheWrite}`,
+    ].join('\n')).join('\n');
+    const endpoints = MINIMAX_REGIONS.map((r) => [
+        `          ${r.region}:`,
+        `            openai_base_url: ${r.openaiBaseUrl}`,
+        `            anthropic_base_url: ${r.anthropicBaseUrl}`,
+        `            docs_root: ${r.docsRoot}`,
+    ].join('\n')).join('\n');
+    return `    - primitive: model/minimax
+      config:
+        model: ${model}
+        region: ${region}
+        models:
+${models}
+        endpoints:
+${endpoints}`;
+}
 function parseArgs(argv) {
     let pattern = 'daily-triage';
     let tool = 'grok';
@@ -74,6 +136,9 @@ function parseArgs(argv) {
     let withFoundry = false;
     let withMemory = false;
     let withFleet = false;
+    let modelProvider = 'anthropic';
+    let region = MINIMAX_DEFAULT_REGION;
+    let model = MINIMAX_DEFAULT_MODEL;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--pattern' || a === '-p')
@@ -88,23 +153,32 @@ function parseArgs(argv) {
             withMemory = true;
         else if (a === '--with-fleet')
             withFleet = true;
+        else if (a === '--model-provider')
+            modelProvider = argv[++i];
+        else if (a === '--region')
+            region = argv[++i];
+        else if (a === '--model')
+            model = argv[++i];
         else if (a === '--help' || a === '-h')
-            return { help: true, pattern, tool, target, dryRun, withFoundry, withMemory, withFleet };
+            return { help: true, pattern, tool, target, dryRun, withFoundry, withMemory, withFleet, modelProvider, region, model };
         else if (!a.startsWith('-'))
             target = a;
     }
-    return { help: false, pattern, tool, target, dryRun, withFoundry, withMemory, withFleet };
+    return { help: false, pattern, tool, target, dryRun, withFoundry, withMemory, withFleet, modelProvider, region, model };
 }
-function foundryStackYaml(stackName, pattern, preset) {
+function foundryStackYaml(stackName, pattern, preset, provider = 'anthropic', region = MINIMAX_DEFAULT_REGION, model = MINIMAX_DEFAULT_MODEL) {
     if (preset === 'implementer') {
+        const interfaceLayer = provider === 'minimax'
+            ? minimaxInterfaceYaml(model, region)
+            : `    - primitive: model/anthropic
+      config:
+        model: claude-sonnet-4-20250514`;
         return `name: ${stackName}
 version: 1.0.0
 description: "loop-engineering ${pattern} → implementer harness (loop-init --with-foundry)"
 layers:
   interface:
-    - primitive: model/anthropic
-      config:
-        model: claude-sonnet-4-20250514
+${interfaceLayer}
   composition:
     - primitive: context/state-file
     - primitive: tools/git-worktree-write
@@ -137,7 +211,11 @@ layers:
  * Scaffold a harness-foundry stack next to loop files so LE graduates land in
  * a versioned harness in one command (no foundry package dependency).
  */
-async function scaffoldFoundry(pattern, targetDir, dryRun) {
+async function scaffoldFoundry(pattern, targetDir, dryRun, model = {
+    provider: 'anthropic',
+    region: MINIMAX_DEFAULT_REGION,
+    model: MINIMAX_DEFAULT_MODEL,
+}) {
     const preset = PATTERN_FOUNDRY_PRESET[pattern];
     const foundryRoot = path.join(targetDir, '.foundry');
     const stackFile = path.join(foundryRoot, 'stack.yaml');
@@ -147,7 +225,7 @@ async function scaffoldFoundry(pattern, targetDir, dryRun) {
         return { preset, stackFile };
     }
     const files = [
-        { path: stackFile, content: foundryStackYaml(stackName, pattern, preset) },
+        { path: stackFile, content: foundryStackYaml(stackName, pattern, preset, model.provider, model.region, model.model) },
         {
             path: path.join(foundryRoot, 'hooks', 'outerloop.yaml'),
             content: `enabled: false
@@ -591,6 +669,9 @@ Options:
   --with-foundry    Also scaffold .foundry/ stack (harness-foundry runtime)
   --with-memory     Also scaffold memory-engineering tiers and budget
   --with-fleet      Also scaffold fleet-engineering registry and inbox
+  --model-provider  Implementer interface provider (default: anthropic; minimax)
+  --region          MiniMax region when --model-provider minimax (global_en, cn_zh)
+  --model           MiniMax model when --model-provider minimax (MiniMax-M3, MiniMax-M2.7)
   --dry-run         Print actions without copying
   -h, --help        This help
 
@@ -602,13 +683,15 @@ Examples:
   npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
   npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --with-foundry
   npx @cobusgreyling/loop-init . -p pr-babysitter -t claude --with-foundry
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
   npx @cobusgreyling/loop-init . --with-memory
   npx @cobusgreyling/loop-init . --with-fleet
 `);
         process.exit(0);
     }
-    const { pattern, tool, target, dryRun, withFoundry, withMemory, withFleet } = args;
+    const { pattern, tool, target, dryRun, withFoundry, withMemory, withFleet, modelProvider, region, model } = args;
     const validPatterns = Object.keys(PATTERN_STARTERS);
     const validTools = Object.keys(TOOL_SUFFIX);
     if (!validPatterns.includes(pattern)) {
@@ -618,6 +701,21 @@ Examples:
     if (!validTools.includes(tool)) {
         console.error(`Unknown tool: ${tool}. Valid: ${validTools.join(', ')}`);
         process.exit(1);
+    }
+    const validProviders = ['anthropic', 'minimax'];
+    if (!validProviders.includes(modelProvider)) {
+        console.error(`Unknown model provider: ${modelProvider}. Valid: ${validProviders.join(', ')}`);
+        process.exit(1);
+    }
+    if (modelProvider === 'minimax') {
+        if (!MINIMAX_REGION_IDS.includes(region)) {
+            console.error(`Unknown region: ${region}. Valid: ${MINIMAX_REGION_IDS.join(', ')}`);
+            process.exit(1);
+        }
+        if (!MINIMAX_MODEL_IDS.includes(model)) {
+            console.error(`Unknown model: ${model}. Valid: ${MINIMAX_MODEL_IDS.join(', ')}`);
+            process.exit(1);
+        }
     }
     const targetDir = path.resolve(target);
     const baseStarter = PATTERN_STARTERS[pattern];
@@ -725,7 +823,11 @@ npm run lint
     if (withFoundry) {
         console.log('');
         console.log('Harness foundry:');
-        const foundry = await scaffoldFoundry(pattern, targetDir, dryRun);
+        const foundry = await scaffoldFoundry(pattern, targetDir, dryRun, {
+            provider: modelProvider,
+            region,
+            model,
+        });
         foundryPreset = foundry?.preset;
     }
     if (withMemory) {
