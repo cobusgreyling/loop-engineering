@@ -6,6 +6,7 @@ Copy-pasteable loop patterns for Windsurf, using Cascade Workflows as the manual
 |---|---|---|---|
 | Daily Triage | 1d–2h (manual `/daily-triage`) | Low | [daily-triage.md](daily-triage.md) |
 | PR Babysitter | 5m–15m (manual `/pr-babysitter`; external reminder optional) | Medium | [pr-babysitter.md](pr-babysitter.md) |
+| CI Sweeper | 5m–15m (manual `/ci-sweeper`; external reminder optional) | Medium | [ci-sweeper.md](ci-sweeper.md) |
 
 No `loop-init --tool windsurf` yet — copy `SKILL.md` + `STATE.md` from any starter (e.g. `starters/minimal-loop`), then follow the example to wire a Cascade Workflow.
 

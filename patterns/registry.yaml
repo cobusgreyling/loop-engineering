@@ -52,7 +52,7 @@ patterns:
     goal: React to failing CI with minimal fixes and escalation
     cadence: 5m-15m
     risk: medium
-    tools: [grok, claude-code, codex, openclaw, opencode, github-actions]
+    tools: [grok, claude-code, codex, openclaw, opencode, github-actions, windsurf]
     skills: [ci-triage, minimal-fix]
     state: ci-sweeper-state.md
     phases: [detect, classify, fix, verify, escalate]
