@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -51,11 +51,22 @@ test('packed package exposes the public lock subpath and keeps legacy deep impor
   assert.ok(jsonStart >= 0, `npm pack --json produced no JSON: ${stdout.slice(0, 200)}`);
   const parsed = JSON.parse(stdout.slice(jsonStart));
   const packed = Array.isArray(parsed) ? parsed : [parsed];
-  assert.equal(packed.length, 1);
-  const tarball = path.join(temp, packed[0].filename);
-  assert.ok(packed[0].filename, 'npm pack should report a tarball filename');
+  assert.equal(packed.length, 1, `unexpected pack json: ${stdout.slice(0, 500)}`);
+  // Resolve tarball path: prefer pack metadata, fall back to scanning pack-destination.
+  const metaName = packed[0]?.filename || packed[0]?.name;
+  let tarball = metaName ? path.join(temp, path.basename(String(metaName))) : null;
+  const tempEntries = await readdir(temp);
+  if (!tarball || !tempEntries.includes(path.basename(tarball))) {
+    const tgzs = tempEntries.filter((f) => f.endsWith('.tgz'));
+    assert.equal(
+      tgzs.length,
+      1,
+      `expected one tarball in pack-destination, got: ${tgzs.join(', ') || '(none)'}; pack stdout: ${stdout.slice(0, 500)}`,
+    );
+    tarball = path.join(temp, tgzs[0]);
+  }
   // Prefer files[] when present; otherwise inspect the tarball (npm@latest may omit files).
-  if (Array.isArray(packed[0].files)) {
+  if (Array.isArray(packed[0]?.files)) {
     assert.ok(
       packed[0].files.some((file) => file.path === 'dist/lock.d.ts'),
       'packed lock subpath should include its declarations',
@@ -65,7 +76,7 @@ test('packed package exposes the public lock subpath and keeps legacy deep impor
       maxBuffer: 10 * 1024 * 1024,
     });
     assert.ok(
-      tarList.split('\n').some((line) => line.endsWith('dist/lock.d.ts') || line.endsWith('/dist/lock.d.ts') || line === 'package/dist/lock.d.ts'),
+      tarList.split('\n').some((line) => line.endsWith('dist/lock.d.ts')),
       `tarball missing dist/lock.d.ts; listing:\n${tarList}`,
     );
   }
@@ -84,7 +95,7 @@ test('packed package exposes the public lock subpath and keeps legacy deep impor
       '--no-fund',
       '--cache',
       npmCache,
-      path.join(temp, packed[0].filename),
+      tarball,
     ],
     { cwd: consumer, maxBuffer: 10 * 1024 * 1024 },
   );
