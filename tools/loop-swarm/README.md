@@ -15,6 +15,8 @@ If an agent produces non-deterministic results, `loop-swarm` acts as an L3 safet
 npx @cobusgreyling/loop-swarm run --count 3 -- npx my-agent run --task "Refactor utils.ts"
 ```
 
+See [Quickstart](../../docs/QUICKSTART.md#multi-agent-consensus-sandboxing-loop-swarm) for workflow examples and command patterns.
+
 ## How it works
 
 1. Spawns `N` (default: 3) instances of `loop-sandbox` sequentially (to prevent git worktree and signal handler races).

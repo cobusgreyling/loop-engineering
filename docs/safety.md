@@ -107,3 +107,8 @@ The `loop-constraints` skill reads this file at the start of every loop run and 
 every rule. Template: [templates/loop-constraints.md](../templates/loop-constraints.md).
 
 Tool examples: [Grok](../examples/grok/constraints.md) · [Claude Code](../examples/claude-code/constraints.md) · [Codex](../examples/codex/constraints.md)
+
+## Worktree Isolation & Consensus Sandboxing
+
+- `loop-sandbox`: Ephemeral git worktree isolation for single agent runs. Captures changes as reviewable patch files before applying. See [tools/loop-sandbox/README.md](../tools/loop-sandbox/README.md).
+- `loop-swarm`: Multi-agent consensus sandboxing across sequential `loop-sandbox` runs. Requires byte-identical patch consensus across runs before accepting edits. See [tools/loop-swarm/README.md](../tools/loop-swarm/README.md) and [Quickstart](./QUICKSTART.md#multi-agent-consensus-sandboxing-loop-swarm).

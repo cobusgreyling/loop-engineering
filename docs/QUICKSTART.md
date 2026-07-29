@@ -305,6 +305,19 @@ git apply .loop-sandbox/patches/<patch-id>.patch
 >
 > **Safety note:** `loop-sandbox` provides worktree isolation, but process execution retains OS-level filesystem and network access — see [docs/safety.md](./safety.md). Always inspect patch files before running `git apply`.
 
+### Multi-agent consensus sandboxing (`loop-swarm`)
+
+For high-confidence L3 operations, `loop-swarm` ([tools/loop-swarm/README.md](../tools/loop-swarm/README.md)) runs an agent command multiple times sequentially across `N` (default: 3) isolated `loop-sandbox` worktrees. It hashes the resulting `.patch` files and verifies that a majority produced byte-identical changes before writing a consensus patch to `.loop-sandbox/patches/consensus.patch`.
+
+If an agent produces non-deterministic edits, `loop-swarm` acts as a consensus safety net by accepting only changes independently reproduced across runs.
+
+```bash
+# Run multi-agent consensus across 3 sequential sandboxes
+npx @cobusgreyling/loop-swarm run --count 3 -- <agent-cmd>
+```
+
+> **Limitations & Safety:** Runs are serialized sequentially to maintain safety guarantees on the manifest (~N× longer execution), shared stdio, and `SIGINT` signals exit the entire process. `loop-swarm` provides git worktree isolation rather than OS-level container isolation — see [docs/safety.md](./safety.md).
+
 ## Copy-paste cheat sheet
 
 ```bash
@@ -338,6 +351,9 @@ npx @cobusgreyling/loop-worktree cleanup --older-than 24h
 # Ephemeral worktree isolation + patch capture
 npx @cobusgreyling/loop-sandbox run -- <command>
 npx @cobusgreyling/loop-sandbox review
+
+# Multi-agent consensus sandboxing across sequential sandboxes
+npx @cobusgreyling/loop-swarm run --count 3 -- <agent-cmd>
 ```
 
 ## Learn the why (optional, 10 minutes)
