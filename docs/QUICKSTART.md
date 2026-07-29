@@ -97,6 +97,20 @@ npx @cobusgreyling/harness-foundry validate
 npx @cobusgreyling/harness-foundry run --goal "Verify harness wiring"
 ```
 
+To configure provider-specific stacks like **MiniMax** during scaffolding:
+
+```bash
+npx @cobusgreyling/loop init . --pattern daily-triage --tool grok \
+  --with-foundry --model-provider minimax --region global_en --model MiniMax-M3
+```
+
+> **MiniMax Foundry flags:**
+> - `--model-provider minimax`
+> - `--region`: `global_en` (default) | `cn_zh`
+> - `--model`: e.g. `MiniMax-M3`
+>
+> See [harness-foundry](https://github.com/cobusgreyling/harness-foundry) for full provider and stack runtime documentation.
+
 ### Catch drift before you schedule (`loop sync`)
 
 `loop audit` scores readiness; `loop sync` checks that your `STATE.md` and `LOOP.md` still agree. When they drift — you edit `LOOP.md` to add a loop but never wire it into `STATE.md`, or a starter update leaves one file behind — a scheduled loop can run against stale instructions. `loop doctor` runs this for you.
