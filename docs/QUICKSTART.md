@@ -146,6 +146,33 @@ LOOP_PROJECT_ROOT=/path/to/your/project node dist/index.js
 
 See [tools/mcp-server/README.md](../tools/mcp-server/README.md) for resources and tools.
 
+## 4b. Set the merge gate (30 seconds)
+
+Before any loop can auto-merge, it needs a `gate.yaml` defining what's off-limits and what's safe to merge unattended. Copy the starter from [templates/gate.yaml.template](../templates/gate.yaml.template) into your repo root as `gate.yaml`:
+
+```yaml
+version: 1
+denylist:
+  - "src/auth/**"
+  - "**/*.env"
+autoMergeAllowlist:
+  - "docs/**"
+  - "**/*.md"
+```
+
+This is **not** a free-form list of gates — `denylist` and `autoMergeAllowlist` are fixed keys `loop-gate` checks against (there's also an optional `maxFiles` cap — see the full template for details).
+
+Enforce it mechanically before any auto-merge action:
+
+```bash
+npx @cobusgreyling/loop gate check --action auto-merge --paths <f1,f2,...>
+# same as: npx @cobusgreyling/loop-gate check --action auto-merge --paths <f1,f2,...>
+```
+
+Exit `0` = allowed · `2` = escalate to a human. Already running `loop-audit --auto-fix`? It emits a loadable `gate.yaml` for you automatically — no need to hand-write one.
+
+See [tools/loop-gate/README.md](../tools/loop-gate/README.md) for the full policy schema and [docs/safety.md](./safety.md) for the risk/mitigation model this gate enforces.
+
 ## 5. Run your first loop — report only (2 minutes)
 
 ### Grok
