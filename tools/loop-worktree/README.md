@@ -30,7 +30,7 @@ import { lockPaths, unlockOwner } from '@cobusgreyling/loop-worktree/lock';
 ```
 
 The `lock` subpath is the stable programmatic entry point for tools that need
-advisory path locking without importing private files under `dist/`.
+advisory path locking without importing private files under `dist/`. See [Quickstart](../../docs/QUICKSTART.md#l2-isolated-fix-attempts-loop-worktree) for CLI and JS usage.
 
 ## Commands
 

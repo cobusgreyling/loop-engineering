@@ -283,6 +283,20 @@ npx @cobusgreyling/loop-worktree cleanup --older-than 24h
 npx @cobusgreyling/loop-worktree list
 ```
 
+To prevent multi-loop collisions on shared paths across concurrent runs, use advisory path locks via CLI or public JS import:
+
+```bash
+# CLI advisory lock (skips or queues if another owner holds an overlapping path)
+npx @cobusgreyling/loop-worktree lock --paths package.json,package-lock.json --owner dependency-sweeper --ttl 6h
+npx @cobusgreyling/loop-worktree unlock --owner dependency-sweeper
+```
+
+Programmatic loops can import lock primitives directly from `@cobusgreyling/loop-worktree/lock` without deep-importing internal files under `dist/`:
+
+```js
+import { lockPaths, unlockPaths, LOCKS_DIR } from '@cobusgreyling/loop-worktree/lock';
+```
+
 Pair with the [circuit breaker](#circuit-breaker-for-l2-loops-optional) above: when `loop-context --check` exits `2`, mark the worktree `escalated` before handing off to a human. The two tools stay independent — see [tools/loop-worktree/README.md](../tools/loop-worktree/README.md).
 
 ### Ephemeral worktree isolation (`loop-sandbox`)
