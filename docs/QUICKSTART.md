@@ -200,6 +200,26 @@ No `loop-init --tool windsurf` yet — copy skills and state from any starter, t
 
 Workflow examples under [examples/github-actions/](../examples/github-actions/) are schema-complete; you wire the agent invocation (Codex API, `repository_dispatch`, etc.). Start with report-only outputs to a state file or issue comment.
 
+### GitHub Actions composite action (`loop-action`)
+
+For CI/CD workflows, use the official GitHub Composite Action [`tools/loop-action`](../tools/loop-action/README.md) to automatically run readiness audits (`loop-audit`), enforce circuit breakers (`loop-context`), and isolate execution in worktrees (`loop-sandbox`):
+
+```yaml
+- uses: cobusgreyling/loop-engineering/tools/loop-action@main
+  with:
+    pattern: 'ci-sweeper'
+    level: 'L1'            # L1 (report-only) -> L2 -> L3
+    sandbox: 'false'       # set 'true' for ephemeral worktree isolation (L2)
+    command: |
+      npx grok-cli run --skill .grok/skills/ci-sweeper/SKILL.md
+```
+
+> **Week-one rule:** report-only mode (`level: 'L1'`). No auto-fix, no auto-merge. Review generated state output before enabling actions.
+>
+> **Note on `command`:** Unquoted multi-arg command strings can be fragile when parsed by shell runners. Prefer multi-line `command: |` blocks or a single script path (e.g. `scripts/run-agent.sh`).
+>
+> See [tools/loop-action/README.md](../tools/loop-action/README.md) and [docs/safety.md](./safety.md) for action inputs, security guardrails, and permission boundaries.
+
 ## 6. Read the output, commit state (1 minute)
 
 Open `STATE.md`. Did the loop capture real priorities? Edit anything wrong — you're still the engineer.

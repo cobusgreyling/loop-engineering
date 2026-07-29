@@ -2,18 +2,29 @@
 
 Includes triggers for the new **Changelog Drafter** pattern (daily or on tags). See `changelog-drafter.yml`.
 
-Event-driven and scheduled loops **without** a TUI session. These workflows:
+Event-driven and scheduled loops **without** a TUI session. The refactored workflow examples in this directory use the [`loop-action`](../../tools/loop-action/README.md) composite action to automatically run readiness audits (`loop-audit`), check circuit breakers (`loop-context`), and isolate execution in worktrees (`loop-sandbox`).
 
-1. Gather context (CI, merges, failures)
-2. Update state files
-3. **Delegate** to your agent harness in the "Invoke agent" step
+## Composite Action (`loop-action`)
+
+Instead of writing manual shell scripts for audits and circuit breakers in your workflows, use the [`tools/loop-action`](../../tools/loop-action/README.md) composite action:
+
+```yaml
+- uses: cobusgreyling/loop-engineering/tools/loop-action@main
+  with:
+    pattern: 'daily-triage'
+    level: 'L1'
+    sandbox: 'false'
+    command: |
+      npx grok-cli run --skill .grok/skills/loop-triage/SKILL.md
+```
 
 ## Wiring Your Agent
 
-Replace the placeholder `run:` steps with one of:
+Replace the `command:` input or placeholder steps with your choice of agent harness:
 
 | Approach | When |
 |----------|------|
+| `loop-action` (recommended) | Automated audit + circuit breaker + worktree sandbox in CI |
 | Codex CLI / API | Headless Codex in CI |
 | `repository_dispatch` | External runner with Grok/Claude |
 | Custom script | Rule-based triage only (L0) |
