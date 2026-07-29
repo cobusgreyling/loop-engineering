@@ -238,6 +238,26 @@ npx @cobusgreyling/loop-worktree list
 
 Pair with the [circuit breaker](#circuit-breaker-for-l2-loops-optional) above: when `loop-context --check` exits `2`, mark the worktree `escalated` before handing off to a human. The two tools stay independent — see [tools/loop-worktree/README.md](../tools/loop-worktree/README.md).
 
+### Ephemeral worktree isolation (`loop-sandbox`)
+
+To run an agent command in a temporary, isolated git worktree and capture its changes as a reviewable `.patch` file without touching your working tree, use `loop-sandbox` ([tools/loop-sandbox/README.md](../tools/loop-sandbox/README.md)). It automatically spawns a clean worktree from HEAD, executes your process, captures all edits (including untracked files) into a `.patch` file, and destroys the worktree so your repo stays pristine.
+
+```bash
+# Run an agent command in an ephemeral sandbox
+npx @cobusgreyling/loop-sandbox run -- npx my-agent
+
+# Optional --shell to run raw shell commands (e.g. bash -c)
+npx @cobusgreyling/loop-sandbox run --shell -- bash -c "echo 'fix' > file.txt"
+
+# List and review generated patches before applying
+npx @cobusgreyling/loop-sandbox review
+git apply .loop-sandbox/patches/<patch-id>.patch
+```
+
+> **Windows compatibility:** On Windows, npm `.cmd` shims (`npx`, `tsc`, etc.) that fail with `ENOENT` are automatically retried through a shell, so you do not need to pass `--shell` just for `npx`.
+>
+> **Safety note:** `loop-sandbox` provides worktree isolation, but process execution retains OS-level filesystem and network access — see [docs/safety.md](./safety.md). Always inspect patch files before running `git apply`.
+
 ## Copy-paste cheat sheet
 
 ```bash
@@ -267,6 +287,10 @@ LOOP_PROJECT_ROOT=. npx @cobusgreyling/loop-mcp-server
 npx @cobusgreyling/loop-worktree create --run-id <id> --pattern <pattern>
 npx @cobusgreyling/loop-worktree mark --run-id <id> --status rejected
 npx @cobusgreyling/loop-worktree cleanup --older-than 24h
+
+# Ephemeral worktree isolation + patch capture
+npx @cobusgreyling/loop-sandbox run -- <command>
+npx @cobusgreyling/loop-sandbox review
 ```
 
 ## Learn the why (optional, 10 minutes)
