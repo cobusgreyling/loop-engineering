@@ -4,7 +4,7 @@ Document the **public** `@cobusgreyling/loop-worktree/lock` import path in QUICK
 
 ## Context
 
-`loop-worktree` 1.3.0 exports:
+`loop-worktree` 1.3.1 exports:
 
 ```js
 import { lockPaths, unlockPaths, LOCKS_DIR } from '@cobusgreyling/loop-worktree/lock';

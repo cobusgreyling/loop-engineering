@@ -1,4 +1,4 @@
-# Release notes draft — week of 2026-07-29 (updated 2026-07-29)
+# Release notes draft — week of 2026-07-29 (updated 2026-07-30)
 
 **Status:** Draft for human review ([#332](https://github.com/cobusgreyling/loop-engineering/issues/332)). Edit before publishing a discussion post or tagging packages.
 
@@ -17,8 +17,18 @@
 
 ### Public worktree lock API
 
-- **`loop-worktree` 1.3.0** — public `./lock` subpath export for advisory path locking ([#407](https://github.com/cobusgreyling/loop-engineering/pull/407)). Thanks [@shixi-li](https://github.com/shixi-li).
-  - Tag: `loop-worktree-v1.3.0` (ready once this PR is on main)
+- **`loop-worktree` 1.3.1** — public `./lock` subpath export for advisory path locking ([#407](https://github.com/cobusgreyling/loop-engineering/pull/407), thanks [@shixi-li](https://github.com/shixi-li)) plus the concurrent-operation manifest-loss fix ([#430](https://github.com/cobusgreyling/loop-engineering/pull/430)) and the npm≥12 pack-test hardening ([#421](https://github.com/cobusgreyling/loop-engineering/pull/421)–[#423](https://github.com/cobusgreyling/loop-engineering/pull/423)) that landed after the burned tag.
+  - Tag: `loop-worktree-v1.3.1` (supersedes `loop-worktree-v1.3.0`; see "Why 1.3.1" below)
+  - **Why 1.3.1:** `loop-worktree-v1.3.0` currently points at `1c88a5e` (#422),
+    which predates [#423](https://github.com/cobusgreyling/loop-engineering/pull/423)'s
+    pack-tarball directory-scan fix — the one that actually survives the release
+    workflow's `npm@latest` (12.x). Every 2026-07-29 dispatch of
+    `release-loop-worktree.yml` therefore died in the test step
+    (`package-exports.test.mjs`, `ERR_INVALID_ARG_TYPE` from an undefined pack
+    filename) before reaching publish; reproduced locally: the `1c88a5e` tree
+    fails 31/32 under npm 12.0.2, current `main` passes 35/35. npm never received
+    1.3.0. Rather than re-pointing the existing tag, bump the version so the
+    release rides a fresh tag.
 
 ### MiniMax + memory bridge (`loop-init` 1.6.0)
 
@@ -63,36 +73,66 @@ Publish **sandbox before swarm** (swarm depends on `@cobusgreyling/loop-sandbox@
 
 ---
 
-## Package status (as of 2026-07-29)
+## Package status (as of 2026-07-30, after the 2026-07-29 publish attempts)
 
-| Package | On npm (before this batch) | Target | Action |
-|---------|----------------------------|--------|--------|
-| `@cobusgreyling/loop-cost` | **1.2.0** | 1.2.0 | Done |
-| `@cobusgreyling/loop-context` | **1.5.0** | 1.5.0 | Done |
-| `@cobusgreyling/loop-worktree` | **1.2.0** | **1.3.0** | Tag `loop-worktree-v1.3.0` (version already on main) |
-| `@cobusgreyling/loop-init` | **1.5.0** | **1.6.0** | Version bump in this PR → tag `loop-init-v1.6.0` |
-| `@cobusgreyling/loop-audit` | **1.7.0** | **1.8.0** | Version bump in this PR → tag `loop-audit-v1.8.0` |
-| `@cobusgreyling/loop-mcp-server` | **1.1.0** | **1.2.0** | Version bump in this PR → tag `loop-mcp-server-v1.2.0` |
-| `@cobusgreyling/loop-sandbox` | — | **1.0.0** | First publish → tag `loop-sandbox-v1.0.0` |
-| `@cobusgreyling/loop-swarm` | — | **1.0.0** | First publish after sandbox → tag `loop-swarm-v1.0.0` |
-| `@cobusgreyling/loop-gate` | **1.0.0** | 1.0.0 | No change |
-| `@cobusgreyling/loop` | **0.1.2** | 0.1.2 | No change |
+| Package | On npm | Target | State | Action |
+|---------|--------|--------|-------|--------|
+| `@cobusgreyling/loop-cost` | **1.2.0** | 1.2.0 | Done | — |
+| `@cobusgreyling/loop-context` | **1.5.0** | 1.5.0 | Done | — |
+| `@cobusgreyling/loop-worktree` | **1.2.0** | **1.3.1** | `v1.3.0` tag burned (its tree predates #423's pack-test fix) | This PR bumps to 1.3.1 → tag `loop-worktree-v1.3.1` |
+| `@cobusgreyling/loop-init` | **1.5.0** | **1.6.0** | Tag exists; 07-29 run green through build, failed at publish (E404) | Registry config below, then re-dispatch |
+| `@cobusgreyling/loop-audit` | **1.7.0** | **1.8.0** | Tag exists; tests green, publish E404 | Registry config below, then re-dispatch |
+| `@cobusgreyling/loop-mcp-server` | **1.1.0** | **1.2.0** | Tag exists; tests green, publish E404 | Registry config below, then re-dispatch |
+| `@cobusgreyling/loop-sandbox` | — | **1.0.0** | Tag exists; tests green, publish E404 (first publish) | See first-publish note below |
+| `@cobusgreyling/loop-swarm` | — | **1.0.0** | Waiting on sandbox | First publish after sandbox is on npm |
+| `@cobusgreyling/loop-gate` | **1.0.0** | 1.0.0 | Done | — |
+| `@cobusgreyling/loop` | **0.1.2** | 0.1.2 | Done | — |
 
-### Suggested publish sequence (human gate — tags only)
+### Why every 07-29 publish failed with `npm error 404` (PUT)
 
-1. Merge this version / release-workflow PR.
-2. Tag in order:
+All three dispatch rounds ended in `404 Not Found - PUT https://registry.npmjs.org/@cobusgreyling%2f<pkg>`,
+including the 15:10 round that ran **after** #422 removed `NODE_AUTH_TOKEN` from the
+publish steps. In each log the Sigstore provenance statement is signed and uploaded
+*before* the PUT fails, so the GitHub OIDC token itself works — the registry is
+rejecting an **unauthenticated** publish (npm reports 404 rather than 403 for
+unauthorized package access). That points at the npmjs.com side of trusted
+publishing, not the workflows:
+
+- Trusted publishing is configured **per package** on npmjs.com
+  (package → Settings → Trusted Publisher), and the **workflow filename must match
+  exactly**. This repo uses one workflow per package
+  (`release-loop-worktree.yml`, `release-loop-audit.yml`, `release-loop-init.yml`,
+  `release-loop-mcp-server.yml`, `release-loop-sandbox.yml`, …), so each package
+  needs its own entry pointing at its own filename.
+- **First publishes** (`loop-sandbox`, `loop-swarm`): a trusted publisher can only
+  be configured on a package that already exists on the registry. If npmjs.com does
+  not offer the create-package-with-trusted-publisher flow for the scope, do the
+  first publish once from a maintainer machine with a granular token
+  (`npm publish --access public`), then add the trusted publisher and let CI own
+  subsequent releases.
+
+### Suggested publish sequence (human gate)
+
+1. Merge this PR (bumps `loop-worktree` to 1.3.1; tags for the other packages
+   already exist and their tagged trees test green).
+2. On npmjs.com, add a Trusted Publisher entry for each package listed above
+   (repository `cobusgreyling/loop-engineering`, the package's own
+   `release-*.yml` filename, environment blank unless one is configured).
+3. Tag the superseding worktree release:
    ```bash
-   git tag loop-worktree-v1.3.0 && git push origin loop-worktree-v1.3.0
-   git tag loop-audit-v1.8.0 && git push origin loop-audit-v1.8.0
-   git tag loop-init-v1.6.0 && git push origin loop-init-v1.6.0
-   git tag loop-mcp-server-v1.2.0 && git push origin loop-mcp-server-v1.2.0
-   git tag loop-sandbox-v1.0.0 && git push origin loop-sandbox-v1.0.0
-   # after sandbox is on npm:
+   git tag loop-worktree-v1.3.1 && git push origin loop-worktree-v1.3.1
+   ```
+   (Leave `loop-worktree-v1.3.0` in place; npm never received 1.3.0 and release
+   dispatches must not target it.)
+4. Re-dispatch the failed workflows against the existing tags:
+   `loop-audit-v1.8.0`, `loop-init-v1.6.0`, `loop-mcp-server-v1.2.0`,
+   `loop-sandbox-v1.0.0` (or first-publish sandbox manually per the note above).
+   Once sandbox is on npm, create the swarm tag (it does not exist yet):
+   ```bash
    git tag loop-swarm-v1.0.0 && git push origin loop-swarm-v1.0.0
    ```
-3. Confirm with `npm view @cobusgreyling/<pkg> version`.
-4. Fold this draft into a GitHub Discussion; close [#332](https://github.com/cobusgreyling/loop-engineering/issues/332).
+5. Confirm with `npm view @cobusgreyling/<pkg> version`.
+6. Fold this draft into a GitHub Discussion; close [#332](https://github.com/cobusgreyling/loop-engineering/issues/332).
 
 ---
 
