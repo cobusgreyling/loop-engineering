@@ -1,0 +1,105 @@
+import { readFile } from 'node:fs/promises';
+
+export interface RunEntry {
+  run_id: string;
+  pattern: string;
+  duration_s: number;
+  items_found: number;
+  actions_taken: number;
+  escalations: number;
+  tokens_estimate: number;
+  outcome: string;
+}
+
+export interface MetricsDashboard {
+  totalRuns: number;
+  totalTokens: number;
+  totalDurationS: number;
+  totalActionsTaken: number;
+  totalEscalations: number;
+  successRatePct: number;
+  roiScore: number;
+  avgDurationS: number;
+}
+
+export async function parseLogFile(filePath: string): Promise<RunEntry[]> {
+  const content = await readFile(filePath, 'utf8');
+  const lines = content.split('\n');
+  const entries: RunEntry[] = [];
+  let inLogSection = false;
+
+  for (const line of lines) {
+    if (line.includes('<!-- Loop appends below this line -->')) {
+      inLogSection = true;
+      continue;
+    }
+    if (!inLogSection || line.trim() === '') continue;
+
+    try {
+      const entry = JSON.parse(line.trim());
+      if (entry.run_id && entry.pattern) {
+        entries.push(entry as RunEntry);
+      }
+    } catch (e) {
+      // Ignore malformed lines
+    }
+  }
+
+  return entries;
+}
+
+export function filterEntries(entries: RunEntry[], pattern?: string, days?: number): RunEntry[] {
+  let filtered = entries;
+
+  if (pattern) {
+    filtered = filtered.filter(e => e.pattern === pattern);
+  }
+
+  if (days && days > 0) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    filtered = filtered.filter(e => {
+      try {
+        const entryDate = new Date(e.run_id);
+        return entryDate >= cutoffDate;
+      } catch {
+        return true;
+      }
+    });
+  }
+
+  return filtered;
+}
+
+export function aggregateMetrics(entries: RunEntry[]): MetricsDashboard {
+  let totalTokens = 0;
+  let totalDurationS = 0;
+  let totalActionsTaken = 0;
+  let totalEscalations = 0;
+
+  for (const entry of entries) {
+    totalTokens += entry.tokens_estimate || 0;
+    totalDurationS += entry.duration_s || 0;
+    totalActionsTaken += entry.actions_taken || 0;
+    totalEscalations += entry.escalations || 0;
+  }
+
+  const totalRuns = entries.length;
+  const successRatePct = totalRuns > 0 ? ((totalRuns - totalEscalations) / totalRuns) * 100 : 0;
+  const avgDurationS = totalRuns > 0 ? totalDurationS / totalRuns : 0;
+
+  // Simple heuristic: Each successful action is worth +10, each escalation is -5.
+  const roiScore = (totalActionsTaken * 10) - (totalEscalations * 5);
+
+  return {
+    totalRuns,
+    totalTokens,
+    totalDurationS,
+    totalActionsTaken,
+    totalEscalations,
+    successRatePct,
+    roiScore,
+    avgDurationS
+  };
+}
