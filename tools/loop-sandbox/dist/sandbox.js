@@ -74,12 +74,21 @@ export async function runInSandbox(root, command, args, options = {}) {
                 activeChild?.kill();
                 // Release the lock before worktree teardown: it's the resource other
                 // loops are blocked on, and a slow worktree removal shouldn't delay
-                // it.
+                // it. Logged only once we know a lock (or stray wait file) actually
+                // existed -- lockRequested only means a lock was asked for, so
+                // logging unconditionally here would print "Releasing lock held by
+                // X" even when lockPaths() itself failed (e.g. blocked by another
+                // owner with no --wait) and no lock was ever acquired.
                 if (lockRequested) {
-                    console.log(`🔓 Releasing lock held by "${lockOwner}"...`);
-                    await unlockOwner(root, lockOwner).catch((err) => {
+                    try {
+                        const released = await unlockOwner(root, lockOwner);
+                        if (released) {
+                            console.log(`🔓 Released lock held by "${lockOwner}".`);
+                        }
+                    }
+                    catch (err) {
                         console.error(`❌ Failed to release lock for "${lockOwner}". Run \`loop-worktree unlock --owner ${lockOwner}\` manually:`, err);
-                    });
+                    }
                 }
                 if (worktreeAbsPath) {
                     if (extractionFailed) {
