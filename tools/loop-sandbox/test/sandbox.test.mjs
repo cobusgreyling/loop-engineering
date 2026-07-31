@@ -12,6 +12,19 @@ import { lockPaths, listLocks } from '@cobusgreyling/loop-worktree/dist/lock.js'
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const sandboxDistUrl = pathToFileURL(path.join(testDir, '../dist/sandbox.js')).href;
 
+/** Captures console.log lines produced while `fn` runs, restoring console.log afterward even if fn throws. */
+async function captureLogs(fn) {
+  const lines = [];
+  const original = console.log;
+  console.log = (...args) => { lines.push(args.join(' ')); };
+  try {
+    await fn();
+  } finally {
+    console.log = original;
+  }
+  return lines;
+}
+
 async function setupTestRepo() {
   const dir = path.join(tmpdir(), `sandbox-test-${Date.now()}-${Math.floor(Math.random()*1000)}`);
   await mkdir(dir, { recursive: true });
@@ -119,9 +132,12 @@ test('binary patch captures exactly without utf8 corruption', async () => {
 test('lockPaths option holds and releases a loop-worktree lock around the run', async () => {
   const root = await setupTestRepo();
   try {
-    const result = await runInSandbox(root, 'node', ['-e', 'require("fs").writeFileSync("locked.txt", "x");'], {
-      lockPaths: ['src/**'],
-      lockOwner: 'lock-test-owner',
+    let result;
+    const logs = await captureLogs(async () => {
+      result = await runInSandbox(root, 'node', ['-e', 'require("fs").writeFileSync("locked.txt", "x");'], {
+        lockPaths: ['src/**'],
+        lockOwner: 'lock-test-owner',
+      });
     });
     assert.ok(result.hasChanges);
 
@@ -129,6 +145,14 @@ test('lockPaths option holds and releases a loop-worktree lock around the run', 
     // strand future loops out of src/** indefinitely with no TTL set.
     const locks = await listLocks(root);
     assert.equal(locks.length, 0);
+
+    // A lock was actually acquired and released here, so the release message
+    // must be printed -- this is the positive case for the "don't claim a
+    // release that didn't happen" fix below.
+    assert.ok(
+      logs.some((l) => l.includes('Released lock held by "lock-test-owner"')),
+      `expected a release message when a lock actually was released, got: ${JSON.stringify(logs)}`,
+    );
   } finally {
     await rm(root, { recursive: true, force: true }).catch(() => {});
   }
@@ -139,13 +163,15 @@ test('lockPaths option refuses to run when another owner holds an overlapping lo
   try {
     await lockPaths({ root, owner: 'other-loop', paths: ['src/**'] });
 
-    await assert.rejects(
-      runInSandbox(root, 'node', ['-e', 'require("fs").writeFileSync("should-not-run.txt", "x");'], {
-        lockPaths: ['src/nested/**'],
-        lockOwner: 'sandbox-test-owner',
-      }),
-      /locked by owner "other-loop"/,
-    );
+    const logs = await captureLogs(async () => {
+      await assert.rejects(
+        runInSandbox(root, 'node', ['-e', 'require("fs").writeFileSync("should-not-run.txt", "x");'], {
+          lockPaths: ['src/nested/**'],
+          lockOwner: 'sandbox-test-owner',
+        }),
+        /locked by owner "other-loop"/,
+      );
+    });
 
     // Blocked before the worktree was ever created -- nothing to clean up.
     const worktreeList = execSync('git worktree list --porcelain', { cwd: root, encoding: 'utf8' });
@@ -154,6 +180,14 @@ test('lockPaths option refuses to run when another owner holds an overlapping lo
     const locks = await listLocks(root);
     assert.equal(locks.length, 1);
     assert.equal(locks[0].owner, 'other-loop');
+
+    // lockPaths() never acquired anything for "sandbox-test-owner" here (it
+    // threw before writing a lock file), so cleanup() must not claim it
+    // released a lock that was never held.
+    assert.ok(
+      !logs.some((l) => /Releasing lock|Released lock/.test(l)),
+      `must not print a lock-release message when no lock was ever acquired, got: ${JSON.stringify(logs)}`,
+    );
   } finally {
     await rm(root, { recursive: true, force: true }).catch(() => {});
   }
