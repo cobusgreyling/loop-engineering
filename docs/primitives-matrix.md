@@ -374,3 +374,54 @@ Graduate to L2 by adding PR creation to the Playbook — but always with a human
 > Paths on the [denylist](../docs/safety.md#path-denylist) (secrets, billing, auth) require
 > explicit human approval before any Devin session may touch them.
 
+## Appendix: Cline
+
+Cline is a VS Code extension that provides an autonomous coding agent inside the
+editor. Map the same loop primitives onto Cline's custom modes, rules files,
+MCP servers, and external schedulers.
+
+| Primitive | Cline mapping |
+|-----------|---------------|
+| Scheduling | No native cron-style scheduler. Use VS Code tasks, external schedulers (cron, systemd, GitHub Actions), or the Cline API headless mode to run sessions on a cadence. |
+| Skills / Rules path | Project rules: `.clinerules` (root) or `.clinerules/` directory for multiple files. Global rules: `cline-global-rules` setting. Load loop instructions as a custom mode or a rules file. |
+| State | Keep `STATE.md` at the repo root and pass it as an editable file for triage loops; each run should read then update only the relevant section. |
+| Maker/checker split | No native subagent or reviewer role. Workaround: run the maker in one Cline session, then open a second Cline session (or manually review the diff view) as the checker before accepting changes. |
+| Connectors | Configure MCP servers in `.cline/mcp.json` (project) or via Cline settings for GitHub, issue/PR discovery, or other external context. Keep credentials out of prompts and state files. |
+| Honest gaps | No first-class scheduler, no built-in maker/checker separation, no dedicated state-file convention — these are all manual conventions layered on top of the Cline extension, same as most editor-hosted agents. |
+
+Minimal transfer recipe:
+
+```bash
+mkdir -p .clinerules .cline
+cp templates/SKILL.md.loop-triage .clinerules/loop-triage.md
+cp starters/minimal-loop/STATE.md.example STATE.md
+```
+
+Week-one Daily Triage prompt (report-only, state updates only):
+
+```text
+Run loop-triage for this repository.
+
+Read STATE.md first.
+Update STATE.md with High Priority and Watch List only.
+Do not edit source code in week one.
+```
+
+Verifier pass for later L2 work — open a second Cline session:
+
+```text
+Act as loop-verifier.
+
+Review the current git diff against STATE.md goals.
+Report PASS/FAIL and do not edit files.
+```
+
+After copying: map scheduling to external schedulers or VS Code tasks until Cline
+has a first-class cron-equivalent. Use `.clinerules` for always-on repo guidance,
+a second Cline session (or human diff review) for maker/checker separation, and
+`.cline/mcp.json` for external tools.
+
+### Official Documentation
+
+https://docs.cline.bot/
+
