@@ -2,67 +2,66 @@
 
 This is a practical, copy-pasteable example of a PR babysitter loop using Windsurf's Cascade.
 
-Windsurf has no native `/loop` scheduler or built-in cron. Map the loop to a **Cascade Workflow** (`.windsurf/workflows/pr-babysitter.md`) and invoke it manually with `/pr-babysitter`; if you need unattended cadence, pair it with an external reminder or scheduler such as GitHub Actions cron, `launchd`, `cron`, or systemd that prompts a human to run the workflow.
+Windsurf has no native `/loop` scheduler (unlike Grok or Claude Code). Map the loop to a **Cascade Workflow** (`.windsurf/workflows/pr-babysitter.md`), invoked manually via `/pr-babysitter` in Cascade chat. For unattended cadence, pair with a GitHub Action or external scheduler — Windsurf workflows are invoke-based, not self-scheduling.
 
-## Workflow (week one — report only)
+## Workflow prompt (week one — report only)
 
 Create `.windsurf/workflows/pr-babysitter.md`:
 
 ```markdown
 # PR Babysitter
 
-**Description:** Check watched pull requests, update state, and report blockers. No auto-merge.
+**Description:** PR review triage — report only, no auto-merge.
 
-1. Read `pr-babysitter-state.md` and the `pr-review-triage` rule.
-2. List open PRs you care about and summarize CI, review, merge conflict, and stale-review status.
-3. Update `pr-babysitter-state.md` with current status, last action, and attempts.
-4. Do not push fixes, comment on PRs, or merge in week one — report only.
-5. Flag ambiguous or high-risk work for human review.
+1. Run the pr-review-triage skill on all open PRs.
+2. Update pr-babysitter-state.md with current CI status and review state.
+3. Do not merge or push fixes in week one — report only.
+4. Flag anything ambiguous or high-risk for human review in pr-babysitter-state.md.
+5. Use worktree + minimal-fix + loop-verifier only for allowlisted low-risk PRs.
+6. Escalate after 3 attempts. No auto-merge in week one.
 ```
 
-Invoke in Cascade with `/pr-babysitter` on your chosen cadence.
-
-For an unattended cadence, keep Windsurf as the reviewer/triage surface and use an external scheduler only to remind a human or open a human-gated prompt. Do not let the scheduler comment, push fixes, approve, label, close, or merge PRs.
+Invoke in Cascade with `/pr-babysitter`. For unattended cadence, use an external trigger (GitHub Actions cron, `launchd`/`cron`) that reminds you to run the workflow — Windsurf workflows are invoke-based, not self-scheduling.
 
 ## Progression
 
-- **Week one — report only.** Append to `pr-babysitter-state.md`. Read the state yourself before acting on any suggestion.
-- **Add minimal fixes.** Allow fixes only for low-risk, allowlisted PRs, and only in an isolated worktree.
-- **Add verifier split.** Use a separate checker/verifier before any PR comment or proposed fix is posted.
-- **Add connectors.** Wire GitHub MCP or CLI access read-only first; enable comments only after the report-only loop is trusted.
+- **Week one — report only.** Append to `pr-babysitter-state.md`. Read it yourself
+  before acting on any suggestion. Human gates all merges.
+- **Add minimal fixes.** Extend the workflow to propose fixes in an isolated
+  worktree for allowlisted low-risk PRs only.
+- **Add connectors.** Wire PR comments and status updates via MCP
+  (read-only discovery first).
+- **Add verifier split.** A separate verifier agent approves before any comment
+  or fix is posted. Max 3 attempts per PR.
 
 ## Requirements
 
-- `pr-babysitter-state.md` in the repo root, copied from `starters/pr-babysitter/pr-babysitter-state.md.example`
-- The `pr-review-triage` skill copied into `.windsurf/rules/pr-review-triage.md` from `starters/pr-babysitter/.grok/skills/pr-review-triage/SKILL.md` or another starter variant
-- A `.windsurf/workflows/pr-babysitter.md` workflow like the one above
-- Manual `/pr-babysitter` invoke for week one; external scheduler or reminder optional after that, with all PR actions still human-gated
+- `pr-babysitter-state.md` in the repo root (from `starters/pr-babysitter/`)
+- The `pr-review-triage` skill in `.windsurf/rules/pr-review-triage.md` (copy from `starters/pr-babysitter/`)
+- Optional always-on rules in `.windsurf/rules/`
+- Manual `/pr-babysitter` invoke for week one; external scheduler (GitHub Action or `cron`) optional for reminders
 
 ## Example pr-babysitter-state.md
 
 ```markdown
 # PR Babysitter State
-
 Last run: 2026-07-05 09:00 UTC
 
-## Watched PRs
+## Open PRs
 
-- #1234 (fix-login-redirect)
-  Status: CI green | changes requested | not ready
-  Attempts: 1/3
-  Last action: Reported blocking review comment; no code changes made.
-  Human decision: Waiting for maintainer guidance before proposing a fix.
-
-## Escalated (human required)
-
-- #1240 touches auth/session code — keep report-only.
+### #1234 — fix:correct login redirect
+- CI: green
+- Reviews: 1 approval, 1 blocking comment
+- Loop action: report only (week one). Needs human triage.
+- Attempts: 1 / 3
 ```
 
 ## Notes
 
-- Start with PRs you own or explicitly care about; avoid scanning the whole org on every run.
-- Keep week-one output short: ready, blocked, stale, or needs human decision.
-- Sign any future comments clearly, for example `🤖 Loop Engineering — PR Babysitter`.
-- See [patterns/pr-babysitter.md](../../patterns/pr-babysitter.md) and [starters/pr-babysitter](../../starters/pr-babysitter/) for the full pattern spec.
+- Combine with `.windsurf/rules/` for always-on constraints across all Cascade sessions
+- GitHub Actions can complement the workflow when your machine is off — Windsurf itself has no native cron
+- See [patterns/pr-babysitter.md](../../patterns/pr-babysitter.md) and
+  [starters/pr-babysitter](../../starters/pr-babysitter/) for the full pattern spec
+  and the `pr-babysitter-state.md` template
 
-See the [primitives matrix](../../docs/primitives-matrix.md) for how Windsurf maps to the same loop shape.
+See the [primitives matrix](../../docs/primitives-matrix.md#appendix-editor-transfer-recipes-opencode-cursor--windsurf) for how Windsurf's workflow model maps to the same six-part loop shape.
