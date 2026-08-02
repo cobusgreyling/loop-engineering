@@ -1,11 +1,12 @@
-<!-- 
-  NOTE: This template is a mirror of skills/budget-negotiator/SKILL.md. 
-  Any changes made here must be kept byte-identical to the source skill.
--->
 ---
 name: budget-negotiator
 description: An advanced skill for L3 autonomous loops. When the token budget nears exhaustion, the agent analyzes its ROI and autonomously drafts a negotiation request for a budget increase rather than silently failing.
 ---
+
+<!--
+  NOTE: This template is a mirror of skills/budget-negotiator/SKILL.md.
+  Any changes made here must be kept byte-identical to the source skill.
+-->
 
 # Budget Negotiator
 
