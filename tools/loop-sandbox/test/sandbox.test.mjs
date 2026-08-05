@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { mkdir, rm, writeFile, stat, readFile, readdir } from 'node:fs/promises';
 import { execSync, spawn } from 'node:child_process';
 import { createWorktree } from '@cobusgreyling/loop-worktree';
-import { lockPaths, listLocks } from '@cobusgreyling/loop-worktree/dist/lock.js';
+import { lockPaths, listLocks } from '@cobusgreyling/loop-worktree/lock';
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const sandboxDistUrl = pathToFileURL(path.join(testDir, '../dist/sandbox.js')).href;
