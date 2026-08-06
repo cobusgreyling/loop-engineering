@@ -84,7 +84,16 @@ function releaseLabels(labels) {
 function selectedFromDecision(decision, repository) {
   if (decision.state !== 'selected' || !decision.selected) throw new Error('Decision does not select a target.');
   if (decision.repository !== repository) throw new Error('Decision repository does not match --repository.');
-  return decision.selected;
+  const selected = decision.selected;
+  if (!['issue', 'pull-request'].includes(selected.type)) throw new Error('Selected target type is invalid.');
+  if (!Number.isInteger(selected.number) || selected.number <= 0) throw new Error('Selected target number is invalid.');
+  if (!Number.isInteger(selected.attempts) || selected.attempts < 0 || selected.attempts >= 3) {
+    throw new Error('Selected target attempt is invalid or exhausted.');
+  }
+  if (selected.type === 'pull-request' && !/^[0-9a-f]{40}$/.test(selected.headSha ?? '')) {
+    throw new Error('Selected pull request requires a full lowercase HEAD SHA.');
+  }
+  return selected;
 }
 
 function openLocks(repository) {

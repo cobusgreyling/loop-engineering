@@ -313,9 +313,13 @@ test('repair lease validates the planner repository and selected state', () => {
   const decision = {
     state: 'selected',
     repository: 'dataelement/coAligne',
-    selected: { type: 'issue', number: 1 },
+    selected: { type: 'issue', number: 1, attempts: 0 },
   };
   assert.equal(selectedFromDecision(decision, 'dataelement/coAligne').number, 1);
   assert.throws(() => selectedFromDecision(decision, 'other/repo'), /does not match/);
   assert.throws(() => selectedFromDecision({ state: 'idle' }, 'dataelement/coAligne'), /does not select/);
+  assert.throws(
+    () => selectedFromDecision({ ...decision, selected: { ...decision.selected, attempts: 3 } }, 'dataelement/coAligne'),
+    /invalid or exhausted/,
+  );
 });
