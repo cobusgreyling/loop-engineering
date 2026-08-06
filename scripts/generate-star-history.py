@@ -2,9 +2,10 @@
 """Generate a static star-history timeline SVG from GitHub stargazers data.
 
 Used while api.star-history.com live embeds are unavailable (GitHub restricted
-stargazer API access for third-party services, Jul 2026). CI requires the
+stargazer API access for third-party services, Jul 2026). CI uses the
 ``STAR_HISTORY_TOKEN`` repo secret (fine-grained PAT with read access to this
-repo). Locally, use ``gh auth`` / ``GH_TOKEN``.
+repo). If the secret is unset, ``update-star-history.yml`` skips cleanly so
+forks without a PAT do not fail daily. Locally, use ``gh auth`` / ``GH_TOKEN``.
 
 Interactive browser UI (token in localStorage): docs/star-history.html
 """
