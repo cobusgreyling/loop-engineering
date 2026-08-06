@@ -1,35 +1,57 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import { realpathSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 function usage() {
-  console.log(`collect-repair-evidence — trusted GitHub intake for coAligne
+  console.log(`collect-repair-evidence — trusted GitHub issue/PR intake
 
 Usage:
-  node collect-repair-evidence.mjs --repository owner/repo --output <file> [options]
+  node scripts/collect-repair-evidence.mjs --repository owner/repo --output <file> [options]
 
 Options:
-  --owned-prefix <prefix>  Branch prefix Codex may push (default: codex/)
-  --required-check <name>  Required check to classify
+  --bug-label <label>      Bug queue label (default: bug)
+  --pause-label <label>    Repository kill-switch label (default: loop-pause-all)
+  --lock-label <label>     Repository lease label (default: loop:repairing)
+  --owned-prefix <prefix>  Branch prefix the loop may push (default: codex/)
+  --required-check <name>  Required check used for repair classification
 `);
 }
 
+function requiredValue(argv, index, flag) {
+  const value = argv[index + 1];
+  if (!value || value.startsWith('--')) throw new Error(`${flag} requires a value.`);
+  return value;
+}
+
 function parseArgs(argv) {
-  const result = { ownedPrefix: 'codex/', requiredCheck: 'continuous-integration/drone/pr' };
-  for (let index = 0; index < argv.length; index++) {
+  const result = {
+    bugLabel: 'bug',
+    pauseLabel: 'loop-pause-all',
+    lockLabel: 'loop:repairing',
+    ownedPrefix: 'codex/',
+    requiredCheck: undefined,
+  };
+  for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
-    if (value === '--repository') result.repository = argv[++index];
-    else if (value === '--output') result.output = argv[++index];
-    else if (value === '--owned-prefix') result.ownedPrefix = argv[++index];
-    else if (value === '--required-check') result.requiredCheck = argv[++index];
+    if (value === '--repository') result.repository = requiredValue(argv, index++, value);
+    else if (value === '--output') result.output = requiredValue(argv, index++, value);
+    else if (value === '--bug-label') result.bugLabel = requiredValue(argv, index++, value);
+    else if (value === '--pause-label') result.pauseLabel = requiredValue(argv, index++, value);
+    else if (value === '--lock-label') result.lockLabel = requiredValue(argv, index++, value);
+    else if (value === '--owned-prefix') result.ownedPrefix = requiredValue(argv, index++, value);
+    else if (value === '--required-check') result.requiredCheck = requiredValue(argv, index++, value);
     else if (value === '--help' || value === '-h') result.help = true;
     else throw new Error(`Unknown argument: ${value}`);
   }
-  if (!result.help && (!result.repository || !result.output)) {
-    throw new Error('--repository and --output are required.');
+  if (!result.help && (!result.repository || !result.output || !result.requiredCheck)) {
+    throw new Error('--repository, --output, and --required-check are required.');
+  }
+  if (result.repository && !/^[^/\s]+\/[^/\s]+$/.test(result.repository)) {
+    throw new Error('--repository must be owner/repo.');
   }
   return result;
 }
@@ -154,12 +176,12 @@ async function main() {
   const issues = issueRecords.filter((item) => !item.pull_request);
   const pulls = apiPages(`repos/${args.repository}/pulls?state=open&per_page=100`);
   const pauseIssues = issues
-    .filter((issue) => labelsOf(issue).includes('loop-pause-all'))
+    .filter((issue) => labelsOf(issue).includes(args.pauseLabel))
     .map((issue) => issue.number);
-  const bugIssues = issues.filter((issue) => labelsOf(issue).includes('bug'));
+  const bugIssues = issues.filter((issue) => labelsOf(issue).includes(args.bugLabel));
   const targetIssues = issues.filter((issue) => {
     const labels = labelsOf(issue);
-    return labels.includes('bug') || labels.includes('loop:repairing');
+    return labels.includes(args.bugLabel) || labels.includes(args.lockLabel);
   });
   const targets = [
     ...targetIssues.map((issue) => collectIssue(args.repository, issue)),
@@ -177,7 +199,11 @@ async function main() {
   console.log(`wrote ${args.output}: ${bugIssues.length} bug issue(s), ${pulls.length} PR(s)`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+function isMain(metaUrl, entrypoint) {
+  return Boolean(entrypoint) && realpathSync(fileURLToPath(metaUrl)) === realpathSync(entrypoint);
+}
+
+if (isMain(import.meta.url, process.argv[1])) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
@@ -189,5 +215,7 @@ export {
   latestReviewsByAuthor,
   linkedPrFromTimeline,
   normalizeStatus,
+  isMain,
+  parseArgs,
   reproductionFromLabels,
 };

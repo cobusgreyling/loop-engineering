@@ -7,18 +7,44 @@ npx @cobusgreyling/loop-init . --pattern issue-pr-repair --tool codex
 ```
 
 The starter installs the repair policy, promotion contract, state spine,
-budget/circuit-breaker files, and the `issue-pr-repair` workflow skill. Start in
-report-only mode while adapting the GitHub evidence collector and test
-deployment receipt publisher to the repository.
+budget/circuit-breaker files, the `issue-pr-repair` workflow skill, and
+dry-run-first GitHub intake/lease adapters. Start in report-only mode while
+adapting the test deployment receipt publisher to the repository.
 
-Verify the installed planner before connecting live GitHub data:
+## First dry run
+
+Authenticate `gh`, install the default labels, and collect authoritative state:
+
+```bash
+gh auth status
+node scripts/install-github-labels.mjs --repository owner/repo
+# Review the JSON, then repeat with --execute.
+node scripts/collect-repair-evidence.mjs \
+  --repository owner/repo \
+  --required-check "your-required-check" \
+  --output .loop/repair-evidence.json
+```
+
+Run the deterministic planner against that fresh evidence:
 
 ```bash
 npx @cobusgreyling/loop-gate repair-plan \
   --contract repair.yaml \
-  --evidence repair-evidence.example.json \
-  --json
+  --evidence .loop/repair-evidence.json \
+  --json > .loop/repair-decision.json
 ```
+
+Inspect a lease without mutating GitHub:
+
+```bash
+node scripts/repair-lease.mjs \
+  --repository owner/repo \
+  --decision .loop/repair-decision.json \
+  --risk low
+```
+
+Only add `--execute` after the decision and proposed labels are correct. Always
+run the matching `--release --execute` command from finally-style cleanup.
 
 Recommended rollout:
 
@@ -29,4 +55,4 @@ Recommended rollout:
 5. After at least three successful trials, consider low-risk auto-merge.
 
 See the [coAligne implementation](../../examples/coaligne/README.md) for a
-working GitHub + Drone adapter with synthetic data and API/browser E2E.
+working Drone promotion adapter with synthetic data and API/browser E2E.

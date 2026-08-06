@@ -1,10 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, access, readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, access, chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import {
+  normalizeStatus as normalizeRepairStatus,
+  parseArgs as parseCollectorArgs,
+} from '../starters/issue-pr-repair/scripts/collect-repair-evidence.mjs';
+import { labelDefinitions } from '../starters/issue-pr-repair/scripts/install-github-labels.mjs';
+import {
+  claimLabels as genericClaimLabels,
+  parseArgs as parseLeaseArgs,
+} from '../starters/issue-pr-repair/scripts/repair-lease.mjs';
 
 const exec = promisify(execFile);
 const CLI = path.resolve('dist/cli.js');
@@ -606,10 +615,103 @@ test('loop-init issue-pr-repair scaffolds executable policy contracts', async ()
     await expectPathExists(dir, 'repair.yaml');
     await expectPathExists(dir, 'promotion.yaml');
     await expectPathExists(dir, 'repair-evidence.example.json');
+    for (const script of [
+      'collect-repair-evidence.mjs',
+      'install-github-labels.mjs',
+      'repair-lease.mjs',
+    ]) {
+      const scriptPath = path.join(dir, 'scripts', script);
+      await access(scriptPath);
+      assert.notEqual((await stat(scriptPath)).mode & 0o111, 0, `${script} should remain executable`);
+      const { stdout } = await exec('node', [scriptPath, '--help']);
+      assert.match(stdout, /Dry-run|trusted GitHub/i);
+    }
     const repair = await readFile(path.join(dir, 'repair.yaml'), 'utf8');
     const promotion = await readFile(path.join(dir, 'promotion.yaml'), 'utf8');
     assert.match(repair, /maxAttempts: 3/);
     assert.match(promotion, /requireDatasetMatch: true/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('issue-pr-repair GitHub adapters validate configuration and custom policy labels', () => {
+  assert.throws(
+    () => parseCollectorArgs(['--repository', 'owner/repo', '--output', 'evidence.json']),
+    /--required-check/,
+  );
+  assert.equal(normalizeRepairStatus('completed', 'success'), 'success');
+  assert.equal(normalizeRepairStatus('queued'), 'pending');
+  assert.throws(
+    () => parseLeaseArgs(['--repository', 'owner/repo', '--decision', 'decision.json', '--risk', 'low', '--max-attempts', '0']),
+    /positive integer/,
+  );
+  const labels = genericClaimLabels(['defect', 'tries:1', 'impact:low'], 'medium', 1, {
+    lockLabel: 'repair:locked',
+    watchLabel: 'repair:managed',
+    attemptPrefix: 'tries:',
+    riskPrefix: 'impact:',
+    maxAttempts: 4,
+  });
+  assert.deepEqual(
+    labels,
+    ['defect', 'repair:locked', 'repair:managed', 'tries:2', 'impact:medium'],
+  );
+  const names = labelDefinitions().map(([name]) => name);
+  assert.equal(new Set(names).size, names.length);
+  assert.ok(names.includes('loop-pause-all'));
+  assert.ok(names.includes('loop:attempts:3'));
+  assert.ok(names.includes('area:deployment'));
+});
+
+test('fresh issue-pr-repair scaffold runs trusted intake, planning, and lease dry-run', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-repair-live-'));
+  const mockBin = path.join(dir, 'mock-bin');
+  const mockGh = path.join(mockBin, 'gh');
+  const evidence = path.join(dir, '.loop', 'evidence.json');
+  const decision = path.join(dir, '.loop', 'decision.json');
+  try {
+    await exec('node', [CLI, dir, '--pattern', 'issue-pr-repair', '--tool', 'codex']);
+    await mkdir(mockBin, { recursive: true });
+    await writeFile(mockGh, `#!/bin/sh
+case "$2" in
+  *"/issues?state=open"*) printf '%s' '[[{"number":42,"title":"Reproduced defect","updated_at":"2026-08-06T00:00:00Z","labels":[{"name":"bug"},{"name":"loop:reproduced"}]}]]' ;;
+  *"/pulls?state=open"*) printf '%s' '[[]]' ;;
+  *"/timeline"*) printf '%s' '[[]]' ;;
+  *"/issues/42") printf '%s' '{"labels":[{"name":"bug"},{"name":"loop:reproduced"}]}' ;;
+  *) printf '%s\n' "unexpected gh endpoint: $2" >&2; exit 2 ;;
+esac
+`);
+    await chmod(mockGh, 0o755);
+    const env = { ...process.env, PATH: `${mockBin}:${process.env.PATH}` };
+    await exec('node', [
+      path.join(dir, 'scripts', 'collect-repair-evidence.mjs'),
+      '--repository', 'owner/repo',
+      '--required-check', 'required-ci',
+      '--output', evidence,
+    ], { env });
+    const planner = path.resolve('../loop-gate/dist/cli.js');
+    const { stdout: decisionJson } = await exec('node', [
+      planner,
+      'repair-plan',
+      '--contract', path.join(dir, 'repair.yaml'),
+      '--evidence', evidence,
+      '--json',
+    ]);
+    await writeFile(decision, decisionJson);
+    const planned = JSON.parse(decisionJson);
+    assert.equal(planned.state, 'selected');
+    assert.equal(planned.selected.number, 42);
+    const { stdout: leaseJson } = await exec('node', [
+      path.join(dir, 'scripts', 'repair-lease.mjs'),
+      '--repository', 'owner/repo',
+      '--decision', decision,
+      '--risk', 'low',
+    ], { env });
+    const lease = JSON.parse(leaseJson);
+    assert.equal(lease.executed, false);
+    assert.ok(lease.labels.includes('loop:repairing'));
+    assert.ok(lease.labels.includes('loop:attempts:1'));
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

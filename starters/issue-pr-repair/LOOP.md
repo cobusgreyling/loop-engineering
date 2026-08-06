@@ -7,8 +7,12 @@
 ## Queue and ownership
 
 - Issues and actionable PR feedback are the primary queue; CI is evidence.
+- `scripts/collect-repair-evidence.mjs` refreshes trusted GitHub state; webhook
+  payloads are never used as evidence.
 - `loop gate repair-plan --contract repair.yaml --evidence <snapshot>` selects
   zero or one target.
+- `scripts/repair-lease.mjs` is dry-run by default and revalidates the selected
+  PR SHA, attempt, and global lock before an executed claim.
 - `loop-pause-all` stops every run; `loop:repairing` is a repository-wide lease.
 - Maximum three attempts. Use one isolated worktree per code-changing attempt.
 
@@ -26,4 +30,5 @@
 - High/critical risk or any path outside the auto-merge allowlist.
 
 Customize `repair.yaml`, `promotion.yaml`, required checks, GitHub labels, and
-the repository-specific evidence/deployment adapters before enabling writes.
+the repository-specific deployment adapter before enabling writes. If repair
+label names change, pass the corresponding lease-script flags.

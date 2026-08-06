@@ -23,20 +23,22 @@ planner decision is available.
 
 ## Process
 
-1. Collect authoritative open issue/PR state. Treat webhook payloads only as
-   wakeups.
+1. Run `scripts/collect-repair-evidence.mjs` to collect authoritative open
+   issue/PR state. Treat webhook payloads only as wakeups.
 2. Run loop gate repair-plan with repair.yaml and the evidence JSON.
 3. For idle, exit quietly. For paused, locked, or human-required, report the
    decision and do not mutate anything.
-4. Claim only the selected target. Re-fetch exact PR SHA, global lock, attempt
-   label, and risk. Stop if any changed. Increment once; cap at three.
+4. Dry-run `scripts/repair-lease.mjs`, then claim only the selected target with
+   `--execute`. It re-fetches exact PR SHA, global lock, attempt label, and
+   risk. Stop if any changed. Increment once; cap at three.
 5. For diagnosis, reproduce without editing and classify the result.
 6. For a code action, create a fresh isolated worktree, reproduce, make the
    smallest relevant change, and add a regression test.
 7. Run narrow and affected-package checks. Use a fresh verifier context to
    reject unrelated changes, disabled tests, weak assertions, or sensitive
    paths.
-8. Open/update a draft PR and release the lease even on failure.
+8. Open/update a draft PR and release the lease even on failure with the
+   matching `repair-lease.mjs --release --execute` command.
 9. Promotion must bind approval, checks, test deployment, versioned safe data,
    relevant E2E, and acceptance to the current full HEAD SHA. Never merge
    directly.
