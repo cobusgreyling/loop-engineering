@@ -57,6 +57,7 @@ jobs:
             --output .loop/evidence \
             --receipt-actor "${{ vars.LOOP_RECEIPT_ACTOR }}" \
             --ci-actor "${{ vars.LOOP_CI_ACTOR }}" \
+            --ci-target-prefix "${{ vars.DRONE_SERVER }}" \
             --acceptance-actors "${{ vars.LOOP_ACCEPTANCE_ACTORS }}" \
           )
           if [[ "$LOOP_EVENT" == "repository_dispatch" && "$LOOP_DISPATCH_PR" =~ ^[1-9][0-9]*$ ]]; then

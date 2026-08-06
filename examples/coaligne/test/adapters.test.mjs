@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import {
   collectExecutionEvidence,
   collectManualAcceptance,
+  isTrustedCiCheck,
+  matchesUrlPrefix,
   normalizeStatus,
 } from '../collect-promotion-evidence.mjs';
 import { selectBuild } from '../trigger-drone-promotion.mjs';
@@ -87,6 +89,24 @@ test('collector ignores machine receipts from untrusted issuers', () => {
     'loop-runner',
   );
   assert.equal(evidence.testData, undefined);
+});
+
+test('legacy Drone statuses can be anchored to an exact trusted URL prefix', () => {
+  const check = {
+    name: 'continuous-integration/drone/pr',
+    issuer: undefined,
+    url: 'http://drone.example.test/dataelement/coAligne/422',
+  };
+  assert.equal(matchesUrlPrefix(check.url, 'http://drone.example.test'), true);
+  assert.equal(isTrustedCiCheck(check, undefined, 'http://drone.example.test'), true);
+  assert.equal(
+    isTrustedCiCheck(
+      { ...check, url: 'http://drone.example.test.attacker.invalid/build/1' },
+      undefined,
+      'http://drone.example.test',
+    ),
+    false,
+  );
 });
 
 test('manual acceptance requires the exact SHA and an allowed comment author', () => {

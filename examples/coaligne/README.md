@@ -85,6 +85,7 @@ node examples/coaligne/collect-promotion-evidence.mjs \
   --output .loop/evidence \
   --receipt-actor coaligne-loop-bot \
   --ci-actor drone-ci \
+  --ci-target-prefix https://drone.example.test \
   --acceptance-actors maintainer-one,maintainer-two \
   --all-open
 ```
@@ -126,7 +127,8 @@ To activate it, configure:
    deployments, restricted to the protected promotion pipeline;
 4. controller variables `LOOP_RECEIPT_ACTOR`, `LOOP_CI_ACTOR`, and
    `LOOP_ACCEPTANCE_ACTORS` matching the GitHub identities permitted to issue
-   those records;
+   those records; legacy Drone statuses without a GitHub creator must instead
+   match the configured `DRONE_SERVER` URL origin and path prefix;
 5. a controller-side Drone promotion trigger after intake/review/check gates pass.
 
 Never expose promotion secrets to ordinary pull-request pipelines. The contract

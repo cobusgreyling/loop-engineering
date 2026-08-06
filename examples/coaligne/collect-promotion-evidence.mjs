@@ -18,6 +18,7 @@ Options:
   --dataset-version <version> Expected test dataset (default: coaligne-acceptance-v1)
   --receipt-actor <login>     Trusted deployment/data/E2E status issuer
   --ci-actor <login>          Trusted Drone status issuer
+  --ci-target-prefix <url>    Trusted Drone status URL prefix (legacy statuses)
   --acceptance-actors <list>  Comma-separated manual acceptance issuers
 `);
 }
@@ -37,6 +38,7 @@ function parseArgs(argv) {
     else if (value === '--dataset-version') result.datasetVersion = argv[++i];
     else if (value === '--receipt-actor') result.receiptActor = argv[++i];
     else if (value === '--ci-actor') result.ciActor = argv[++i];
+    else if (value === '--ci-target-prefix') result.ciTargetPrefix = argv[++i];
     else if (value === '--acceptance-actors') {
       result.acceptanceActors = argv[++i].split(',').map((actor) => actor.trim()).filter(Boolean);
     }
@@ -167,6 +169,29 @@ function collectChecks(repository, sha) {
   return [...checks.values()];
 }
 
+function matchesUrlPrefix(value, prefix) {
+  if (!value || !prefix) return false;
+  try {
+    const url = new URL(value);
+    const trusted = new URL(prefix);
+    const basePath = trusted.pathname.replace(/\/+$/, '');
+    return (
+      url.protocol === trusted.protocol &&
+      url.host === trusted.host &&
+      (url.pathname === basePath || url.pathname.startsWith(`${basePath}/`))
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isTrustedCiCheck(check, ciActor, ciTargetPrefix) {
+  return Boolean(
+    (ciActor && check.issuer === ciActor) ||
+    (ciTargetPrefix && matchesUrlPrefix(check.url, ciTargetPrefix)),
+  );
+}
+
 function collectDeployment(repository, sha, environment, receiptActor) {
   if (!receiptActor) return undefined;
   const deployments = ghJson([
@@ -253,7 +278,7 @@ async function collectOne(repository, args, number) {
   const checks = collectedChecks.filter(
     (check) =>
       check.name !== 'continuous-integration/drone/pr' ||
-      (args.ciActor && check.issuer === args.ciActor),
+      isTrustedCiCheck(check, args.ciActor, args.ciTargetPrefix),
   );
   const execution = collectExecutionEvidence(
     checks,
@@ -302,7 +327,9 @@ async function main() {
   }
   await mkdir(args.output, { recursive: true });
   if (!args.receiptActor) console.warn('Machine receipts disabled: --receipt-actor is not configured.');
-  if (!args.ciActor) console.warn('Drone check disabled: --ci-actor is not configured.');
+  if (!args.ciActor && !args.ciTargetPrefix) {
+    console.warn('Drone check disabled: configure --ci-actor or --ci-target-prefix.');
+  }
   const pulls = args.pr
     ? [{ number: args.pr, labels: [] }]
     : apiPages(`repos/${args.repository}/pulls?state=open&per_page=100`);
@@ -326,4 +353,10 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   });
 }
 
-export { collectExecutionEvidence, collectManualAcceptance, normalizeStatus };
+export {
+  collectExecutionEvidence,
+  collectManualAcceptance,
+  isTrustedCiCheck,
+  matchesUrlPrefix,
+  normalizeStatus,
+};
