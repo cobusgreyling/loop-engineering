@@ -8,6 +8,7 @@ import {
   isTrustedCiCheck,
   matchesUrlPrefix,
   normalizeStatus,
+  selectPulls,
 } from '../collect-promotion-evidence.mjs';
 import { selectBuild } from '../trigger-drone-promotion.mjs';
 import {
@@ -107,6 +108,12 @@ test('legacy Drone statuses can be anchored to an exact trusted URL prefix', () 
     ),
     false,
   );
+});
+
+test('an explicit webhook PR bypasses the scheduled automerge-label filter', () => {
+  const pulls = [{ number: 299, labels: [] }];
+  assert.deepEqual(selectPulls(pulls, { pr: 299, allOpen: false }), pulls);
+  assert.deepEqual(selectPulls(pulls, { allOpen: false }), []);
 });
 
 test('manual acceptance requires the exact SHA and an allowed comment author', () => {

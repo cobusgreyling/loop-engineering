@@ -109,6 +109,13 @@ function attemptsFromLabels(labels) {
   return 0;
 }
 
+function selectPulls(pulls, args) {
+  if (args.pr) return pulls;
+  return pulls.filter(
+    (pull) => args.allOpen || (pull.labels ?? []).some((label) => label.name === 'loop:automerge'),
+  );
+}
+
 function repositoryParts(repository) {
   const [owner, repo, extra] = repository.split('/');
   if (!owner || !repo || extra) throw new Error(`Invalid repository: ${repository}. Use owner/repo.`);
@@ -333,9 +340,7 @@ async function main() {
   const pulls = args.pr
     ? [{ number: args.pr, labels: [] }]
     : apiPages(`repos/${args.repository}/pulls?state=open&per_page=100`);
-  const selected = pulls.filter(
-    (pull) => args.allOpen || (pull.labels ?? []).some((label) => label.name === 'loop:automerge'),
-  );
+  const selected = selectPulls(pulls, args);
 
   for (const pull of selected) {
     const evidence = await collectOne(args.repository, args, pull.number);
@@ -359,4 +364,5 @@ export {
   isTrustedCiCheck,
   matchesUrlPrefix,
   normalizeStatus,
+  selectPulls,
 };
