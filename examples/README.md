@@ -2,7 +2,8 @@
 
 ## Reference implementations
 
-- [`coaligne/`](./coaligne/) — evidence-aware PR promotion: six-hour
+- [`coaligne/`](./coaligne/) — issue-first repair intake plus evidence-aware PR
+  promotion: deterministic one-target planning and leases, six-hour
   reconciliation, exact-SHA deployment, versioned safe data, risk-based E2E,
   human acceptance, and guarded auto-merge.
 

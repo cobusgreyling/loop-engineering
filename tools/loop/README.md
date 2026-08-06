@@ -20,7 +20,7 @@ This package does **not** replace `loop-init`, `loop-audit`, or the other tools.
 | `loop badge` | `loop-audit --badge` | README badge |
 | `loop context` | `@cobusgreyling/loop-context` | Circuit breaker / memory |
 | `loop worktree` | `@cobusgreyling/loop-worktree` | Isolated fix attempts |
-| `loop gate` | `@cobusgreyling/loop-gate` | Path policy + evidence-aware PR promotion |
+| `loop gate` | `@cobusgreyling/loop-gate` | Issue/PR repair intake + path policy + evidence-aware promotion |
 | `loop mcp` | `@cobusgreyling/loop-mcp-server` | MCP server |
 | `loop sandbox` | `@cobusgreyling/loop-sandbox` | Sandbox helper (if present) |
 
