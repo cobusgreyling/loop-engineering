@@ -68,8 +68,12 @@ See [docs/multi-loop.md](docs/multi-loop.md). Priority: CI Sweeper → PR Babysi
 ## How to run locally
 
 ```bash
+# Front door (after build or npm publish)
+node tools/loop/dist/cli.js doctor .
+node tools/loop/dist/cli.js status .
 node tools/loop-audit/dist/cli.js . --suggest
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok  # after npm publish
+npx @cobusgreyling/loop init . --pattern daily-triage --tool grok  # after npm publish
+# same as: npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
 bash scripts/before-after-demo.sh
 ```
 
@@ -79,7 +83,7 @@ bash scripts/before-after-demo.sh
 |------|-------|------------|-------|
 | Daily Triage | L1 | ✅ `daily-triage.yml` | Weekdays; updates `STATE.md` + `loop-run-log.md` |
 | Changelog Drafter | L1 | ✅ `changelog-drafter.yml` | Mondays; opens release-prep issue |
-| Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main`; needs `STAR_HISTORY_TOKEN` secret (PAT) |
+| Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main`; needs `STAR_HISTORY_TOKEN` secret (PAT). Skips (success) if secret unset — safe for forks |
 | Validate + Audit | L1 | ✅ `validate-patterns.yml`, `audit.yml` | On PR + push; readiness score on PRs |
 | Dependabot | L1 | ✅ `.github/dependabot.yml` | Weekly npm (`loop-audit`, `loop-init`) + GitHub Actions |
 | PR Babysitter | L2 | ⏸ Manual | Maintainer `/loop` or `starters/pr-babysitter` — no Action yet |

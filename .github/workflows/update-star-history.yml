@@ -17,27 +17,36 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Generate static star-history SVGs
+        id: generate
         env:
           GH_TOKEN: ${{ secrets.STAR_HISTORY_TOKEN }}
+          # Chart the repo this workflow runs on (upstream or fork).
+          STAR_HISTORY_REPO: ${{ github.repository }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "::error::STAR_HISTORY_TOKEN secret is required. GITHUB_TOKEN cannot list stargazers since GitHub's Jul 2026 API restriction — add a fine-grained PAT with read access to this repository (see scripts/generate-star-history.py)."
-            exit 1
+            # GITHUB_TOKEN cannot list stargazers (GitHub Jul 2026 restriction).
+            # Forks and clones without STAR_HISTORY_TOKEN should not fail daily CI.
+            echo "::notice::STAR_HISTORY_TOKEN not set — skipping star-history update. To enable: add a fine-grained PAT with read access to this repository as the STAR_HISTORY_TOKEN secret (see scripts/generate-star-history.py)."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
           python3 scripts/generate-star-history.py
 
       - name: Run validate gates (for PR status)
         id: validate_gates
+        if: steps.generate.outputs.skipped != 'true'
         continue-on-error: true
         run: bash scripts/ci-validate-gates.sh
 
       - name: Run audit gates (for PR status)
         id: audit_gates
+        if: steps.generate.outputs.skipped != 'true'
         continue-on-error: true
         run: bash scripts/ci-audit-gates.sh
 
       - name: Fail the run if either gate failed
-        if: steps.validate_gates.outcome == 'failure' || steps.audit_gates.outcome == 'failure'
+        if: steps.generate.outputs.skipped != 'true' && (steps.validate_gates.outcome == 'failure' || steps.audit_gates.outcome == 'failure')
         run: |
           echo "validate gates: ${{ steps.validate_gates.outcome }}"
           echo "audit gates:    ${{ steps.audit_gates.outcome }}"
@@ -46,6 +55,7 @@ jobs:
 
       - name: Open PR for chart SVGs if changed
         id: pr
+        if: steps.generate.outputs.skipped != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -89,7 +99,7 @@ jobs:
           gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
 
       - name: Post required commit statuses for branch protection
-        if: steps.pr.outputs.opened == 'true'
+        if: steps.generate.outputs.skipped != 'true' && steps.pr.outputs.opened == 'true'
         uses: actions/github-script@v9
         with:
           script: |
