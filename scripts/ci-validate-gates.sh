@@ -102,4 +102,8 @@ cd ../mcp-server
 npm ci
 npm test
 
+echo "Testing coAligne promotion adapters…"
+cd ../..
+node --test examples/coaligne/test/*.test.mjs
+
 echo "validate gates passed ✓"

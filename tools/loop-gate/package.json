@@ -1,11 +1,12 @@
 {
   "name": "@cobusgreyling/loop-gate",
   "version": "1.0.0",
-  "description": "Mechanical enforcement of LOOP.md/docs/safety.md's path denylist and auto-merge allowlist — evaluate a proposed change against static policy and block or allow it.",
+  "description": "Mechanical path policy and evidence-aware PR promotion gates for safe autonomous loops.",
   "type": "module",
   "main": "dist/gate.js",
   "exports": {
-    ".": "./dist/gate.js"
+    ".": "./dist/gate.js",
+    "./promotion": "./dist/promotion.js"
   },
   "bin": {
     "loop-gate": "dist/cli.js"

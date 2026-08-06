@@ -1,6 +1,11 @@
 # loop-gate
 
-Mechanical enforcement of static safety policy — the code behind `docs/safety.md`'s Path Denylist and Auto-Merge Policy, and `LOOP.md`'s *"No auto-merge on main except trivial dependency patches"* / *"Denylist... without human review"* rules. Nothing evaluated a proposed change against that prose before; `loop-gate` does.
+Mechanical enforcement for both static change policy and evidence-aware PR
+promotion. It answers two different questions:
+
+1. `check`: may this set of paths be committed or auto-merged?
+2. `promote`: did the **current PR HEAD SHA** actually pass review, checks,
+   deployment, approved-data seeding, E2E, and acceptance?
 
 Deliberately has **no knowledge of run history**. Stagnation, repeated failures, and token/daily budgets already belong to [`loop-context`](../loop-context)'s circuit breaker — `loop-gate` only looks at *what* is being proposed (which paths, what action type), not *how the run has behaved so far*. Chain the two:
 
@@ -28,6 +33,7 @@ npm test
 
 ```bash
 loop-gate check --action <commit|merge|auto-merge> --paths <f1,f2,...> [--gate-file gate.yaml] [--json]
+loop-gate promote --contract promotion.yaml --evidence pr-42.json [--gate-file gate.yaml] [--json]
 ```
 
 | Flag | Default | Meaning |
@@ -63,9 +69,47 @@ Checked in order (first match wins, same "most specific trigger first" conventio
 
 Glob matching is via [`minimatch`](https://www.npmjs.com/package/minimatch) (the same semantics `.gitignore`-style globs use — `**` matches across path segments).
 
+## Evidence-aware promotion
+
+Copy [`templates/promotion.yaml.template`](../../templates/promotion.yaml.template)
+to the target repository and adapt it. The controller supplies a trusted JSON
+snapshot containing PR metadata and receipts from CI, deployment, test-data,
+E2E, and human acceptance systems:
+
+```bash
+loop-gate promote \
+  --contract promotion.yaml \
+  --gate-file gate.yaml \
+  --evidence .loop/evidence/pr-42.json \
+  --json
+```
+
+Exit `0` means every gate is satisfied. Exit `2` means hold/escalate. The JSON
+decision includes a stage and all unmet gates, so a reconciler can decide
+whether to wait, dispatch a fix, request human action, or merge.
+
+Core invariants:
+
+- checks, approval, deployment, seeded data, E2E, and acceptance are tied to
+  the current PR HEAD SHA;
+- a new commit invalidates older evidence automatically;
+- E2E suites may be activated by changed-path rules;
+- production data can be forbidden while allowing versioned synthetic or
+  sanitized datasets;
+- static denylist/allowlist policy is evaluated in the same decision;
+- the final merge should use the provider's compare-and-swap option, such as
+  `gh pr merge --match-head-commit <sha>`.
+
+See the executable [coAligne reference](../../examples/coaligne/README.md).
+
 ## What this does not do
 
-- Does not read a run ledger, and never will — that keeps it decoupled from `loop-context` at the source level, the same way `loop-worktree` and `loop-context` stay independent while still being paired by convention in a control script.
+- Does not read a run ledger — retry and budget behavior remains in
+  `loop-context`. The evidence document carries only the current attempt count
+  needed by the promotion contract.
+- Does not trust or collect provider evidence by itself. A GitHub/Drone/etc.
+  adapter must build the evidence document from trusted systems. Never accept
+  evidence authored by the PR being evaluated.
 - Does not produce its own escalation summary format — fold its JSON decision into whatever your control script already assembles from `loop-context --inject` when escalating to a human.
 - Does not enforce anything by itself — like `loop-worktree`'s locks, this is advisory: a control script that skips calling `loop-gate` is not physically blocked. The mechanism is only as good as the scripts that call it.
 

@@ -1,5 +1,11 @@
 # Examples
 
+## Reference implementations
+
+- [`coaligne/`](./coaligne/) — evidence-aware PR promotion: six-hour
+  reconciliation, exact-SHA deployment, versioned safe data, risk-based E2E,
+  human acceptance, and guarded auto-merge.
+
 Same patterns, different tools. Skills and state schemas are shared; only scheduling and invocation differ.
 
 | Tool | Directory |

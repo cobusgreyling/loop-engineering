@@ -34,6 +34,9 @@ Usage:
   loop wizard [--yes]           Guided scaffold + doctor
   loop context|worktree|gate|mcp|sandbox [args…]
 
+Evidence-aware PR promotion:
+  loop gate promote --contract promotion.yaml --evidence pr-42.json --json
+
 Week-one (recommended):
   npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
   npx @cobusgreyling/loop doctor .

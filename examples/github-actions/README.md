@@ -40,6 +40,11 @@ The state file schema and skills are tool-agnostic — only the invocation step 
 | [post-merge-cleanup.yml](./post-merge-cleanup.yml) | Push to main + nightly | Post-Merge Cleanup |
 | [issue-triage.yml](./issue-triage.yml) | Cron 2h weekdays + `issues` events | Issue Triage |
 
+For guarded auto-merge with test-environment, dataset, E2E, and exact-SHA
+evidence, use the [coAligne promotion-loop reference](../coaligne/README.md).
+It combines webhook evidence with a six-hour reconciliation run and fails
+closed when any receipt is missing or stale.
+
 ## Security
 
 - Use `GITHUB_TOKEN` with minimum permissions

@@ -1,0 +1,27 @@
+version: 1
+
+denylist:
+  - ".env"
+  - ".env.*"
+  - "**/secrets/**"
+  - "**/credentials/**"
+  - "**/*_key*"
+  - "**/*_secret*"
+  - ".github/workflows/release.yml"
+  - "server/alembic/**"
+  - "deploy/**"
+  - "server/app/**/auth*"
+
+maxFiles: 12
+
+# Demo allowlist: expand only after observing report-only runs. The promotion
+# contract still requires deployment, data provenance, E2E, and approval.
+autoMergeAllowlist:
+  - "apps/web/src/**"
+  - "apps/web/test/**"
+  - "apps/desktop/src/**"
+  - "apps/desktop/test/**"
+  - "apps/cli/src/**"
+  - "apps/cli/test/**"
+  - "server/app/**"
+  - "server/tests/**"

@@ -1,0 +1,42 @@
+# Evidence contract for `loop gate promote`.
+# Every successful artifact must belong to the current PR HEAD SHA. A new
+# commit invalidates old approval, deployment, dataset, E2E, and acceptance.
+version: 1
+
+authorization:
+  labels: ["loop:automerge"]
+  minApprovals: 1
+
+pullRequest:
+  baseBranches: [main]
+  requireCleanMerge: true
+  requireResolvedThreads: true
+  sameRepositoryOnly: true
+  maxAttempts: 3
+
+checks:
+  required: [unit, integration]
+
+deployment:
+  required: true
+  environment: test
+  maxAgeHours: 24
+
+testData:
+  required: true
+  # Never put raw customer or production credentials in a loop environment.
+  allowedKinds: [synthetic, sanitized]
+  requireVersion: true
+
+e2e:
+  requiredSuites: [smoke, regression]
+  pathSuites:
+    - paths: ["apps/desktop/**"]
+      suites: [desktop-test-channel]
+  requireDatasetMatch: true
+  maxAgeHours: 24
+
+manualAcceptance:
+  mode: risk-based
+  riskLevels: [unclassified, high, critical]
+  maxAgeHours: 24

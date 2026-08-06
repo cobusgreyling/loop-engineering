@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "observedAt": "2026-08-06T08:00:00Z",
+  "pullRequest": {
+    "number": 293,
+    "headSha": "new456",
+    "baseBranch": "main",
+    "baseRepository": "dataelement/coAligne",
+    "headRepository": "dataelement/coAligne",
+    "draft": false,
+    "mergeState": "CLEAN",
+    "labels": ["bug", "loop:automerge"],
+    "approvals": 1,
+    "approvalSha": "abc123",
+    "changesRequested": false,
+    "unresolvedThreads": 0,
+    "attempts": 1,
+    "riskLevel": "low",
+    "changedPaths": ["apps/web/src/lib/deepLink.ts", "apps/web/test/deepLink.test.ts"]
+  },
+  "checks": [
+    { "name": "continuous-integration/drone/pr", "status": "success", "sha": "abc123" }
+  ],
+  "deployment": {
+    "environment": "coaligne-test",
+    "status": "success",
+    "sha": "abc123",
+    "completedAt": "2026-08-06T07:25:00Z"
+  },
+  "testData": {
+    "kind": "sanitized",
+    "version": "coaligne-acceptance-v7",
+    "status": "success",
+    "sha": "abc123",
+    "completedAt": "2026-08-06T07:30:00Z"
+  },
+  "e2e": [
+    { "suite": "smoke", "status": "success", "sha": "abc123", "datasetVersion": "coaligne-acceptance-v7", "completedAt": "2026-08-06T07:35:00Z" },
+    { "suite": "regression-focus", "status": "success", "sha": "abc123", "datasetVersion": "coaligne-acceptance-v7", "completedAt": "2026-08-06T07:36:00Z" },
+    { "suite": "browser-web", "status": "success", "sha": "abc123", "datasetVersion": "coaligne-acceptance-v7", "completedAt": "2026-08-06T07:36:30Z" }
+  ]
+}

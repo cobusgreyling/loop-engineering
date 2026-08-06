@@ -1,0 +1,77 @@
+name: coAligne PR Promotion Loop (reference)
+
+on:
+  # Recovery/reconciliation path. Webhooks should handle the common fast path.
+  schedule:
+    - cron: '0 */6 * * *'
+  repository_dispatch:
+    types: [loop-promotion-evidence]
+  issue_comment:
+    types: [created, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  deployments: read
+  issues: read
+
+concurrency:
+  group: coaligne-pr-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      # In an adopted repo, keep the trusted contract/controller on the default
+      # branch and explicitly check out that branch, never the PR head.
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install and build promotion gate
+        run: |
+          cd tools/loop-gate
+          npm ci
+          npm run build
+
+      - name: Reconcile trusted evidence
+        env:
+          LOOP_EVENT: ${{ github.event_name }}
+          LOOP_DISPATCH_PR: ${{ github.event.client_payload.pr }}
+          LOOP_COMMENT_PR: ${{ github.event.issue.number }}
+        run: |
+          # The trusted default-branch adapter converts exact-SHA GitHub
+          # deployments and loop/* commit statuses into promotion receipts.
+          # A webhook payload is only a wakeup hint; evidence is always
+          # re-fetched from its authoritative systems.
+          args=( \
+            --repository "${{ github.repository }}" \
+            --output .loop/evidence \
+            --receipt-actor "${{ vars.LOOP_RECEIPT_ACTOR }}" \
+            --ci-actor "${{ vars.LOOP_CI_ACTOR }}" \
+            --acceptance-actors "${{ vars.LOOP_ACCEPTANCE_ACTORS }}" \
+          )
+          if [[ "$LOOP_EVENT" == "repository_dispatch" && "$LOOP_DISPATCH_PR" =~ ^[1-9][0-9]*$ ]]; then
+            args+=(--pr "$LOOP_DISPATCH_PR")
+          elif [[ "$LOOP_EVENT" == "issue_comment" && "$LOOP_COMMENT_PR" =~ ^[1-9][0-9]*$ ]]; then
+            args+=(--pr "$LOOP_COMMENT_PR")
+          fi
+          node examples/coaligne/collect-promotion-evidence.mjs "${args[@]}"
+
+      - name: Evaluate and optionally merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LOOP_REPOSITORY: ${{ github.repository }}
+          DRONE_SERVER: ${{ vars.DRONE_SERVER }}
+          DRONE_TOKEN: ${{ secrets.DRONE_PROMOTION_TOKEN }}
+          LOOP_TRIGGER_DEPLOYMENT: ${{ vars.LOOP_TRIGGER_DEPLOYMENT }}
+          LOOP_AUTO_MERGE: ${{ vars.LOOP_AUTO_MERGE }}
+        run: bash examples/coaligne/promotion-controller.sh .loop/evidence

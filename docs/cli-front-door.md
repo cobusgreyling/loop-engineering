@@ -27,7 +27,7 @@ npx @cobusgreyling/loop doctor .
 | `loop sync …` | `npx @cobusgreyling/loop-sync …` |
 | `loop context …` | `npx @cobusgreyling/loop-context …` |
 | `loop worktree …` | `npx @cobusgreyling/loop-worktree …` |
-| `loop gate …` | `npx @cobusgreyling/loop-gate …` |
+| `loop gate …` | `npx @cobusgreyling/loop-gate …` (static path policy + exact-SHA PR promotion evidence) |
 | `loop mcp …` | `npx @cobusgreyling/loop-mcp-server …` |
 | `loop badge .` | `loop-audit . --badge` |
 | `loop doctor .` | **new** (audit + sync + files) |

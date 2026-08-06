@@ -17,6 +17,54 @@ async function freshGateDir() {
   return dir;
 }
 
+async function freshPromotionDir() {
+  const dir = await freshGateDir();
+  await writeFile(
+    path.join(dir, 'promotion.yaml'),
+    `version: 1
+authorization: { labels: ["loop:automerge"], minApprovals: 1 }
+pullRequest:
+  baseBranches: [main]
+  requireCleanMerge: true
+  requireResolvedThreads: true
+  sameRepositoryOnly: true
+  maxAttempts: 3
+checks: { required: ["drone/pr"] }
+deployment: { required: false, environment: test }
+testData: { required: false, allowedKinds: [synthetic], requireVersion: false }
+e2e: { requiredSuites: [], requireDatasetMatch: false }
+manualAcceptance: { mode: never }
+`,
+  );
+  await writeFile(
+    path.join(dir, 'evidence.json'),
+    JSON.stringify({
+      version: 1,
+      observedAt: '2026-08-06T08:00:00Z',
+      pullRequest: {
+        number: 1,
+        headSha: 'abc',
+        baseBranch: 'main',
+        baseRepository: 'o/r',
+        headRepository: 'o/r',
+        draft: false,
+        mergeState: 'CLEAN',
+        labels: ['loop:automerge'],
+        approvals: 1,
+        approvalSha: 'abc',
+        changesRequested: false,
+        unresolvedThreads: 0,
+        attempts: 0,
+        riskLevel: 'low',
+        changedPaths: ['docs/readme.md'],
+      },
+      checks: [{ name: 'drone/pr', status: 'success', sha: 'abc' }],
+      e2e: [],
+    }),
+  );
+  return dir;
+}
+
 function runCli(args, cwd) {
   return spawnSync(process.execPath, [cli, ...args], { cwd, encoding: 'utf8' });
 }
@@ -102,4 +150,34 @@ test('cli unknown command exits 1', () => {
   const r = runCli(['bogus']);
   assert.equal(r.status, 1);
   assert.match(r.stderr, /Unknown command/);
+});
+
+test('cli promote allows a PR that satisfies the contract', async () => {
+  const dir = await freshPromotionDir();
+  const r = runCli(
+    ['promote', '--contract', 'promotion.yaml', '--evidence', 'evidence.json', '--json'],
+    dir,
+  );
+  assert.equal(r.status, 0, r.stderr);
+  const decision = JSON.parse(r.stdout);
+  assert.equal(decision.allowed, true);
+  assert.equal(decision.stage, 'merge-ready');
+});
+
+test('cli promote holds when exact-SHA check evidence is missing', async () => {
+  const dir = await freshPromotionDir();
+  const file = path.join(dir, 'evidence.json');
+  const evidence = JSON.parse(await (await import('node:fs/promises')).readFile(file, 'utf8'));
+  evidence.pullRequest.headSha = 'new-sha';
+  await writeFile(file, JSON.stringify(evidence));
+  const r = runCli(['promote', '--contract', 'promotion.yaml', '--evidence', 'evidence.json'], dir);
+  assert.equal(r.status, 2);
+  assert.match(r.stdout, /check-missing/);
+});
+
+test('cli promote requires contract and evidence files', async () => {
+  const dir = await freshPromotionDir();
+  const r = runCli(['promote', '--contract', 'promotion.yaml'], dir);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /requires --contract and --evidence/);
 });

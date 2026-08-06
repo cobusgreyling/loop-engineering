@@ -1,0 +1,49 @@
+# coAligne reference contract. This is intentionally stricter than CI green.
+version: 1
+
+authorization:
+  labels: ["loop:automerge"]
+  minApprovals: 1
+
+pullRequest:
+  baseBranches: [main]
+  requireCleanMerge: true
+  requireResolvedThreads: true
+  sameRepositoryOnly: true
+  maxAttempts: 3
+
+checks:
+  required:
+    - continuous-integration/drone/pr
+
+deployment:
+  required: true
+  environment: coaligne-test
+  maxAgeHours: 24
+
+testData:
+  required: true
+  allowedKinds: [synthetic, sanitized]
+  requireVersion: true
+
+e2e:
+  requiredSuites:
+    - smoke
+    - regression-focus
+    - browser-web
+  pathSuites:
+    - paths: ["server/**", "apps/web/**"]
+      suites: [access, project-lifecycle, collaboration, file-handling]
+    - paths: ["apps/desktop/**", "apps/cli/**"]
+      suites: [desktop-test-channel, local-sync]
+    - paths: ["server/alembic/**", "deploy/**", ".github/**"]
+      suites: [upgrade-and-rollback]
+  requireDatasetMatch: true
+  maxAgeHours: 24
+
+manualAcceptance:
+  mode: risk-based
+  # Unknown risk is not low risk. A trusted classifier or maintainer must
+  # explicitly apply risk:low / risk:medium to avoid this human gate.
+  riskLevels: [unclassified, high, critical]
+  maxAgeHours: 24
