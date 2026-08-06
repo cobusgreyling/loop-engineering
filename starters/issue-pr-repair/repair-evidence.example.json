@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "observedAt": "2026-08-06T00:00:00Z",
+  "repository": "replace-owner/repository",
+  "pauseIssues": [],
+  "targets": [
+    {
+      "type": "issue",
+      "number": 42,
+      "title": "Example reproduced regression",
+      "updatedAt": "2026-08-05T00:00:00Z",
+      "labels": ["bug", "loop:reproduced", "priority:high"],
+      "reproduction": "confirmed"
+    }
+  ]
+}

@@ -212,11 +212,12 @@ Deeper diagrams — the actor-level sequence within one run, the run lifecycle's
 ## Patterns
 
 <p align="center">
-  <img src="assets/visuals/patterns-overview.svg" alt="Seven production loop patterns with cadence and token cost" width="100%" />
+  <img src="assets/visuals/patterns-overview.svg" alt="Production loop patterns with cadence and token cost" width="100%" />
 </p>
 
 | Pattern | Cadence | Starter | Week 1 | Token cost |
 |---------|---------|---------|--------|------------|
+| [Issue + PR Repair](patterns/issue-pr-repair.md) | 6h | [issue-pr-repair](starters/issue-pr-repair/) | L2 assisted | High |
 | [Daily Triage](patterns/daily-triage.md) | 1d–2h | [minimal-loop](starters/minimal-loop/) | **L1** report | Low |
 | [PR Babysitter](patterns/pr-babysitter.md) | 5–15m | [pr-babysitter](starters/pr-babysitter/) | L1 watch | High |
 | [CI Sweeper](patterns/ci-sweeper.md) | 5–15m | [ci-sweeper](starters/ci-sweeper/) | L2 cautious | Very high |
@@ -227,7 +228,7 @@ Deeper diagrams — the actor-level sequence within one run, the run lifecycle's
 
 Not sure which to pick? Try the [interactive picker](https://cobusgreyling.github.io/loop-engineering/#interactive) or [pattern-picker](docs/pattern-picker.md).
 
-Machine-readable index: [patterns/registry.yaml](patterns/registry.yaml) (7 patterns)
+Machine-readable index: [patterns/registry.yaml](patterns/registry.yaml) (8 patterns)
 
 ## Getting Started (5 minutes)
 

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "issue-pr-repair": {
+      "name": "issue-pr-repair",
+      "description": "Issue-first repair orchestrator with deterministic one-target selection.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, repair.yaml, repair-loop-state.md, and the issue-pr-repair skill. Run repair-plan first and obey it. Report only until L2 writes are explicitly enabled.",
+      "permission": {
+        "bash": "ask",
+        "edit": "ask"
+      }
+    },
+    "verifier": {
+      "name": "verifier",
+      "description": "Independent checker for one repair diff.",
+      "mode": "subagent",
+      "prompt": "Do not edit. Reject unless scope, reproduction, regression tests, and affected checks are proven.",
+      "permission": {
+        "bash": "ask",
+        "edit": "deny"
+      }
+    }
+  }
+}

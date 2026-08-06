@@ -17,7 +17,8 @@ type Pattern =
   | 'dependency-sweeper'
   | 'post-merge-cleanup'
   | 'changelog-drafter'
-  | 'issue-triage';
+  | 'issue-triage'
+  | 'issue-pr-repair';
 
 type Tool = 'grok' | 'claude' | 'codex' | 'opencode';
 
@@ -29,6 +30,7 @@ const PATTERN_STARTERS: Record<Pattern, string> = {
   'post-merge-cleanup': 'post-merge-cleanup',
   'changelog-drafter': 'changelog-drafter',
   'issue-triage': 'issue-triage',
+  'issue-pr-repair': 'issue-pr-repair',
 };
 
 const TOOL_SUFFIX: Record<Tool, string> = {
@@ -38,13 +40,14 @@ const TOOL_SUFFIX: Record<Tool, string> = {
   opencode: '-opencode',
 };
 
-const L2_PATTERNS = new Set<Pattern>(['ci-sweeper', 'dependency-sweeper']);
+const L2_PATTERNS = new Set<Pattern>(['ci-sweeper', 'dependency-sweeper', 'issue-pr-repair']);
 
 const PATTERNS_NEEDING_FIX: Set<Pattern> = new Set([
   'pr-babysitter',
   'ci-sweeper',
   'dependency-sweeper',
   'post-merge-cleanup',
+  'issue-pr-repair',
 ]);
 
 /**
@@ -52,7 +55,7 @@ const PATTERNS_NEEDING_FIX: Set<Pattern> = new Set([
  * They get the loop-intake skill so the loop clarifies a vague item or escalates
  * it instead of guessing and burning fix attempts.
  */
-const PATTERNS_NEEDING_INTAKE: Set<Pattern> = new Set(['issue-triage']);
+const PATTERNS_NEEDING_INTAKE: Set<Pattern> = new Set(['issue-triage', 'issue-pr-repair']);
 
 const STATE_FILES: Record<Pattern, string> = {
   'daily-triage': 'STATE.md',
@@ -62,6 +65,7 @@ const STATE_FILES: Record<Pattern, string> = {
   'post-merge-cleanup': 'post-merge-state.md',
   'changelog-drafter': 'changelog-drafter-state.md',
   'issue-triage': 'issue-triage-state.md',
+  'issue-pr-repair': 'repair-loop-state.md',
 };
 
 /** Mirrors patterns/registry.yaml cost caps — used when scaffolding observability files. */
@@ -76,6 +80,7 @@ const PATTERN_BUDGET: Record<
   'post-merge-cleanup': { name: 'Post-Merge Cleanup', maxRunsPerDay: 1, dailyCap: 200_000, maxSpawnsL1: 0, maxSpawnsL2: 2 },
   'changelog-drafter': { name: 'Changelog Drafter', maxRunsPerDay: 1, dailyCap: 100_000, maxSpawnsL1: 0, maxSpawnsL2: 2 },
   'issue-triage': { name: 'Issue Triage', maxRunsPerDay: 12, dailyCap: 80_000, maxSpawnsL1: 0, maxSpawnsL2: 1 },
+  'issue-pr-repair': { name: 'Issue + PR Repair', maxRunsPerDay: 4, dailyCap: 750_000, maxSpawnsL1: 0, maxSpawnsL2: 2 },
 };
 
 type FoundryPreset = 'minimal' | 'implementer';
@@ -89,6 +94,7 @@ const PATTERN_FOUNDRY_PRESET: Record<Pattern, FoundryPreset> = {
   'ci-sweeper': 'implementer',
   'dependency-sweeper': 'implementer',
   'post-merge-cleanup': 'implementer',
+  'issue-pr-repair': 'implementer',
 };
 
 const FOUNDRY_SHOWCASE =
@@ -574,6 +580,7 @@ const LEDGER_GOAL: Record<Pattern, string> = {
   'post-merge-cleanup': 'Clean up regressions from recent merges',
   'changelog-drafter': 'Draft accurate release notes',
   'issue-triage': 'Triage the open issue queue',
+  'issue-pr-repair': 'Turn one actionable issue or blocked PR into an exact-SHA verified draft PR',
 };
 
 /**
@@ -591,6 +598,7 @@ const LEDGER_LEVEL: Record<Pattern, string> = {
   'post-merge-cleanup': 'L2',
   'changelog-drafter': 'L1',
   'issue-triage': 'L1',
+  'issue-pr-repair': 'L2',
 };
 
 /**
@@ -779,6 +787,12 @@ function firstLoopCommand(pattern: Pattern, tool: Tool): string {
       codex: 'Automation 2h: issue-triage → issue-triage-state.md. Propose only.',
       opencode: `${OPENCODE_RUN} "Run issue-triage. Update issue-triage-state.md. Propose labels only — no auto-apply."`,
     },
+    'issue-pr-repair': {
+      grok: '/loop 6h Run issue-pr-repair. Obey repair-plan, lease one target, worktree + minimal-fix + verifier, draft PR only.',
+      claude: '/loop 6h $issue-pr-repair — deterministic one-target plan, lease, worktree, verifier, exact-SHA promotion.',
+      codex: 'Automation 6h: $issue-pr-repair. Run repair-plan first; one leased target; draft PR; promotion contract required.',
+      opencode: `${OPENCODE_RUN} "Run issue-pr-repair. Obey repair-plan and report only until L2 is enabled." --title "Issue + PR repair"`,
+    },
   };
   return cmds[pattern][tool];
 }
@@ -852,6 +866,7 @@ Patterns:
   post-merge-cleanup
   changelog-drafter (new low-risk release notes pattern)
   issue-triage (new low-risk issue queue health companion to daily triage)
+  issue-pr-repair (bounded issue/PR repair with staged promotion evidence)
 
 Options:
   -p, --pattern     Pattern to scaffold
@@ -876,6 +891,7 @@ Examples:
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
+  npx @cobusgreyling/loop-init . -p issue-pr-repair -t codex --with-foundry
   npx @cobusgreyling/loop-init . --with-memory
   npx @cobusgreyling/loop-init . --with-fleet
 `);
@@ -924,7 +940,14 @@ Examples:
       console.error(`Starter not found: ${starterRoot}`);
       process.exit(1);
     }
-    console.log(`Note: no ${tool} variant for ${pattern} — using ${baseStarter} (Grok paths)`);
+    const toolSkillDir = {
+      grok: path.join(fallback, '.grok', 'skills'),
+      claude: path.join(fallback, '.claude', 'skills'),
+      codex: path.join(fallback, '.codex', 'skills'),
+      opencode: path.join(fallback, 'skills'),
+    }[tool];
+    const fallbackKind = (await exists(toolSkillDir)) ? 'multi-tool starter' : 'base starter';
+    console.log(`Note: no standalone ${tool} variant for ${pattern} — using ${baseStarter} (${fallbackKind})`);
   }
 
   const effectiveStarter = (await exists(starterRoot))
@@ -1007,6 +1030,21 @@ Examples:
   const loopMd = path.join(effectiveStarter, 'LOOP.md');
   if (await exists(loopMd)) {
     await copyFile(loopMd, path.join(targetDir, 'LOOP.md'), dryRun);
+  }
+
+  for (const artifact of ['repair.yaml', 'promotion.yaml', 'repair-evidence.example.json']) {
+    const source = path.join(effectiveStarter, artifact);
+    const destination = path.join(targetDir, artifact);
+    if ((await exists(source)) && !(await exists(destination))) {
+      await copyFile(source, destination, dryRun);
+    }
+  }
+
+  const starterScripts = path.join(effectiveStarter, 'scripts');
+  if (await exists(starterScripts)) {
+    for (const script of await readDirNames(starterScripts)) {
+      await copyFile(path.join(starterScripts, script), path.join(targetDir, 'scripts', script), dryRun);
+    }
   }
 
   await copyL2Templates(pattern, tool, targetDir, templatesRoot, dryRun);

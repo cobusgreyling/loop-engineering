@@ -14,6 +14,7 @@ Each pattern answers:
 
 | Pattern | Cadence | Risk | File |
 |---------|---------|------|------|
+| Issue + PR Repair | 6h | Medium | [issue-pr-repair.md](./issue-pr-repair.md) |
 | PR Babysitter | 5–15m | Medium | [pr-babysitter.md](./pr-babysitter.md) |
 | Daily Triage | 1d–2h | Low | [daily-triage.md](./daily-triage.md) |
 | Issue Triage (new) | 2h–1d | Low | [issue-triage.md](./issue-triage.md) |
@@ -27,7 +28,7 @@ Machine-readable index: [registry.yaml](./registry.yaml)
 ## How to Use a Pattern
 
 1. Pick a pattern: [pattern-picker.md](../docs/pattern-picker.md)
-2. Scaffold with `npx @cobusgreyling/loop-init . --pattern <name> --tool grok` (or `--tool opencode` / `--tool claude`) or copy from `starters/`
+2. Scaffold with `npx @cobusgreyling/loop-init . --pattern <name> --tool codex` (or `--tool grok` / `--tool opencode` / `--tool claude`) or copy from `starters/`
 3. Copy skills from `templates/` if customizing beyond the starter
 4. Set up scheduling (`/loop`, `scheduler_create`, GitHub Action, Codex Automation)
 5. Run week one in **L1 report-only** mode before enabling fixes

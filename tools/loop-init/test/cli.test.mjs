@@ -522,6 +522,12 @@ const SCAFFOLD_PATTERNS = {
     fixCapable: false,
     intake: true,
   },
+  'issue-pr-repair': {
+    state: 'repair-loop-state.md',
+    primarySkill: 'issue-pr-repair',
+    fixCapable: true,
+    intake: true,
+  },
 };
 
 const SCAFFOLD_TOOLS = {
@@ -592,3 +598,19 @@ for (const [pattern, contract] of Object.entries(SCAFFOLD_PATTERNS)) {
     });
   }
 }
+
+test('loop-init issue-pr-repair scaffolds executable policy contracts', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-repair-contracts-'));
+  try {
+    await exec('node', [CLI, dir, '--pattern', 'issue-pr-repair', '--tool', 'codex']);
+    await expectPathExists(dir, 'repair.yaml');
+    await expectPathExists(dir, 'promotion.yaml');
+    await expectPathExists(dir, 'repair-evidence.example.json');
+    const repair = await readFile(path.join(dir, 'repair.yaml'), 'utf8');
+    const promotion = await readFile(path.join(dir, 'promotion.yaml'), 'utf8');
+    assert.match(repair, /maxAttempts: 3/);
+    assert.match(promotion, /requireDatasetMatch: true/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

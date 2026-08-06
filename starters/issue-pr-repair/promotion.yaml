@@ -1,0 +1,29 @@
+version: 1
+authorization:
+  labels: ["loop:automerge"]
+  minApprovals: 1
+pullRequest:
+  baseBranches: [main]
+  requireCleanMerge: true
+  requireResolvedThreads: true
+  sameRepositoryOnly: true
+  maxAttempts: 3
+checks:
+  required: ["replace-with-required-check"]
+deployment:
+  required: true
+  environment: test
+  maxAgeHours: 24
+testData:
+  required: true
+  allowedKinds: [synthetic, sanitized]
+  requireVersion: true
+e2e:
+  requiredSuites: [smoke, regression-focus, browser-web]
+  pathSuites: []
+  requireDatasetMatch: true
+  maxAgeHours: 24
+manualAcceptance:
+  mode: risk-based
+  riskLevels: [unclassified, high, critical]
+  maxAgeHours: 24

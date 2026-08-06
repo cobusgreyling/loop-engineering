@@ -5,7 +5,8 @@ Pick one primary loop per concern. Overlapping loops need coordination — see [
 ```mermaid
 flowchart TD
     A[What hurts right now?] --> B{CI red?}
-    B -->|yes| C[CI Sweeper]
+    B -->|yes, only checks| C[CI Sweeper]
+    B -->|bugs and PRs together| O[Issue + PR Repair]
     B -->|no| D{PRs stalling?}
     D -->|yes| E[PR Babysitter]
     D -->|no| F{Morning chaos or noisy issues?}
@@ -43,6 +44,7 @@ npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok   # scaffolds 
 
 | Symptom | Pattern | Start with |
 |---------|---------|------------|
+| Bugs are primary, but fixes must shepherd PRs through a real test environment | [Issue + PR Repair](../patterns/issue-pr-repair.md) | L2 assisted, 6h cadence, deterministic intake and max 3 attempts |
 | CI failing on main or PRs | [CI Sweeper](../patterns/ci-sweeper.md) | L2, 15m cadence, max 3 attempts |
 | PRs waiting on review/CI/rebase | [PR Babysitter](../patterns/pr-babysitter.md) | L1 watch → L2 assisted |
 | "What should I work on?" every morning or noisy GitHub issues | [Daily Triage](../patterns/daily-triage.md) + [Issue Triage](../patterns/issue-triage.md) (new) | **L1 report-only week one** — low risk, excellent pair |
@@ -54,6 +56,7 @@ npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok   # scaffolds 
 
 | Combination | Rule |
 |-------------|------|
+| Issue + PR Repair + CI Sweeper/PR Babysitter | Issue + PR Repair owns leased targets; the narrower loops must skip `loop:repairing` |
 | CI Sweeper + PR Babysitter | CI Sweeper owns failing checks; PR Babysitter does not re-fix the same branch in the same hour |
 | Daily Triage + anything | Daily Triage reports; action loops execute. Triage does not auto-fix in L1 |
 | Dependency Sweeper + CI Sweeper | Pause Dependency Sweeper while CI is red on main |

@@ -2,6 +2,28 @@
 # Used by loop-audit, loop-cost, docs site, and tooling.
 
 patterns:
+  - id: issue-pr-repair
+    name: Issue + PR Repair
+    file: issue-pr-repair.md
+    goal: Select one actionable bug or blocked PR, produce a minimal verified fix, and promote its exact revision through realistic acceptance
+    cadence: 6h
+    risk: medium
+    tools: [grok, claude-code, codex, opencode]
+    skills: [issue-pr-repair, minimal-fix, loop-verifier, loop-guard]
+    state: repair-loop-state.md
+    phases: [collect, select, lease, reproduce, fix, verify, promote, handoff]
+    human_gates: [security, auth, billing, migrations, deployment, release, flaky-infra, max-attempts, high-risk]
+    starter: starters/issue-pr-repair
+    week_one_mode: L2
+    token_cost: high
+    cost:
+      tokens_noop: 3000
+      tokens_report: 50000
+      tokens_action: 300000
+      stable_fraction: 0.35
+      suggested_daily_cap: 750000
+      early_exit_required: true
+
   - id: pr-babysitter
     name: PR Babysitter
     file: pr-babysitter.md
