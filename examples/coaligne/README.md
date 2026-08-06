@@ -151,8 +151,9 @@ To activate it, configure:
 1. Drone secrets `TEST_DEPLOY_ENV`, `TEST_DEPLOY_HOST`, `TEST_DEPLOY_USER`,
    `TEST_DEPLOY_SSH_KEY`, and a pinned `TEST_DEPLOY_KNOWN_HOSTS` entry;
 2. `LOOP_ACCEPTANCE_PASSWORD`, `LOOP_TEST_API_URL`, and `LOOP_TEST_WEB_URL`;
-3. a least-privilege `LOOP_GITHUB_TOKEN` that can publish commit statuses and
-   deployments, restricted to the protected promotion pipeline;
+3. a repository-restricted `LOOP_GITHUB_TOKEN` that can publish commit statuses
+   and deployments and send the `repository_dispatch` wakeup (which requires
+   Contents write), restricted to the protected promotion pipeline;
 4. controller variables `LOOP_RECEIPT_ACTOR`, `LOOP_CI_ACTOR`, and
    `LOOP_ACCEPTANCE_ACTORS` matching the GitHub identities permitted to issue
    those records; legacy Drone statuses without a GitHub creator must instead
