@@ -18,6 +18,12 @@ import {
   reproductionFromLabels,
 } from '../collect-repair-evidence.mjs';
 import {
+  claimLabels,
+  parseAttempt,
+  releaseLabels,
+  selectedFromDecision,
+} from '../repair-lease.mjs';
+import {
   evaluatePromotion,
   loadPromotionContract,
   parsePromotionEvidence,
@@ -283,4 +289,33 @@ test('repair collector uses each review author latest decisive review', () => {
     { user: { login: 'observer' }, state: 'COMMENTED', submitted_at: '2026-08-03T00:00:00Z' },
   ];
   assert.deepEqual(latestReviewsByAuthor(reviews).map((review) => review.state), ['APPROVED']);
+});
+
+test('repair lease advances exactly one attempt and replaces risk classification', () => {
+  const labels = claimLabels(['bug', 'risk:low', 'loop:attempts:1'], 'medium', 1);
+  assert.equal(parseAttempt(labels), 2);
+  assert.equal(labels.includes('loop:repairing'), true);
+  assert.equal(labels.includes('loop:watch'), true);
+  assert.equal(labels.includes('risk:medium'), true);
+  assert.equal(labels.includes('risk:low'), false);
+});
+
+test('repair lease rejects stale attempts and releases only its lock', () => {
+  assert.throws(() => claimLabels(['bug', 'loop:attempts:2'], 'low', 1), /Attempt changed/);
+  assert.throws(() => parseAttempt(['loop:attempts:one']), /invalid attempt/);
+  assert.deepEqual(
+    releaseLabels(['bug', 'loop:repairing', 'loop:attempts:1']),
+    ['bug', 'loop:attempts:1'],
+  );
+});
+
+test('repair lease validates the planner repository and selected state', () => {
+  const decision = {
+    state: 'selected',
+    repository: 'dataelement/coAligne',
+    selected: { type: 'issue', number: 1 },
+  };
+  assert.equal(selectedFromDecision(decision, 'dataelement/coAligne').number, 1);
+  assert.throws(() => selectedFromDecision(decision, 'other/repo'), /does not match/);
+  assert.throws(() => selectedFromDecision({ state: 'idle' }, 'dataelement/coAligne'), /does not select/);
 });

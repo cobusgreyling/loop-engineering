@@ -106,5 +106,6 @@ echo "Testing coAligne promotion adapters…"
 cd ../..
 node --test examples/coaligne/test/*.test.mjs
 node --check examples/coaligne/collect-repair-evidence.mjs
+node --check examples/coaligne/repair-lease.mjs
 
 echo "validate gates passed ✓"

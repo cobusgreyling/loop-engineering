@@ -25,6 +25,12 @@ diagnostic work; flaky or infrastructure failures and sensitive paths go to a
 human. Codex performs the selected reproduction or minimal fix in an isolated
 worktree; the deterministic engine owns selection and safety policy.
 
+Before work starts, [`repair-lease.mjs`](./repair-lease.mjs) re-fetches the
+target, validates the exact PR HEAD and attempt count, acquires the global
+`loop:repairing` label, advances the attempt, and installs exactly one risk
+label. It is dry-run by default; scheduled repair uses `--execute` and always
+calls `--release --execute` during cleanup.
+
 ## What the engine proves
 
 Before returning `MERGE-READY`, `loop-gate promote` proves that the **current PR
