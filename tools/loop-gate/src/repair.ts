@@ -169,6 +169,17 @@ function parseTarget(value: unknown, source: string): RepairTargetEvidence {
     if (!status || !failureClass) throw new Error(`${source}.check requires status and failureClass.`);
     parsed.check = { status, failureClass };
   }
+  if (type === 'issue' && !parsed.reproduction) {
+    throw new Error(`${source}.reproduction is required for an issue.`);
+  }
+  if (type === 'pull-request') {
+    if (!parsed.headSha || !/^[0-9a-f]{40}$/.test(parsed.headSha)) {
+      throw new Error(`${source}.headSha must be a full lowercase SHA for a pull request.`);
+    }
+    if (!parsed.changedPaths || parsed.branchOwned === undefined || parsed.reviewActionable === undefined || !parsed.check) {
+      throw new Error(`${source} is missing required pull-request evidence.`);
+    }
+  }
   return parsed;
 }
 
@@ -179,21 +190,24 @@ export function parseRepairEvidence(value: unknown, source = 'repair evidence'):
     throw new Error(`${source}.pauseIssues must contain positive issue numbers.`);
   }
   if (!Array.isArray(root.targets)) throw new Error(`${source}.targets must be an array.`);
+  const targets = root.targets.map((target, index) => parseTarget(target, `${source}.targets[${index}]`));
+  const identities = targets.map((target) => `${target.type}:${target.number}`);
+  if (new Set(identities).size !== identities.length) throw new Error(`${source}.targets contains duplicates.`);
   return {
     version: 1,
     observedAt: timestamp(root.observedAt, `${source}.observedAt`),
     repository: string(root.repository, `${source}.repository`),
     pauseIssues: root.pauseIssues as number[],
-    targets: root.targets.map((target, index) => parseTarget(target, `${source}.targets[${index}]`)),
+    targets,
   };
 }
 
 function attempts(target: RepairTargetEvidence, contract: RepairContract): number | undefined {
-  const values = target.labels
-    .filter((label) => label.startsWith(contract.labels.attemptsPrefix))
-    .map((label) => Number(label.slice(contract.labels.attemptsPrefix.length)))
-    .filter((value) => Number.isInteger(value) && value >= 0);
-  return values.length === 1 ? values[0] : values.length === 0 ? 0 : undefined;
+  const labels = target.labels.filter((label) => label.startsWith(contract.labels.attemptsPrefix));
+  if (labels.length === 0) return 0;
+  if (labels.length !== 1) return undefined;
+  const value = Number(labels[0].slice(contract.labels.attemptsPrefix.length));
+  return Number.isInteger(value) && value >= 0 ? value : undefined;
 }
 
 function targetName(target: RepairTargetEvidence): string {

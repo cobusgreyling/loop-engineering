@@ -91,12 +91,14 @@ test('attempt exhaustion, conflicts, and sensitive work require humans', () => {
     issue(1, { labels: ['bug', 'loop:attempts:3'] }),
     issue(2, { labels: ['bug', 'loop:attempts:1', 'loop:attempts:2'] }),
     pull(3, { reviewActionable: true, changedPaths: ['deploy/docker-compose.yml'] }),
+    issue(4, { labels: ['bug', 'loop:attempts:many'] }),
   ]));
   assert.equal(decision.state, 'human-required');
   assert.deepEqual(decision.issues.map((item) => item.code), [
     'attempt-limit',
     'attempt-label-conflict',
     'sensitive-target',
+    'attempt-label-conflict',
   ]);
 });
 
@@ -127,4 +129,9 @@ test('non-actionable PRs do not create sensitive-path alert noise', () => {
 test('contract and evidence parsers reject malformed inputs', () => {
   assert.throws(() => parseRepairContract({ ...contract, maxAttempts: 0 }), /greater than zero/);
   assert.throws(() => parseRepairEvidence({ ...evidence([]), pauseIssues: [0] }), /positive issue numbers/);
+  assert.throws(
+    () => parseRepairEvidence(evidence([pull(2, { headSha: undefined })])),
+    /headSha must be a full lowercase SHA/,
+  );
+  assert.throws(() => parseRepairEvidence(evidence([issue(1), issue(1)])), /contains duplicates/);
 });

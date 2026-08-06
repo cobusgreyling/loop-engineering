@@ -153,8 +153,12 @@ async function main() {
     .filter((issue) => labelsOf(issue).includes('loop-pause-all'))
     .map((issue) => issue.number);
   const bugIssues = issues.filter((issue) => labelsOf(issue).includes('bug'));
+  const targetIssues = issues.filter((issue) => {
+    const labels = labelsOf(issue);
+    return labels.includes('bug') || labels.includes('loop:repairing');
+  });
   const targets = [
-    ...bugIssues.map((issue) => collectIssue(args.repository, issue)),
+    ...targetIssues.map((issue) => collectIssue(args.repository, issue)),
     ...pulls.map((pull) => collectPull(args.repository, pull, args)),
   ];
   const evidence = {
