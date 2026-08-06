@@ -10,6 +10,11 @@ import {
   loadPromotionContract,
   loadPromotionEvidence,
 } from './promotion.js';
+import {
+  evaluateRepair,
+  loadRepairContract,
+  loadRepairEvidence,
+} from './repair.js';
 
 interface Flags {
   help: boolean;
@@ -45,6 +50,7 @@ run history — pair with loop-context --check for stagnation/budget triggers.
 Usage:
   loop-gate check --action <commit|merge|auto-merge> --paths <f1,f2,...> [options]
   loop-gate promote --contract <promotion.yaml> --evidence <evidence.json> [options]
+  loop-gate repair-plan --contract <repair.yaml> --evidence <evidence.json> [options]
 
 Options:
   --action <commit|merge|auto-merge>   What the loop is about to do
@@ -60,6 +66,7 @@ Exit codes: 0 allowed · 2 escalate · 1 error
 Example:
   loop-gate check --action auto-merge --paths $(git diff --name-only | tr '\\n' ',')
   loop-gate promote --contract promotion.yaml --evidence pr-42.json --json
+  loop-gate repair-plan --contract repair.yaml --evidence queue.json --json
 `;
 
 async function main(): Promise<number> {
@@ -70,7 +77,7 @@ async function main(): Promise<number> {
     console.log(HELP);
     return command ? 0 : 1;
   }
-  if (command !== 'check' && command !== 'promote') {
+  if (command !== 'check' && command !== 'promote' && command !== 'repair-plan') {
     console.error(`Unknown command "${command}".\n\n${HELP}`);
     return 1;
   }
@@ -99,6 +106,28 @@ async function main(): Promise<number> {
       }
     }
     return decision.allowed ? 0 : 2;
+  }
+  if (command === 'repair-plan') {
+    if (!flags.contractFile || !flags.evidenceFile) {
+      throw new Error('repair-plan requires --contract and --evidence.');
+    }
+    const [contract, evidence] = await Promise.all([
+      loadRepairContract(flags.contractFile),
+      loadRepairEvidence(flags.evidenceFile),
+    ]);
+    const decision = evaluateRepair(contract, evidence);
+    if (flags.json) {
+      console.log(JSON.stringify(decision, null, 2));
+    } else {
+      console.log(`${decision.state.toUpperCase()} — ${decision.summary}`);
+      if (decision.selected) {
+        console.log(`  - ${decision.selected.action} ${decision.selected.type} #${decision.selected.number} (${decision.selected.mode})`);
+      }
+      for (const item of decision.issues) {
+        console.log(`  - ${item.kind} ${item.code}: ${item.message}`);
+      }
+    }
+    return decision.state === 'selected' || decision.state === 'idle' ? 0 : 2;
   }
   if (!flags.action || !flags.paths) {
     throw new Error('check requires --action and --paths.');

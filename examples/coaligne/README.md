@@ -3,6 +3,28 @@
 This demo turns the coAligne test-deployment requirements into an executable
 merge contract. It is deliberately stricter than "CI is green".
 
+It also includes an issue-first intake planner. The trusted collector snapshots
+open bug issues and PRs, then `repair-plan` selects at most one safe action while
+enforcing the pause label, ownership lock, sensitive areas, and three-attempt
+circuit breaker:
+
+```bash
+node examples/coaligne/collect-repair-evidence.mjs \
+  --repository dataelement/coAligne \
+  --output .loop/repair-evidence.json
+
+node tools/loop-gate/dist/cli.js repair-plan \
+  --contract examples/coaligne/repair.yaml \
+  --evidence .loop/repair-evidence.json \
+  --json
+```
+
+The planner prioritizes confirmed bugs, actionable review feedback, and
+deterministic check failures in that order. Unknown bug/check failures become
+diagnostic work; flaky or infrastructure failures and sensitive paths go to a
+human. Codex performs the selected reproduction or minimal fix in an isolated
+worktree; the deterministic engine owns selection and safety policy.
+
 ## What the engine proves
 
 Before returning `MERGE-READY`, `loop-gate promote` proves that the **current PR

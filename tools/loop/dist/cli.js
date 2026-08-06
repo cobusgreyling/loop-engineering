@@ -37,6 +37,9 @@ Usage:
 Evidence-aware PR promotion:
   loop gate promote --contract promotion.yaml --evidence pr-42.json --json
 
+Issue-first repair intake:
+  loop gate repair-plan --contract repair.yaml --evidence queue.json --json
+
 Week-one (recommended):
   npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
   npx @cobusgreyling/loop doctor .

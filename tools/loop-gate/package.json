@@ -6,7 +6,8 @@
   "main": "dist/gate.js",
   "exports": {
     ".": "./dist/gate.js",
-    "./promotion": "./dist/promotion.js"
+    "./promotion": "./dist/promotion.js",
+    "./repair": "./dist/repair.js"
   },
   "bin": {
     "loop-gate": "dist/cli.js"

@@ -12,6 +12,12 @@ import {
 } from '../collect-promotion-evidence.mjs';
 import { selectBuild } from '../trigger-drone-promotion.mjs';
 import {
+  failureClassFromLabels,
+  latestReviewsByAuthor,
+  linkedPrFromTimeline,
+  reproductionFromLabels,
+} from '../collect-repair-evidence.mjs';
+import {
   evaluatePromotion,
   loadPromotionContract,
   parsePromotionEvidence,
@@ -253,4 +259,28 @@ test('published coAligne receipts satisfy the real promotion contract', async ()
   const decision = evaluatePromotion(contract, evidence);
   assert.equal(decision.allowed, true, JSON.stringify(decision.issues));
   assert.equal(decision.stage, 'merge-ready');
+});
+
+test('repair collector classifies explicit reproduction and failure labels', () => {
+  assert.equal(reproductionFromLabels(['bug', 'loop:reproduced']), 'confirmed');
+  assert.equal(reproductionFromLabels(['bug']), 'unknown');
+  assert.equal(failureClassFromLabels(['loop:failure:deterministic']), 'deterministic');
+  assert.equal(failureClassFromLabels([]), 'unknown');
+});
+
+test('repair collector finds an open cross-referenced pull request', () => {
+  const events = [
+    { event: 'cross-referenced', source: { issue: { number: 10, state: 'closed', pull_request: {} } } },
+    { event: 'cross-referenced', source: { issue: { number: 11, state: 'open', pull_request: {} } } },
+  ];
+  assert.equal(linkedPrFromTimeline(events), 11);
+});
+
+test('repair collector uses each review author latest decisive review', () => {
+  const reviews = [
+    { user: { login: 'maintainer' }, state: 'CHANGES_REQUESTED', submitted_at: '2026-08-01T00:00:00Z' },
+    { user: { login: 'maintainer' }, state: 'APPROVED', submitted_at: '2026-08-02T00:00:00Z' },
+    { user: { login: 'observer' }, state: 'COMMENTED', submitted_at: '2026-08-03T00:00:00Z' },
+  ];
+  assert.deepEqual(latestReviewsByAuthor(reviews).map((review) => review.state), ['APPROVED']);
 });

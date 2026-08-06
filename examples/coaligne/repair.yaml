@@ -1,0 +1,25 @@
+version: 1
+
+labels:
+  pause: loop-pause-all
+  lock: loop:repairing
+  bug: bug
+  attemptsPrefix: "loop:attempts:"
+  priority: [priority:critical, priority:high, priority:medium, priority:low]
+  sensitive:
+    - security
+    - area:auth
+    - area:billing
+    - area:migrations
+    - area:deployment
+    - area:release
+
+maxAttempts: 3
+
+sensitivePaths:
+  - ".github/**"
+  - "deploy/**"
+  - "server/alembic/**"
+  - "**/auth/**"
+  - "**/*secret*"
+  - "**/*credential*"

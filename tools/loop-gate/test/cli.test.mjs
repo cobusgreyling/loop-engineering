@@ -65,6 +65,42 @@ manualAcceptance: { mode: never }
   return dir;
 }
 
+async function freshRepairDir() {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-repair-cli-'));
+  await writeFile(
+    path.join(dir, 'repair.yaml'),
+    `version: 1
+labels:
+  pause: loop-pause-all
+  lock: loop:repairing
+  bug: bug
+  attemptsPrefix: "loop:attempts:"
+  priority: [priority:high]
+  sensitive: [security]
+maxAttempts: 3
+sensitivePaths: ["deploy/**"]
+`,
+  );
+  await writeFile(
+    path.join(dir, 'evidence.json'),
+    JSON.stringify({
+      version: 1,
+      observedAt: '2026-08-06T08:00:00Z',
+      repository: 'o/r',
+      pauseIssues: [],
+      targets: [{
+        type: 'issue',
+        number: 7,
+        title: 'Reproducible bug',
+        updatedAt: '2026-08-01T00:00:00Z',
+        labels: ['bug'],
+        reproduction: 'confirmed',
+      }],
+    }),
+  );
+  return dir;
+}
+
 function runCli(args, cwd) {
   return spawnSync(process.execPath, [cli, ...args], { cwd, encoding: 'utf8' });
 }
@@ -180,4 +216,24 @@ test('cli promote requires contract and evidence files', async () => {
   const r = runCli(['promote', '--contract', 'promotion.yaml'], dir);
   assert.equal(r.status, 1);
   assert.match(r.stderr, /requires --contract and --evidence/);
+});
+
+test('cli repair-plan selects one safe target', async () => {
+  const dir = await freshRepairDir();
+  const r = runCli(['repair-plan', '--contract', 'repair.yaml', '--evidence', 'evidence.json', '--json'], dir);
+  assert.equal(r.status, 0, r.stderr);
+  const decision = JSON.parse(r.stdout);
+  assert.equal(decision.state, 'selected');
+  assert.equal(decision.selected.number, 7);
+});
+
+test('cli repair-plan exits 2 when the kill switch is active', async () => {
+  const dir = await freshRepairDir();
+  const file = path.join(dir, 'evidence.json');
+  const evidence = JSON.parse(await (await import('node:fs/promises')).readFile(file, 'utf8'));
+  evidence.pauseIssues = [99];
+  await writeFile(file, JSON.stringify(evidence));
+  const r = runCli(['repair-plan', '--contract', 'repair.yaml', '--evidence', 'evidence.json'], dir);
+  assert.equal(r.status, 2);
+  assert.match(r.stdout, /PAUSED/);
 });

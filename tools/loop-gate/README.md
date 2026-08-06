@@ -1,11 +1,12 @@
 # loop-gate
 
-Mechanical enforcement for both static change policy and evidence-aware PR
-promotion. It answers two different questions:
+Mechanical enforcement for static change policy, repair intake, and
+evidence-aware PR promotion. It answers three different questions:
 
 1. `check`: may this set of paths be committed or auto-merged?
 2. `promote`: did the **current PR HEAD SHA** actually pass review, checks,
    deployment, approved-data seeding, E2E, and acceptance?
+3. `repair-plan`: which single issue or PR is safe and valuable to handle next?
 
 Deliberately has **no knowledge of run history**. Stagnation, repeated failures, and token/daily budgets already belong to [`loop-context`](../loop-context)'s circuit breaker — `loop-gate` only looks at *what* is being proposed (which paths, what action type), not *how the run has behaved so far*. Chain the two:
 
@@ -34,6 +35,7 @@ npm test
 ```bash
 loop-gate check --action <commit|merge|auto-merge> --paths <f1,f2,...> [--gate-file gate.yaml] [--json]
 loop-gate promote --contract promotion.yaml --evidence pr-42.json [--gate-file gate.yaml] [--json]
+loop-gate repair-plan --contract repair.yaml --evidence queue.json [--json]
 ```
 
 | Flag | Default | Meaning |
@@ -101,6 +103,21 @@ Core invariants:
   `gh pr merge --match-head-commit <sha>`.
 
 See the executable [coAligne reference](../../examples/coaligne/README.md).
+
+## Issue-first repair intake
+
+`repair-plan` turns a trusted issue/PR snapshot into one deterministic next
+action. It enforces the repository kill switch, a single ownership lock,
+sensitive labels/paths, and the attempt circuit breaker before ranking:
+
+1. confirmed bug reports without a linked PR;
+2. actionable PR review feedback;
+3. deterministic required-check failures;
+4. bug or check diagnosis when classification is still missing.
+
+The planner selects at most one target. It returns `propose` mode for a PR
+branch the loop does not own, and escalates flaky/infrastructure failures,
+sensitive work, conflicting attempt labels, and exhausted retries.
 
 ## What this does not do
 
