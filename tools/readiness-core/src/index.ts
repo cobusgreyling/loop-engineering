@@ -36,14 +36,14 @@ export async function scanSkillDirectories(root: string): Promise<string[]> {
     path.join(root, '.codex', 'skills'),
     path.join(root, 'skills'),
   ];
-  const found: string[] = [];
+  const foundSet = new Set<string>();
   for (const dir of dirs) {
     if (!(await fileExists(dir))) continue;
     const entries = await readdir(dir, { withFileTypes: true });
     for (const e of entries) {
-      if (e.isDirectory()) found.push(e.name);
-      if (e.isFile() && e.name === 'SKILL.md') found.push('root-skill');
+      if (e.isDirectory()) foundSet.add(e.name);
+      if (e.isFile() && e.name === 'SKILL.md') foundSet.add('root-skill');
     }
   }
-  return found;
+  return [...foundSet];
 }
