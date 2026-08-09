@@ -67,13 +67,13 @@ function extractFrontmatter(content: string): { frontmatter: Record<string, stri
   const frontmatter: Record<string, string> = {};
   let body = content;
   
-  if (content.startsWith('---')) {
-    const endIndex = content.indexOf('---', 3);
+  if (content.startsWith('---\n') || content.startsWith('---\r\n')) {
+    const endIndex = content.indexOf('\n---', 3);
     if (endIndex !== -1) {
       const fmContent = content.slice(3, endIndex);
-      body = content.slice(endIndex + 3);
+      body = content.slice(endIndex + 4);
       
-      for (const line of fmContent.split('\n')) {
+      for (const line of fmContent.split(/\r?\n/)) {
         const colonIndex = line.indexOf(':');
         if (colonIndex !== -1) {
           const key = line.slice(0, colonIndex).trim();
