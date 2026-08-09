@@ -50,6 +50,14 @@ Also add an entry to `patterns/registry.yaml`.
 - Include at least one failure or surprise
 - Actionable lesson in one paragraph
 
+## Development Setup
+
+```bash
+npm ci   # at repo root – installs yaml/ajv for scripts/validate-registry.mjs
+npm run validate:registry
+npm run check:loop-init
+```
+
 ## Pull Request Checklist
 
 - [ ] Links work from README or relevant index
