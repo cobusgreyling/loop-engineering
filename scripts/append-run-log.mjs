@@ -16,7 +16,13 @@ if (!entryJson) {
   process.exit(1);
 }
 
-const entry = JSON.parse(entryJson);
+let entry;
+try {
+  entry = JSON.parse(entryJson);
+} catch {
+  console.error('Usage: second argument must be a valid JSON object');
+  process.exit(1);
+}
 const content = await readFile(logPath, 'utf8');
 const markerAt = content.indexOf(MARKER);
 if (markerAt === -1) {

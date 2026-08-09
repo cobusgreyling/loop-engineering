@@ -19,6 +19,7 @@ Options:
   --json      JSON output (for CI / scripting)
   --md        Markdown report
   --suggest   Show copy-from-template commands
+  --fix       Alias for --suggest (prints commands, does not modify files)
   --help, -h  This help
 
 Scores goal readiness for Grok Build /goal:
