@@ -32,13 +32,13 @@ export function filterEntries(entries, pattern, days) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
         filtered = filtered.filter(e => {
-            try {
-                const entryDate = new Date(e.run_id);
-                return entryDate >= cutoffDate;
-            }
-            catch {
+            const entryDate = new Date(e.run_id);
+            // An unparseable run_id (e.g. a numeric GitHub run id or a custom
+            // slug) yields Invalid Date; keep the entry rather than silently
+            // dropping it from the timeframe view.
+            if (Number.isNaN(entryDate.getTime()))
                 return true;
-            }
+            return entryDate >= cutoffDate;
         });
     }
     return filtered;
