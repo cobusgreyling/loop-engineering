@@ -36,15 +36,16 @@ async function readFileContent(filePath) {
 /**
  * Extract frontmatter from markdown files
  */
-function extractFrontmatter(content) {
+export function extractFrontmatter(content) {
     const frontmatter = {};
     let body = content;
-    if (content.startsWith('---')) {
-        const endIndex = content.indexOf('---', 3);
-        if (endIndex !== -1) {
+    if (content.startsWith('---\n') || content.startsWith('---\r\n')) {
+        const endIndex = content.indexOf('\n---', 3);
+        if (endIndex !== -1 && (endIndex + 4 === content.length || content[endIndex + 4] === '\n' || content[endIndex + 4] === '\r')) {
             const fmContent = content.slice(3, endIndex);
-            body = content.slice(endIndex + 3);
-            for (const line of fmContent.split('\n')) {
+            const closingEnd = content.indexOf('\n', endIndex + 4);
+            body = closingEnd === -1 ? content.slice(endIndex + 1) : content.slice(closingEnd + 1);
+            for (const line of fmContent.split(/\r?\n/)) {
                 const colonIndex = line.indexOf(':');
                 if (colonIndex !== -1) {
                     const key = line.slice(0, colonIndex).trim();

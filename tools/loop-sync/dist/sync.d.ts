@@ -30,6 +30,13 @@ export interface SyncOptions {
     json?: boolean;
 }
 /**
+ * Extract frontmatter from markdown files
+ */
+export declare function extractFrontmatter(content: string): {
+    frontmatter: Record<string, string>;
+    body: string;
+};
+/**
  * Main sync function
  */
 export declare function runSync(options: SyncOptions): Promise<DriftReport>;
