@@ -63,7 +63,7 @@ async function readFileContent(filePath: string): Promise<string | null> {
 /**
  * Extract frontmatter from markdown files
  */
-function extractFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
+export function extractFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
   const frontmatter: Record<string, string> = {};
   let body = content;
   

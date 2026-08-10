@@ -4,7 +4,7 @@ import path from 'node:path';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { runSync, formatReport } from '../dist/sync.js';
+import { runSync, formatReport, extractFrontmatter } from '../dist/sync.js';
 
 const testDir = path.join(process.cwd(), '.test-tmp');
 const exec = promisify(execFile);
@@ -80,6 +80,31 @@ describe('runSync', () => {
   test('provides suggestions', async () => {
     const report = await runSync({ targetDir: testDir, ...baseOpts });
     assert.ok(report.suggestions.length > 0);
+  });
+});
+
+describe('extractFrontmatter', () => {
+  test('parses LF frontmatter', () => {
+    const { frontmatter, body } = extractFrontmatter('---\nname: demo\nversion: 1.0.0\n---\nBody text\n');
+
+    assert.deepEqual(frontmatter, { name: 'demo', version: '1.0.0' });
+    assert.match(body, /Body text/);
+  });
+
+  test('parses CRLF frontmatter without trailing \\r in keys or values', () => {
+    const { frontmatter, body } = extractFrontmatter('---\r\nname: demo\r\nversion: 1.0.0\r\n---\r\nBody text\r\n');
+
+    assert.deepEqual(frontmatter, { name: 'demo', version: '1.0.0' });
+    assert.ok(Object.keys(frontmatter).every((key) => !key.endsWith('\r')));
+    assert.match(body, /Body text/);
+  });
+
+  test('rejects opening fence without newline', () => {
+    const content = '---hello\nname: demo\n---\nBody text\n';
+    const { frontmatter, body } = extractFrontmatter(content);
+
+    assert.deepEqual(frontmatter, {});
+    assert.equal(body, content);
   });
 });
 
