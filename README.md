@@ -301,13 +301,13 @@ Addy Osmani:
 
 **First PR?** Pick one open issue below. Stories and adopters get **same-day review** when possible. See [CONTRIBUTORS.md](CONTRIBUTORS.md) and the [contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123).
 
-**13 open** [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)s (refreshed **2026-08-10** — Wave 6 from real community PR pain). Comment **"I'll take this"** for assignment.
+**12 open** [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)s (refreshed **2026-08-10** — Wave 6 from real community PR pain). Comment **"I'll take this"** for assignment.
 
 | Time | Issue | What you ship |
 |------|-------|---------------|
 | ~10 min | [#120 — Adopters list](https://github.com/cobusgreyling/loop-engineering/issues/120) | One row in `docs/adopters.md` (or [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) template) |
 | ~15–20 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) · [#119 — PR Babysitter failure](https://github.com/cobusgreyling/loop-engineering/issues/119) | Honest `stories/` write-up + index row |
-| ~20–25 min | [#482 — CONTRIBUTING Path A/B/C](https://github.com/cobusgreyling/loop-engineering/issues/482) · [#483 — Windows notes](https://github.com/cobusgreyling/loop-engineering/issues/483) | Setup map + Windows/CRLF landing notes (pain from #477 / #476) |
+| ~20–25 min | [#483 — Windows notes](https://github.com/cobusgreyling/loop-engineering/issues/483) | Windows/CRLF landing notes in QUICKSTART (pain from #476) |
 | ~20–40 min | [#481 — append-run-log JSON test](https://github.com/cobusgreyling/loop-engineering/issues/481) · [#480 — skill-dedup test](https://github.com/cobusgreyling/loop-engineering/issues/480) · [#479 — loop-sync CRLF tests](https://github.com/cobusgreyling/loop-engineering/issues/479) | Regression tests locking fixes from #474–#476 |
 | ~40–45 min | [#387 — Hermes CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/387) · [#388 — Hermes Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/388) · [#484 — Windsurf Post-Merge](https://github.com/cobusgreyling/loop-engineering/issues/484) · [#485 — Windsurf Changelog](https://github.com/cobusgreyling/loop-engineering/issues/485) | Fill pattern-coverage gaps in `examples/` |
 | Anytime | Templates | [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) · [Share a story](https://github.com/cobusgreyling/loop-engineering/issues/new?template=share-story.yml) |
