@@ -50,13 +50,27 @@ Also add an entry to `patterns/registry.yaml`.
 - Include at least one failure or surprise
 - Actionable lesson in one paragraph
 
-## Development Setup
+## Contributor paths (pick one)
+
+| Path | When | Setup |
+|------|------|--------|
+| **A — Content** | Stories, examples, adopters, most docs | No install — edit markdown, open PR |
+| **B — One package** | Fix a single CLI under `tools/<pkg>` | `cd tools/<pkg> && npm ci && npm test` |
+| **C — Full monorepo** | Registry / cross-package scripts | Root `npm ci` then commands below |
+
+Stories and adopters get **same-day review** when possible. Live backlog: [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+
+## Development Setup (Path C)
 
 ```bash
 npm ci   # at repo root – installs yaml/ajv for scripts/validate-registry.mjs
 npm run validate:registry
 npm run check:loop-init
 ```
+
+## Area owners
+
+See [docs/area-owners.md](./docs/area-owners.md). Docs/examples/stories PRs are co-reviewed by [@AIMindCrafter](https://github.com/AIMindCrafter) (CODEOWNERS).
 
 ## Pull Request Checklist
 

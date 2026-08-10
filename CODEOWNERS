@@ -1,8 +1,14 @@
-# Default owner for review routing (solo maintainer today).
+# Default owner for review routing.
 * @cobusgreyling
 
+# Core patterns, tools, CI — maintainer
 /patterns/ @cobusgreyling
 /tools/ @cobusgreyling
 /.github/ @cobusgreyling
-/docs/ @cobusgreyling
 /starters/ @cobusgreyling
+
+# Docs / examples / stories — co-triaged by community area owner
+# (AIMindCrafter: multi-PR docs/examples track; write access for CODEOWNERS reviews)
+/docs/ @cobusgreyling @AIMindCrafter
+/examples/ @cobusgreyling @AIMindCrafter
+/stories/ @cobusgreyling @AIMindCrafter

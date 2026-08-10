@@ -79,3 +79,12 @@ create_issue "Add MiniMax foundry flags to QUICKSTART" "good first issue,docs" "
 create_issue "Document public loop-worktree lock import in QUICKSTART" "good first issue,docs" "$BODY_DIR/quickstart-worktree-lock-import.md"
 create_issue "Share a loop-sandbox production story" "good first issue,story" "$BODY_DIR/loop-sandbox-story.md"
 create_issue "Add budget-negotiator skill discoverability to docs" "good first issue,docs" "$BODY_DIR/budget-negotiator-docs.md"
+
+# Wave 6 — 2026-08-10 community pain (from merged PRs #474–#477) + coverage gaps
+create_issue "Add CRLF frontmatter regression tests for loop-sync" "good first issue,tooling" "$BODY_DIR/loop-sync-crlf-tests.md"
+create_issue "Add skill-dedup regression test for readiness-core" "good first issue,tooling" "$BODY_DIR/readiness-core-skill-dedup-test.md"
+create_issue "Add invalid-JSON test for append-run-log" "good first issue,tooling" "$BODY_DIR/append-run-log-invalid-json-test.md"
+create_issue "Expand CONTRIBUTING with Path A/B/C setup map" "good first issue,docs" "$BODY_DIR/contributing-path-abc.md"
+create_issue "Add Windows contributor notes to QUICKSTART" "good first issue,docs" "$BODY_DIR/windows-contributor-notes.md"
+create_issue "Add Windsurf Post-Merge Cleanup example doc" "good first issue,docs" "$BODY_DIR/windsurf-post-merge-cleanup-example.md"
+create_issue "Add Windsurf Changelog Drafter example doc" "good first issue,docs" "$BODY_DIR/windsurf-changelog-drafter-example.md"
