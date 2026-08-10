@@ -4,7 +4,7 @@ import path from 'node:path';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { runSync, formatReport } from '../dist/sync.js';
+import { runSync, formatReport, extractFrontmatter } from '../dist/sync.js';
 
 const testDir = path.join(process.cwd(), '.test-tmp');
 const exec = promisify(execFile);
@@ -115,6 +115,36 @@ describe('formatReport', () => {
 
     assert.match(formatted, /AGENTS\.md/);
     assert.match(formatted, /missing/i);
+  });
+});
+
+describe('extractFrontmatter', () => {
+  test('parses LF frontmatter', () => {
+    const { frontmatter, body } = extractFrontmatter(
+      '---\nkey: value\n---\nbody text\n',
+    );
+    assert.deepEqual(frontmatter, { key: 'value' });
+    assert.equal(body, 'body text\n');
+  });
+
+  test('parses CRLF frontmatter without trailing carriage returns', () => {
+    const { frontmatter, body } = extractFrontmatter(
+      '---\r\nkey: value\r\nother: thing\r\n---\r\nbody text\r\n',
+    );
+    assert.deepEqual(frontmatter, { key: 'value', other: 'thing' });
+    assert.ok(!Object.values(frontmatter).some((v) => v.endsWith('\r')));
+    assert.ok(!Object.keys(frontmatter).some((k) => k.endsWith('\r')));
+    assert.equal(body, 'body text\r\n');
+  });
+
+  test('rejects opening fence without newline (---hello)', () => {
+    const { frontmatter } = extractFrontmatter('---hello\nkey: value\n---\n');
+    assert.deepEqual(frontmatter, {});
+  });
+
+  test('rejects closing fence without preceding newline', () => {
+    const { frontmatter } = extractFrontmatter('---\nkey: value\n---oops\n');
+    assert.deepEqual(frontmatter, {});
   });
 });
 
