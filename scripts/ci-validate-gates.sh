@@ -35,6 +35,9 @@ npm install --no-save yaml@2 ajv@8
 node scripts/validate-registry.mjs
 node scripts/check-loop-init-sync.mjs
 
+echo "Smoke-testing scripts…"
+node scripts/append-run-log.test.mjs
+
 echo "Building and testing readiness-core…"
 (
   cd tools/readiness-core
