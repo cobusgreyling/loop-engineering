@@ -7,6 +7,7 @@ Same patterns, different tools. Skills and state schemas are shared; only schedu
 | Grok Build TUI | [grok/](./grok/) |
 | Claude Code | [claude-code/](./claude-code/) |
 | Codex App | [codex/](./codex/) |
+| LongHorizon-Harness | [longhorizon-harness/](./longhorizon-harness/) |
 | OpenClaw | [openclaw/](./openclaw/) |
 | Cursor | [cursor/](./cursor/) |
 | Windsurf | [windsurf/](./windsurf/) |
