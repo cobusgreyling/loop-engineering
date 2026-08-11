@@ -241,7 +241,7 @@ function foundryStackYaml(
         ? minimaxInterfaceYaml(model, region)
         : `    - primitive: model/anthropic
       config:
-        model: claude-sonnet-4-20250514`;
+        model: claude-sonnet-4-6`;
     return `name: ${stackName}
 version: 1.0.0
 description: "loop-engineering ${pattern} → implementer harness (loop-init --with-foundry)"
