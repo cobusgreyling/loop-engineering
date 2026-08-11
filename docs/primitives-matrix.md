@@ -425,3 +425,54 @@ a second Cline session (or human diff review) for maker/checker separation, and
 
 https://docs.cline.bot/
 
+## Appendix: Continue.dev
+
+Continue.dev is an open-source AI coding assistant for VS Code and JetBrains.
+Map the same loop primitives onto Continue's rules directory, MCP config, and
+external schedulers.
+
+| Primitive | Continue.dev mapping |
+|-----------|----------------------|
+| Scheduling | No native cron-style scheduler. Use VS Code tasks, JetBrains run configurations, external schedulers (cron, systemd, GitHub Actions), or a headless script invoking the Continue API to run sessions on a cadence. |
+| Skills / Rules path | Project rules: `.continue/rules/` directory (markdown rule files). Global rules: `~/.continue/rules/`. Main config at `.continue/config.yaml` (project) or `~/.continue/config.yaml` (global) for models, MCP servers, and other settings. Load loop instructions as a rules file. |
+| State | Keep `STATE.md` at the repo root and pass it as an editable file for triage loops; each run should read then update only the relevant section. |
+| Maker/checker split | No native subagent or reviewer role. Workaround: run the maker in one Continue session, then open a second Continue session (or manually review the diff view) as the checker before accepting changes. |
+| Connectors | Configure MCP servers in `.continue/config.yaml` (project) or `~/.continue/config.yaml` (global) for GitHub, issue/PR discovery, or other external context. Keep credentials out of prompts and state files. |
+| Honest gaps | No first-class scheduler, no built-in maker/checker separation, no dedicated state-file convention — these are all manual conventions layered on top of the Continue extension, same as most editor-hosted agents. |
+
+Minimal transfer recipe:
+
+```bash
+mkdir -p .continue/rules
+cp templates/SKILL.md.loop-triage .continue/rules/loop-triage.md
+cp starters/minimal-loop/STATE.md.example STATE.md
+```
+
+Week-one Daily Triage prompt (report-only, state updates only):
+
+```text
+Run loop-triage for this repository.
+
+Read STATE.md first.
+Update STATE.md with High Priority and Watch List only.
+Do not edit source code in week one.
+```
+
+Verifier pass for later L2 work — open a second Continue session:
+
+```text
+Act as loop-verifier.
+
+Review the current git diff against STATE.md goals.
+Report PASS/FAIL and do not edit files.
+```
+
+After copying: map scheduling to external schedulers or VS Code tasks until Continue
+has a first-class cron-equivalent. Use `.continue/rules/` for always-on repo guidance,
+a second Continue session (or human diff review) for maker/checker separation, and
+`.continue/config.yaml` for external tools and MCP servers.
+
+### Official Documentation
+
+https://docs.continue.dev/
+
