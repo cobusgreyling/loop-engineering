@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const files = await import(path.resolve(__dirname, '../dist/files.js'));
+const files = await import(pathToFileURL(path.resolve(__dirname, '../dist/files.js')).href);
 
 test('parseRunLog extracts trailing JSON lines newest first', () => {
   const content = `
