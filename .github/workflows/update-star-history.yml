@@ -98,6 +98,11 @@ jobs:
           echo "number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
           gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
 
+          # README/showcase serve charts via jsDelivr (@main). Purge so the
+          # next visit is not stuck on a stale cached SVG after merge lands.
+          curl -fsS "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/assets/visuals/star-history.svg" || true
+          curl -fsS "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/assets/visuals/star-history-dark.svg" || true
+
       - name: Post required commit statuses for branch protection
         if: steps.generate.outputs.skipped != 'true' && steps.pr.outputs.opened == 'true'
         uses: actions/github-script@v9

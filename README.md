@@ -25,14 +25,14 @@
 
 <p align="center">
   <a href="https://cobusgreyling.github.io/loop-engineering/">
-    <img src="assets/visuals/loop-engineering-logo.svg" alt="Loop Engineering logo" width="88" />
+    <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-engineering-logo.svg" alt="Loop Engineering logo" width="88" />
   </a>
 </p>
 
 > **Stop prompting. Design the loop. Get a score.**
 
 <p align="center">
-  <img src="assets/visuals/LE5.jpeg" alt="Loop Engineering — design the system that prompts your agents" width="100%" />
+  <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/LE5.jpeg" alt="Loop Engineering — design the system that prompts your agents" width="100%" />
 </p>
 
 <p align="center">
@@ -55,7 +55,7 @@ npx @cobusgreyling/loop doctor .
 
 <p align="center">
   <a href="docs/QUICKSTART.md">
-    <img src="assets/visuals/loop-audit-demo.gif" alt="Loop Ready score climbs from 10 to 100 in 15 seconds" width="100%" />
+    <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-audit-demo.gif" alt="Loop Ready score climbs from 10 to 100 in 15 seconds" width="100%" />
   </a>
 </p>
 
@@ -152,7 +152,7 @@ memory-engineering → loop-engineering → harness-foundry → outerloop → fl
 | [Add your project](https://github.com/cobusgreyling/loop-engineering/discussions/92) | **Pinned:** Loop Ready badge + adopters list |
 
 <p align="center">
-  <img src="assets/visuals/section-divider.svg" alt="" width="100%" />
+  <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/section-divider.svg" alt="" width="100%" />
 </p>
 
 ## Why This Matters
@@ -181,13 +181,13 @@ Full detail: [docs/primitives.md](docs/primitives.md) · Cross-tool matrix: [doc
 ### Visual Overview
 
 <p align="center">
-  <img src="assets/visuals/primitives-infographic.jpg" alt="The Five Building Blocks + Memory — Loop Engineering" width="100%" />
+  <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/primitives-infographic.jpg" alt="The Five Building Blocks + Memory — Loop Engineering" width="100%" />
 </p>
 
 ### Anatomy of a Loop
 
 <p align="center">
-  <img src="assets/visuals/loop-cycle-animated.svg" alt="Animated loop flow — schedule, triage, state, worktree, implement, verify, MCP, human gate" width="100%" />
+  <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-cycle-animated.svg" alt="Animated loop flow — schedule, triage, state, worktree, implement, verify, MCP, human gate" width="100%" />
 </p>
 
 <details>
@@ -217,7 +217,7 @@ Deeper diagrams — the actor-level sequence within one run, the run lifecycle's
 ## Patterns
 
 <p align="center">
-  <img src="assets/visuals/patterns-overview.svg" alt="Seven production loop patterns with cadence and token cost" width="100%" />
+  <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/patterns-overview.svg" alt="Seven production loop patterns with cadence and token cost" width="100%" />
 </p>
 
 | Pattern | Cadence | Starter | Week 1 | Token cost |
@@ -357,9 +357,9 @@ MIT
 <p align="center">
   <a href="https://cobusgreyling.github.io/loop-engineering/star-history.html">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/visuals/star-history-dark.svg" />
-      <source media="(prefers-color-scheme: light)" srcset="assets/visuals/star-history.svg" />
-      <img alt="Star History Chart" src="assets/visuals/star-history.svg" />
+      <source media="(prefers-color-scheme: dark)" srcset="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/star-history-dark.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/star-history.svg" />
+      <img alt="Star History Chart" src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/star-history.svg" />
     </picture>
   </a>
 </p>

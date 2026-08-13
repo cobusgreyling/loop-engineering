@@ -11,9 +11,9 @@ title: Loop Engineering — Showcase
   <meta name="description" content="The practical reference for loop engineering. Patterns, starters, checklists, and tooling for Grok, Claude Code, Codex, OpenClaw, and Opencode.">
   <meta property="og:title" content="Loop Engineering">
   <meta property="og:description" content="Stop prompting. Design the loop. Get a score. Two npx commands.">
-  <meta property="og:image" content="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-social-banner.jpg">
+  <meta property="og:image" content="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-engineering-social-banner.jpg">
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/showcase.css">
-  <link rel="icon" href="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg">
+  <link rel="icon" href="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-engineering-logo.svg">
   <script type="module">
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.esm.min.mjs";
     mermaid.initialize({
@@ -43,7 +43,7 @@ title: Loop Engineering — Showcase
 <nav class="nav">
   <div class="wrap nav-inner">
     <a href="#" class="logo">
-      <img src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg" alt="" width="28" height="28" style="vertical-align:-6px;margin-right:8px;border-radius:6px;" />
+      <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-engineering-logo.svg" alt="" width="28" height="28" style="vertical-align:-6px;margin-right:8px;border-radius:6px;" />
       Loop <span>Engineering</span>
     </a>
     <button
@@ -97,7 +97,7 @@ npx @cobusgreyling/loop doctor .</pre>
   </div>
   <img
     class="hero-img"
-    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-audit-demo.gif"
+    src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-audit-demo.gif"
     alt="Loop Ready score climbs from 10 to 100"
     loading="lazy"
     style="margin-top:24px;"
@@ -125,7 +125,7 @@ npx @cobusgreyling/loop doctor .</pre>
   <p class="section-desc">You design it once. You're not prompting every micro-step.</p>
   <img
     class="hero-img"
-    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-cycle-animated.svg"
+    src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/loop-cycle-animated.svg"
     alt="Anatomy of a loop — schedule, triage, state, worktree, implementer, verifier, MCP, human gate"
     loading="lazy"
     style="margin-bottom: 24px;"
@@ -348,7 +348,7 @@ flowchart TB
   <p class="section-desc">Documented loops with scheduling, skills, state schemas, verification, and honest failure modes.</p>
   <img
     class="hero-img"
-    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/patterns-overview.svg"
+    src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/patterns-overview.svg"
     alt="Seven production loop patterns — cadence and token cost overview"
     loading="lazy"
     style="margin-bottom: 28px;"
@@ -1059,7 +1059,7 @@ function setupMobileNav() {
 
 async function renderTelemetry() {
   try {
-    const res = await fetch('https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/loop-run-log.md');
+    const res = await fetch('https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/loop-run-log.md');
     const text = await res.text();
     
     // Parse JSON lines from the markdown file
