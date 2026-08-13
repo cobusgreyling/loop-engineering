@@ -1,0 +1,41 @@
+name: Pattern request
+description: Request a new loop pattern or tool mapping
+title: "[pattern] "
+labels:
+  - pattern-request
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Pattern name
+      placeholder: e.g. Nightly Flake Hunter
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal (one sentence)
+    validations:
+      required: true
+  - type: dropdown
+    id: tools
+    attributes:
+      label: Tools you need it for
+      multiple: true
+      options:
+        - Grok
+        - Claude Code
+        - Codex
+        - Cursor
+        - Opencode
+        - GitHub Actions
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: When would this run? What does success look like?
+    validations:
+      required: true

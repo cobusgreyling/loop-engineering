@@ -16,9 +16,10 @@ npx @cobusgreyling/loop-audit . --suggest
 **From this repo:**
 
 ```bash
+# readiness-core is a monorepo sibling (file: dep) — prebuild builds it for you
 cd tools/loop-audit
 npm install
-npm run build
+npm run build   # runs prebuild → builds ../readiness-core, then tsc
 node dist/cli.js /path/to/your/project
 ```
 

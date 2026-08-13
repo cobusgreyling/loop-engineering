@@ -1,27 +1,28 @@
 ## Summary
-<!-- One sentence what this does and why -->
+<!-- One sentence: what this does and why -->
+
+## Related issue
+<!-- Fixes #123 or Relates to #456 — link if there is one -->
 
 ## Changes
 - [ ] New pattern or starter (followed `templates/pattern-template.md` + updated `registry.yaml`)
-- [ ] Doc / example improvement
-- [ ] Tool change (loop-audit)
-- [ ] Story (includes real failure or surprise + lesson)
+- [ ] Doc / example / story improvement
+- [ ] Tool / CLI change under `tools/`
+- [ ] Test only
+- [ ] Other
 
 ## Checklist (from CONTRIBUTING)
-- [ ] All required sections present for patterns
-- [ ] Links work from README, patterns/README, starters/README, docs/index
-- [ ] No secrets, tokens, internal company URLs
+- [ ] Links work from README or the relevant index
+- [ ] No secrets, tokens, or internal company URLs
 - [ ] `STATE.md*` examples use `.example` suffix
 - [ ] Safety-related content references `docs/safety.md`
-- [ ] Ran `node tools/loop-audit/dist/cli.js .` (or on the starter) and addressed findings
+- [ ] If you touched a package under `tools/<pkg>`: `cd tools/<pkg> && npm ci && npm test`
+- [ ] If you touched the registry: root `npm ci && npm run validate:registry`
 
 ## Testing / Dogfood
-- [ ] `loop-audit` passes on affected starters or this repo
-- [ ] Manual review of generated state / skill output
-
-## Screenshots / Examples (if UI or command output)
-<!-- Paste relevant output or link to rendered docs -->
+- [ ] `npx @cobusgreyling/loop audit .` (or package-local tests) on affected paths
+- [ ] Manual review of generated state / skill output if scaffolding changed
 
 ---
 
-*This template enforces the high bar this reference is known for.*
+Docs, stories, adopters, and small tests: **maintainers aim to review within 48 hours** (same-day when possible).

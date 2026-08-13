@@ -14,7 +14,8 @@
     "build": "tsc",
     "test": "npm run build && node --test test/auditor.test.mjs",
     "prepublishOnly": "npm test",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli.js",
+    "prebuild": "npm install --prefix ../readiness-core --no-fund --no-audit && npm run build --prefix ../readiness-core"
   },
   "engines": {
     "node": ">=18"

@@ -12,3 +12,6 @@ contact_links:
   - name: "🌱 Good first issues"
     url: https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
     about: "Scoped ~10 min–1 hr tasks. Comment I'll take this to get assigned."
+  - name: "🔒 Security vulnerability"
+    url: https://github.com/cobusgreyling/loop-engineering/blob/main/SECURITY.md
+    about: "Report security issues privately — do not open a public issue."

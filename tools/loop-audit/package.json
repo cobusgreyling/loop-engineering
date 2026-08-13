@@ -17,7 +17,8 @@
     "start": "node dist/cli.js",
     "audit": "npm run build && node dist/cli.js",
     "audit:suggest": "npm run build && node dist/cli.js . --suggest",
-    "demo": "bash ../../scripts/before-after-demo.sh"
+    "demo": "bash ../../scripts/before-after-demo.sh",
+    "prebuild": "npm install --prefix ../readiness-core --no-fund --no-audit && npm run build --prefix ../readiness-core"
   },
   "engines": {
     "node": ">=18"

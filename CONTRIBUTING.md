@@ -2,6 +2,8 @@
 
 This repo is a **practical engineering reference**, not a hype collection. We welcome patterns, stories, tool mappings, and honest failure reports.
 
+**Maintainer response:** docs, stories, adopters, and small tests get a first response within **48 hours** (same-day when possible). Comment *I'll take this* on a [`good first issue`](https://github.com/cobusgreyling/loop-engineering/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get assigned.
+
 ## Ways to Contribute
 
 | Contribution | Where |

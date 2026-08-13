@@ -1,0 +1,67 @@
+name: Share a production story
+description: Honest win or failure from running a loop (failures are first-class)
+title: "[story] "
+labels:
+  - story
+  - good first issue
+body:
+  - type: markdown
+    value: |
+      Real experience preferred. Anonymize if needed. You can also open a PR under `stories/` — same-day review when possible.
+
+  - type: dropdown
+    id: pattern
+    attributes:
+      label: Pattern used
+      options:
+        - Daily Triage
+        - PR Babysitter
+        - CI Sweeper
+        - Dependency Sweeper
+        - Changelog Drafter
+        - Post-Merge Cleanup
+        - Issue Triage
+        - Other / custom
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Primary tool
+      options:
+        - Grok
+        - Claude Code
+        - Codex
+        - Cursor
+        - Opencode
+        - Windsurf
+        - GitHub Actions
+        - Mixed / other
+    validations:
+      required: true
+
+  - type: textarea
+    id: worked
+    attributes:
+      label: What worked
+      placeholder: What the loop did well for a week or more
+    validations:
+      required: true
+
+  - type: textarea
+    id: failed
+    attributes:
+      label: What failed or surprised you
+      description: Required — failures are first-class content in this repo
+      placeholder: Token spike, bad auto-merge, drift, human gate miss…
+    validations:
+      required: true
+
+  - type: textarea
+    id: lesson
+    attributes:
+      label: Actionable lesson
+      description: One paragraph others can act on
+    validations:
+      required: true

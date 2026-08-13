@@ -1,0 +1,42 @@
+name: Bug report
+description: Something is broken, inaccurate, or loop-audit gives wrong results
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: describe
+    attributes:
+      label: Describe the bug
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include `npx @cobusgreyling/loop audit . --json` or other command output if relevant
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "OS: macOS 15 · Node: 22 · package: @cobusgreyling/loop-audit@…"
+    validations:
+      required: true
