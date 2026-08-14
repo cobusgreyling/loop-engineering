@@ -314,13 +314,11 @@ Addy Osmani:
 |------|-------|---------------|
 | ~10 min | [#120 — Adopters list](https://github.com/cobusgreyling/loop-engineering/issues/120) | One row in `docs/adopters.md` (or [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) template) |
 | ~15–20 min | [#118 — Daily Triage story](https://github.com/cobusgreyling/loop-engineering/issues/118) · [#173 — Issue Triage story](https://github.com/cobusgreyling/loop-engineering/issues/173) · [#119 — PR Babysitter failure](https://github.com/cobusgreyling/loop-engineering/issues/119) | Honest `stories/` write-up + index row |
-| ~20–25 min | [#483 — Windows notes](https://github.com/cobusgreyling/loop-engineering/issues/483) | Windows/CRLF landing notes in QUICKSTART (pain from #476) |
-| ~20–40 min | [#481 — append-run-log JSON test](https://github.com/cobusgreyling/loop-engineering/issues/481) · [#480 — skill-dedup test](https://github.com/cobusgreyling/loop-engineering/issues/480) · [#479 — loop-sync CRLF tests](https://github.com/cobusgreyling/loop-engineering/issues/479) | Regression tests locking fixes from #474–#476 |
-| ~40–45 min | [#387 — Hermes CI Sweeper](https://github.com/cobusgreyling/loop-engineering/issues/387) · [#388 — Hermes Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/388) · [#484 — Windsurf Post-Merge](https://github.com/cobusgreyling/loop-engineering/issues/484) · [#485 — Windsurf Changelog](https://github.com/cobusgreyling/loop-engineering/issues/485) | Fill pattern-coverage gaps in `examples/` |
+| ~40–45 min | [#388 — Hermes Issue Triage](https://github.com/cobusgreyling/loop-engineering/issues/388) | Hermes Issue Triage example in `examples/hermes/` |
 | Anytime | Templates | [Add Adopter](https://github.com/cobusgreyling/loop-engineering/issues/new?template=add-adopter.yml) · [Share a story](https://github.com/cobusgreyling/loop-engineering/issues/new?template=share-story.yml) |
 | Hubs | Discussions | [Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/326) · [Ask anything](https://github.com/cobusgreyling/loop-engineering/discussions/327) |
 
-**Recently shipped (thanks!):** @pxmpsdev — loop-sync CRLF tests (#496), readiness skill-dedup (#497), append-run-log invalid-JSON (#498), metrics unparseable run_id (#499). @shixi-li — Hermes CI Sweeper example (#500). Earlier: @pxmpsdev #474–#477.
+**Recently shipped (thanks!):** @AIMindCrafter — Windows/CRLF notes (#492), Windsurf Post-Merge Cleanup (#494), Windsurf Changelog Drafter (#495). @pxmpsdev — loop-sync CRLF tests (#496), readiness skill-dedup (#497), append-run-log invalid-JSON (#498), metrics unparseable run_id (#499). @shixi-li — Hermes CI Sweeper example (#500).
 
 **Docs/examples triage:** @AIMindCrafter co-owns `docs/`, `examples/`, and `stories/` (see [CODEOWNERS](CODEOWNERS) + [docs/area-owners.md](docs/area-owners.md)).
 

@@ -1,6 +1,13 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: "npm"
     directory: "/tools/loop-audit"
     schedule:
       interval: "weekly"
@@ -14,6 +21,13 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: "chore(loop-init)"
+  - package-ecosystem: "npm"
+    directory: "/tools/mcp-server"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(mcp)"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

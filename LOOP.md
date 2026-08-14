@@ -85,7 +85,7 @@ bash scripts/before-after-demo.sh
 | Changelog Drafter | L1 | ✅ `changelog-drafter.yml` | Mondays; opens release-prep issue |
 | Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main`; needs `STAR_HISTORY_TOKEN` secret (PAT). Skips (success) if secret unset — safe for forks |
 | Validate + Audit | L1 | ✅ `validate-patterns.yml`, `audit.yml` | On PR + push; readiness score on PRs |
-| Dependabot | L1 | ✅ `.github/dependabot.yml` | Weekly npm (`loop-audit`, `loop-init`) + GitHub Actions |
+| Dependabot | L1 | ✅ `.github/dependabot.yml` | Weekly npm (root, `loop-audit`, `loop-init`, `mcp-server`) + GitHub Actions |
 | PR Babysitter | L2 | ⏸ Manual | Maintainer `/loop` or `starters/pr-babysitter` — no Action yet |
 | Dependency Sweeper | L2 | ⏸ Dependabot only | Patch PRs via Dependabot; full sweeper starter is manual |
 | CI Sweeper | L2 | ⏸ Partial | Reacts via failing validate/audit; no dedicated retry workflow |
