@@ -47,7 +47,11 @@ export function parseInterval(token) {
     if (!m)
         throw new Error(`Invalid cadence interval: ${token}`);
     const unit = m[2];
-    return Number(m[1]) * INTERVAL_MS[unit];
+    const value = Number(m[1]);
+    if (value <= 0) {
+        throw new Error(`Invalid cadence interval: ${token}. The interval value must be greater than zero.`);
+    }
+    return value * INTERVAL_MS[unit];
 }
 /** Runs per day for a single interval like 15m or 1d. */
 export function runsPerDayForInterval(interval) {

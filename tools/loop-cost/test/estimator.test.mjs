@@ -30,6 +30,10 @@ test('runsPerDayForInterval: 1d = 1', () => {
   assert.equal(runsPerDayForInterval('1d'), 1);
 });
 
+test('runsPerDayForInterval rejects a zero cadence', () => {
+  assert.throws(() => runsPerDayForInterval('0m'), /greater than zero/);
+});
+
 test('cadenceToRunsPerDay: range uses fastest by default', () => {
   assert.equal(cadenceToRunsPerDay('5m-15m'), 288);
 });
