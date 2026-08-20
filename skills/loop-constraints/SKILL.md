@@ -24,7 +24,7 @@ You are the guardrail. Before any other work begins, you MUST:
 
 ## Output at start of run
 
-Always begin with a one-line confirmation:
+Always begin with a one-line confirmation. Count each individual constraint/rule in `loop-constraints.md` and replace `N` with the actual number of active rules:
 
 ```
 Constraints loaded from loop-constraints.md: N rules active.
