@@ -8,9 +8,10 @@
 | [pr-babysitter.md](./pr-babysitter.md) | PR Babysitter (L1 report → L2 worktree + verifier) |
 | [ci-sweeper.md](./ci-sweeper.md) | CI Sweeper (L1 report → L2 worktree + verifier) |
 | [issue-triage.md](./issue-triage.md) | Issue Triage (L1 propose-only → L2 allowlisted labels) |
+| [loop-verifier.md](./loop-verifier.md) | Loop Verifier (L2 — independent maker/checker split via `delegate_task`) |
 
 Optional **channel delivery** (Telegram, Slack, Discord, WhatsApp, SMS, Feishu) is Hermes's differentiator — the same cron job can post its summary into any connected home channel.
 
 No `loop-init --tool hermes` yet — copy skills and state manually, then schedule via `hermes cron`.
 
-See [docs/primitives-matrix.md](../../docs/primitives-matrix.md) for the Hermes column in the cross-tool matrix.
+See [docs/primitives-matrix.md](../../docs/primitives-matrix.md) for the Hermes matrix.
