@@ -57,7 +57,7 @@ delegate_task(
 
 Split implementer and verifier across **two** cron jobs chained with
 `--context-from` (the upstream job's stdout is injected into the downstream
-prompt) when you need the verifier fully independent:
+job's prompt) when you need the verifier fully independent:
 
 ```bash
 # 1. Implementer job proposes the fix
@@ -69,17 +69,21 @@ IMPLEMENTER_ID=$(hermes cron create "5 7 * * 1-5" \
   "Run the loop-triage skill. For high-priority single-file bugfixes propose a minimal diff in a fenced patch block. Update STATE.md. Do not apply." \
   | tail -1)
 
-# 2. Verifier job reviews the proposal
+# 2. Verifier job reviews the proposal, catching scope or test failures
 VERIFIER_ID=$(hermes cron create "10 7 * * 1-5" \
   --name "daily-fix-verify" \
   --deliver local \
   --skill loop-verifier \
   --workdir "$PWD" \
-  "Review the injected proposal against STATE.md using the loop-verifier skill: scope, intent, tests, no-cheating, risk. Update STATE.md with the verdict." \
+  "Read the injected proposal. Review it against STATE.md using the loop-verifier skill: scope, intent, tests, no-cheating, risk. Update STATE.md with the verdict." \
   | tail -1)
 
 hermes cron edit "$VERIFIER_ID" --context-from "$IMPLEMENTER_ID"
 ```
+
+The jobs are independent sessions; `--context-from` joins them into a pipeline.
+This is the Hermes shape of the maker/checker split. The implementer can be a
+`delegate_task` too — but the verifier must always be a separate call or job.
 
 ## Verification split
 
@@ -91,34 +95,35 @@ hermes cron edit "$VERIFIER_ID" --context-from "$IMPLEMENTER_ID"
 
 Keep the verifier's tool allowance minimal: `terminal` (to run tests) and `file`
 (to read the diff) are enough for most review loops. Do not hand it write access
-to GH, MCP connectors, or code paths unless the loop is trusted.
+to git or to MCP connectors unless the loop is fully trusted.
 
 ## Safety (L1 → L2)
 
-- Week one stays report-only; the verifier adds no run authority of its own.
+- Week one stays report-only; the verifier adds no touch to production.
 - The verifier's default stance is **REJECT** until tests run and scope is
-  checked — the skill encodes this.
-- Do not trust the implementer's "tests pass" claim; the verifier must run them.
-- Escalate ambiguous, auth, payments, security, public-API changes to a human —
-  see [docs/safety.md](../../../docs/safety.md).
-- Cost and attempt caps: a new verifier `delegate_task` is a fresh agent session
-  per review — count it in the loop budget (scripts/loop-budget.md).
+  checked — the `loop-verifier` skill encodes this.
+- Do not trust the implementer's claim that tests passed; the verifier must run them.
+- Escalate ambiguous, auth, payments, security, or public-API changes to a human
+  (see [docs/safety.md](../../docs/safety.md)).
 
-## Operations
+## Cost & running
 
 ```bash
 hermes cron list
 hermes cron status
-hermes cron run <job-id>            # one-off test tick
+hermes cron run <job-id>          # one-off test tick
 hermes cron edit "$VERIFIER_ID" --context-from "$IMPLEMENTER_ID"
 hermes cron pause <job-id>
 ```
 
-Audit the loop: `npx @cobusgreyling/loop-audit . --suggest`
+Every verifier is a fresh agent session, so count it in a token/attempt budget —
+see [`loop-budget.md`](../../../loop-budget.md) and
+[`tools/loop-cost`](../../../tools/loop-cost/). Typical L2: triage (cheap) →
+implement (expensive) → verify (medium). Attempt cap of 3 before escalation.
 
 ## References
 
-- [Loop Verifier skill](../../../skills/loop-verifier/SKILL.md) — the shared spec
+- [Loop Verifier skill](../../skills/loop-verifier/SKILL.md) — the shared spec
 - [Hermes Daily Triage](./daily-triage.md) — L1 base this wires into
 - [Hermes PR Babysitter](./pr-babysitter.md) — L2 progression with worktrees
-- [docs/safety.md](../../../docs/safety.md) — human gates
+- [docs/safety.md](../../docs/safety.md) — human gates
