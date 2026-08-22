@@ -69,7 +69,7 @@ IMPLEMENTER_ID=$(hermes cron create "5 7 * * 1-5" \
   "Run the loop-triage skill. For high-priority single-file bugfixes propose a minimal diff in a fenced patch block. Update STATE.md. Do not apply." \
   | tail -1)
 
-# 2. Verifier job reviews the proposal, catching scope or test failures
+# 2. Verifier job reviews the proposal, catching scope or test problems
 VERIFIER_ID=$(hermes cron create "10 7 * * 1-5" \
   --name "daily-fix-verify" \
   --deliver local \
@@ -117,9 +117,9 @@ hermes cron pause <job-id>
 ```
 
 Every verifier is a fresh agent session, so count it in a token/attempt budget —
-see [`loop-budget.md`](../../../loop-budget.md) and
-[`tools/loop-cost`](../../../tools/loop-cost/). Typical L2: triage (cheap) →
-implement (expensive) → verify (medium). Attempt cap of 3 before escalation.
+see [loop-budget.md](../../loop-budget.md) and
+[loop-cost](../../tools/loop-cost/). Typical L2: triage (cheap) → implement
+(expensive) → verify (medium). Attempt cap of 3 before escalation.
 
 ## References
 
