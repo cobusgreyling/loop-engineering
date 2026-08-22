@@ -14,4 +14,4 @@ Optional **channel delivery** (Telegram, Slack, Discord, WhatsApp, SMS, Feishu) 
 
 No `loop-init --tool hermes` yet — copy skills and state manually, then schedule via `hermes cron`.
 
-See [docs/primitives-matrix.md](../../docs/primitives-matrix.md) for the Hermes matrix.
+See [docs/primitives-matrix.md](../../docs/primitives-matrix.md) for the Hermes column in the cross-tool matrix.
