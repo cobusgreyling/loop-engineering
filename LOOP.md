@@ -9,9 +9,9 @@ The goal of this repo is to be the canonical, copyable, high-signal collection o
 ### Daily Triage (L1 — automated + report)
 - Cadence: 1d weekdays (`/.github/workflows/daily-triage.yml`)
 - Skill: `loop-triage` (from `skills/` and `starters/minimal-loop`)
-- State: STATE.md (updated by workflow; human reviews weekly issue)
+- State: STATE.md (written by `scripts/github-triage.mjs` from **open PRs + issues**, not from the Loop Ready score)
 - Phase: Report-only. Human reviews and decides actions.
-- Handoff: Design decisions, large refactors, new pattern acceptance.
+- Handoff: Blocked fork PRs, unanswered issues, design decisions, new pattern acceptance.
 
 ### PR Babysitter (L2 — assisted, manual trigger)
 - Cadence: 10–15m during active hours (maintainer `/loop` or future Action)
@@ -81,7 +81,8 @@ bash scripts/before-after-demo.sh
 
 | Loop | Level | Automation | Notes |
 |------|-------|------------|-------|
-| Daily Triage | L1 | ✅ `daily-triage.yml` | Weekdays; updates `STATE.md` + `loop-run-log.md` |
+| Daily Triage | L1 | ✅ `daily-triage.yml` | Weekdays; `github-triage.mjs` writes `STATE.md` from open PRs/issues |
+| Fork PR gate | L1 | ✅ `fork-pr-gate.yml` | Content-only fork PRs get `validate`/`audit` statuses without workflow approval |
 | Changelog Drafter | L1 | ✅ `changelog-drafter.yml` | Mondays; opens release-prep issue |
 | Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main`; needs `STAR_HISTORY_TOKEN` secret (PAT). Skips (success) if secret unset — safe for forks |
 | Validate + Audit | L1 | ✅ `validate-patterns.yml`, `audit.yml` | On PR + push; readiness score on PRs |

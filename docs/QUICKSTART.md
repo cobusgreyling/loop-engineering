@@ -12,6 +12,8 @@ Landed from [X](https://x.com), the [showcase](https://cobusgreyling.github.io/l
 
 ## 1. Pick your pain (30 seconds)
 
+Have a **feature or refactor** to finish, not a maintenance cadence? That is a different job — see [jobs.md](./jobs.md) and the [refactor / change path](./refactor.md). Do not point `daily-triage` at a whole-repo rewrite.
+
 Not sure which loop? Use the [interactive pattern picker](https://cobusgreyling.github.io/loop-engineering/#interactive) on the showcase — it recommends a pattern, scaffold command, first `/loop` line, and a token estimate.
 
 Or start with **Daily Triage** if you just want to learn loop discipline with low risk.

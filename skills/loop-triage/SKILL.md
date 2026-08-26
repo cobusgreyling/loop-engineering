@@ -13,10 +13,13 @@ You are an expert engineering triage agent. Your job is to produce a clean, prio
 
 ## Inputs (the loop will provide these)
 - Recent CI / test failures (last 24h)
-- Open issues / Linear tickets assigned to the team
+- Open PRs: merge conflicts, failing checks, **no CI** (fork workflows waiting for approval), `BLOCKED`, changes requested
+- Open issues / Linear tickets — especially unanswered >7d and stale `good first issue`s
 - Recent commits on main (last 24–48h)
 - Any Slack / chat threads the loop has visibility into
 - The current state file (what the loop already knows about)
+
+On this reference repo, `scripts/github-triage.mjs` (via `.github/workflows/daily-triage.yml`) is the mechanical source for High Priority. A Loop Ready score of 100 is **watch**, not an all-clear, if GitHub still has blocked PRs.
 
 ## Output Format
 

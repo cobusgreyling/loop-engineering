@@ -72,7 +72,7 @@ npm run check:loop-init
 
 ## Area owners
 
-See [docs/area-owners.md](./docs/area-owners.md). Docs/examples/stories PRs are co-reviewed by [@AIMindCrafter](https://github.com/AIMindCrafter) (CODEOWNERS).
+See [docs/area-owners.md](./docs/area-owners.md). Docs/examples/stories/skills PRs are triaged by [@AIMindCrafter](https://github.com/AIMindCrafter) **by assignment** (not CODEOWNERS — auto-requests were blocking fork PRs). Content-only fork PRs get required `validate`/`audit` statuses from `.github/workflows/fork-pr-gate.yml`.
 
 ## Pull Request Checklist
 

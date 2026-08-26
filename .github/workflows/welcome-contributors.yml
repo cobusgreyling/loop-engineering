@@ -10,6 +10,7 @@ on:
       - 'docs/adopters.md'
       - 'examples/**'
       - 'docs/**'
+      - 'skills/**'
 
 permissions:
   contents: read
@@ -53,6 +54,8 @@ jobs:
             const isAdopter = paths.some((p) => p === 'docs/adopters.md');
             const isExample = paths.some((p) => p.startsWith('examples/')) ||
               pr.title.toLowerCase().includes('example');
+            const isSkill = paths.some((p) => p.startsWith('skills/')) ||
+              pr.title.toLowerCase().includes('skill');
             const isDocs = paths.some((p) => p.startsWith('docs/')) ||
               pr.title.toLowerCase().includes('docs:');
 
@@ -60,6 +63,7 @@ jobs:
             if (isStory) kind = 'a production story';
             else if (isAdopter) kind = 'an adopter listing';
             else if (isExample) kind = 'a tool example';
+            else if (isSkill) kind = 'a skill improvement';
             else if (isDocs) kind = 'a docs improvement';
 
             const body = [

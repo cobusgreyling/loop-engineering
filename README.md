@@ -76,6 +76,7 @@ For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agent
 ## Contents
 
 - [Quickstart (5 min)](docs/QUICKSTART.md)
+- [What do you want to do?](docs/jobs.md)
 - [Quick Links](#quick-links)
 - [Why This Matters](#why-this-matters)
 - [The Five Building Blocks + Memory](#the-five-building-blocks--memory)
@@ -94,6 +95,7 @@ For developers using Grok, Claude Code, Codex, Cursor, and other AI coding agent
 | Start here | Description |
 |------------|-------------|
 | [Quickstart (5 min)](docs/QUICKSTART.md) | `loop init` → `loop doctor` → first loop — **start here if you just landed** |
+| [What do you want to do?](docs/jobs.md) | Jobs table: keep the repo healthy vs **ship a refactor** ([tutorial](docs/refactor.md)) |
 | [CLI front door](docs/cli-front-door.md) | Unified `@cobusgreyling/loop` — old packages stay open |
 | [Loop Engineering essay](https://cobusgreyling.substack.com/p/loop-engineering) | The concept, primitives, and Grok mapping — read for the why |
 | [Pattern Picker](docs/pattern-picker.md) | Which loop to run first — **start here if unsure** |

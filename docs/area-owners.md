@@ -5,7 +5,7 @@ Optional community ownership for review routing. **Owner** still ships `main` an
 | Area | Paths | Owner | Scope |
 |------|-------|-------|--------|
 | **Maintainer** | repo-wide | [@cobusgreyling](https://github.com/cobusgreyling) | Releases, tools, patterns, safety |
-| **Docs / examples / stories** | `docs/`, `examples/`, `stories/` | [@AIMindCrafter](https://github.com/AIMindCrafter) (triage + review) | QUICKSTART, tool examples, production stories, adopters-adjacent docs |
+| **Docs / examples / stories / skills** | `docs/`, `examples/`, `stories/`, `skills/` | [@AIMindCrafter](https://github.com/AIMindCrafter) (triage + review **by assignment**, not CODEOWNERS) | QUICKSTART, tool examples, production stories, skill prompts |
 
 ## What area owners do
 
@@ -24,4 +24,4 @@ Optional community ownership for review routing. **Owner** still ships `main` an
 
 Multi-PR track record in the area + public invite from the maintainer. Start with [CONTRIBUTING.md](../CONTRIBUTING.md) and the [contributor quickstart](https://github.com/cobusgreyling/loop-engineering/discussions/123).
 
-CODEOWNERS file: [../CODEOWNERS](../CODEOWNERS).
+CODEOWNERS ([../CODEOWNERS](../CODEOWNERS)) lists the **maintainer only**. Area owners are invited on the PR when their review is useful; putting them in CODEOWNERS auto-requests a review on every docs/examples PR and leaves fork PRs `BLOCKED` after the maintainer has already approved.

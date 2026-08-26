@@ -37,6 +37,7 @@ node scripts/check-loop-init-sync.mjs
 
 echo "Smoke-testing scripts…"
 node scripts/append-run-log.test.mjs
+node scripts/github-triage.test.mjs
 
 echo "Building and testing readiness-core…"
 (

@@ -1,0 +1,118 @@
+name: Fork PR gate
+
+# Runs in the *base* repo, so first-time-contributor fork PRs still get a
+# required-check outcome without anyone clicking "Approve and run workflows".
+# NEVER checkout or execute PR-head code here — list files via the API only.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Open PR number to re-evaluate (content-only stub vs comment)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  statuses: write
+  pull-requests: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const marker = '— loop-engineering fork-pr-gate';
+
+            const prNumber = context.eventName === 'workflow_dispatch'
+              ? Number(process.env.PR_NUMBER)
+              : context.payload.pull_request.number;
+
+            if (!Number.isFinite(prNumber) || prNumber < 1) {
+              core.setFailed('Missing PR number');
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner, repo, pull_number: prNumber,
+            });
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: prNumber, per_page: 100,
+            });
+            const paths = files.map((f) => f.filename);
+
+            const isContentPath = (p) => {
+              if (
+                p.startsWith('docs/') ||
+                p.startsWith('examples/') ||
+                p.startsWith('stories/') ||
+                p.startsWith('skills/') ||
+                p.startsWith('assets/')
+              ) {
+                return true;
+              }
+              // Root markdown / license only — not CODEOWNERS, gate.yaml, patterns, tools.
+              if (!p.includes('/')) {
+                return (
+                  p.endsWith('.md') ||
+                  p === 'LICENSE' ||
+                  p === 'CODE_OF_CONDUCT.md'
+                );
+              }
+              return false;
+            };
+
+            const allContent = paths.length > 0 && paths.every(isContentPath);
+            const sha = pr.head.sha;
+            const targetUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            core.info(`PR #${prNumber} sha=${sha} files=${paths.length} content-only=${allContent}`);
+            core.info(paths.join('\n'));
+
+            if (allContent) {
+              for (const check of ['validate', 'audit']) {
+                await github.rest.repos.createCommitStatus({
+                  owner,
+                  repo,
+                  sha,
+                  state: 'success',
+                  context: check,
+                  description: 'Content-only PR — required checks via fork-pr-gate (base repo)',
+                  target_url: targetUrl,
+                });
+              }
+              core.info('Posted success statuses for validate + audit');
+              return;
+            }
+
+            // Code / patterns / tools / CI: do not fake required checks.
+            // Leave a one-shot comment so the maintainer knows to approve workflows.
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: prNumber, per_page: 100,
+            });
+            if (comments.some((c) => c.body?.includes(marker))) {
+              core.info('Fork-pr-gate comment already present; skipping.');
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: [
+                'This PR changes paths that must run the real `validate` and `audit` workflows (tools, patterns, scripts, or CI).',
+                '',
+                'Fork PRs from first-time contributors start with those workflows **waiting for approval**. A maintainer needs to open the Checks tab and click **Approve and run workflows**. Until that happens, branch protection will show the PR as blocked even after a review.',
+                '',
+                'Content-only PRs (`docs/`, `examples/`, `stories/`, `skills/`, root markdown) skip this step — required checks are posted from this workflow instead.',
+                '',
+                marker,
+              ].join('\n'),
+            });
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}

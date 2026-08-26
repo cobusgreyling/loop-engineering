@@ -60,36 +60,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Update STATE.md
+      - name: Inspect GitHub and write STATE.md
+        id: github
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          SCORE="${{ steps.audit.outputs.score }}"
-          LEVEL="${{ steps.audit.outputs.level }}"
-          FAILING="${{ steps.workflows.outputs.failing }}"
-          cat > STATE.md <<EOF
-          # Loop State — loop-engineering reference
-
-          Last run: ${DATE} (automated daily-triage workflow)
-
-          ## High Priority (loop is acting or waiting on human)
-
-          - Maintain loop readiness score ≥ 58 (current: **${SCORE}**, level **${LEVEL}**).
-          - Keep npm packages current after tool changes (tag \`loop-audit-v*\`, \`loop-init-v*\`, \`loop-cost-v*\` — see docs/RELEASE.md).
-          $([ "$FAILING" -gt 0 ] && echo "- **${FAILING}** dogfood workflow(s) failing — investigate CI.")
-
-          ## Watch List
-
-          - Expand contributor failure stories (dependency sweeper, multi-loop).
-          - Collect a production story for Post-Merge Cleanup.
-          - Validate \`loop-init\` scaffolds on fresh projects across all patterns.
-
-          ## Recent Noise (ignored this run)
-
-          —
-
-          ---
-          Run log: Updated by \`.github/workflows/daily-triage.yml\`. See \`LOOP.md\` for cadence and gates.
-          EOF
+          mkdir -p /tmp/triage
+          node scripts/github-triage.mjs \
+            --score "${{ steps.audit.outputs.score }}" \
+            --level "${{ steps.audit.outputs.level }}" \
+            --failing-workflows "${{ steps.workflows.outputs.failing }}" \
+            --out-md STATE.md \
+            --out-json /tmp/triage/summary.json
+          HIGH=$(node -e "console.log(JSON.parse(require('fs').readFileSync('/tmp/triage/summary.json','utf8')).high)")
+          ITEMS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('/tmp/triage/summary.json','utf8')).items_found)")
+          echo "high=$HIGH" >> "$GITHUB_OUTPUT"
+          echo "items=$ITEMS" >> "$GITHUB_OUTPUT"
 
       - name: Append loop-run-log.md
         id: runlog
@@ -103,6 +89,8 @@ jobs:
           ")
           FAILING="${{ steps.workflows.outputs.failing }}"
           SCORE="${{ steps.audit.outputs.score }}"
+          ITEMS="${{ steps.github.outputs.items }}"
+          HIGH="${{ steps.github.outputs.high }}"
           if [ "$FAILING" -gt 0 ]; then
             OUTCOME="escalated"
           else
@@ -113,9 +101,9 @@ jobs:
               run_id: '${END}',
               pattern: 'daily-triage',
               duration_s: Number('${DURATION}'),
-              items_found: Number('${FAILING}') + 1,
+              items_found: Number('${ITEMS}' || 0) + Number('${FAILING}'),
               actions_taken: 1,
-              escalations: Number('${FAILING}'),
+              escalations: Number('${FAILING}') + Number('${HIGH}' || 0),
               tokens_estimate: 52000,
               readiness_score: Number('${SCORE}'),
               outcome: '${OUTCOME}',

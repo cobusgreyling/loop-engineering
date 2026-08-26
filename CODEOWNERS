@@ -7,8 +7,11 @@
 /.github/ @cobusgreyling
 /starters/ @cobusgreyling
 
-# Docs / examples / stories — co-triaged by community area owner
-# (AIMindCrafter: multi-PR docs/examples track; write access for CODEOWNERS reviews)
-/docs/ @cobusgreyling @AIMindCrafter
-/examples/ @cobusgreyling @AIMindCrafter
-/stories/ @cobusgreyling @AIMindCrafter
+# Docs / examples / stories / skills — maintainer owns merge.
+# Area owners (see docs/area-owners.md) triage and review by assignment;
+# they are not listed here because CODEOWNERS auto-requests block fork PRs
+# even when the branch ruleset does not require a code-owner review.
+/docs/ @cobusgreyling
+/examples/ @cobusgreyling
+/stories/ @cobusgreyling
+/skills/ @cobusgreyling

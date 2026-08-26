@@ -4,7 +4,9 @@ Pick one primary loop per concern. Overlapping loops need coordination — see [
 
 ```mermaid
 flowchart TD
-    A[What hurts right now?] --> B{CI red?}
+    A[What hurts right now?] --> R{Feature or refactor to finish?}
+    R -->|yes| S[Refactor / change path — not a cadence loop]
+    R -->|no| B{CI red?}
     B -->|yes| C[CI Sweeper]
     B -->|no| D{PRs stalling?}
     D -->|yes| E[PR Babysitter]
@@ -20,6 +22,8 @@ flowchart TD
     N -->|yes| M
     N -->|no| G
 ```
+
+Shipping a change (not operating the repo) is documented in [refactor.md](./refactor.md) — there is no whole-repo refactor pattern.
 
 ## Cost-aware picks
 
