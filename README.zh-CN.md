@@ -2,6 +2,10 @@
 
 > **别再逐条提示。设计循环。拿一个分数。**
 
+<p align="center">
+  <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/LE5.jpeg" alt="Loop Engineering — 设计会提示你的 agent 的系统" width="100%" />
+</p>
+
 [English README](README.md) · [5 分钟快速开始](docs/QUICKSTART.md) · [我想重构项目](docs/refactor.md)
 
 ```bash

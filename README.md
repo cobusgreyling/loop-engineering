@@ -16,6 +16,10 @@
 
 > **Stop prompting. Design the loop. Get a score.**
 
+<p align="center">
+  <img src="https://cdn.jsdelivr.net/gh/cobusgreyling/loop-engineering@main/assets/visuals/LE5.jpeg" alt="Loop Engineering — design the system that prompts your agents" width="100%" />
+</p>
+
 <p align="center"><strong>Start in 5 minutes</strong> ·
   <a href="docs/QUICKSTART.md">Quickstart</a> ·
   <a href="docs/jobs.md">What do you want to do?</a> ·
