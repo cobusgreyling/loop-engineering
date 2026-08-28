@@ -3,8 +3,9 @@
 Clone-and-run scaffolds. Copy into your project — or use `loop-init`:
 
 ```bash
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
-npx @cobusgreyling/loop-init . -p pr-babysitter -t claude
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude
+npx @cobusgreyling/loop-init . -p thin-loop
+npx @cobusgreyling/loop-init . -p pr-babysitter -t grok
 ```
 
 ## Daily Triage (L1 report-only)
@@ -15,6 +16,7 @@ npx @cobusgreyling/loop-init . -p pr-babysitter -t claude
 | [minimal-loop-claude](./minimal-loop-claude/) | Claude Code | `.claude/skills/` + `.claude/agents/` |
 | [minimal-loop-codex](./minimal-loop-codex/) | Codex | `.codex/skills/` + `.codex/agents/` |
 | [minimal-loop-opencode](./minimal-loop-opencode/) | Opencode | `skills/` + `AGENTS.md` |
+| [thin-loop](./thin-loop/) | GitHub Actions (any tool) | `.github/workflows/thin-loop.yml` only |
 
 ## L2 assisted patterns
 

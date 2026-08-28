@@ -86,6 +86,8 @@ export interface LoopSignals {
 export type { Finding };
 export interface AuditResult extends BaseAuditResult<'L0' | 'L1' | 'L2' | 'L3', LoopSignals> {
 }
+/** Activity older than this does not count toward Loop Ready. */
+export declare const ACTIVITY_MAX_AGE_MS: number;
 export declare function computeScore(signals: LoopSignals): {
     score: number;
     level: 'L0' | 'L1' | 'L2' | 'L3';

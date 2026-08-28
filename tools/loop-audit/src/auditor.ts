@@ -92,7 +92,7 @@ const SCORE_WEIGHTS = {
   gateYaml: 3,
   constraintsFile: 4,
   constraintsSkill: 2,
-  loopActivity: 6,
+  loopActivity: 14,
   /** Harness Runtime (harness-foundry) — stack, lock, sessions, emit, host */
   harnessStack: 4,
   harnessLock: 1,
@@ -207,70 +207,78 @@ async function findSkills(root: string): Promise<string[]> {
   return found;
 }
 
+/** Activity older than this does not count toward Loop Ready. */
+export const ACTIVITY_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+function parseLastRunTimestamp(text: string): Date | null {
+  const m = text.match(
+    /Last run:\s*([0-9]{4}-[0-9]{2}-[0-9]{2}(?:[T ][0-9:.]+(?:Z|[+-][0-9:]+)?)?)/i,
+  );
+  if (!m) return null;
+  const raw = /T|\s/.test(m[1]) ? m[1].replace(' ', 'T') : `${m[1]}T00:00:00Z`;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function isFreshTimestamp(d: Date, now = Date.now()): boolean {
+  const age = now - d.getTime();
+  return age <= ACTIVITY_MAX_AGE_MS && age >= -60_000;
+}
+
 async function detectLoopActivity(root: string): Promise<{ present: boolean; evidence: string[] }> {
   const evidence: string[] = [];
-  const stateCandidates = [...STATE_FILES];
+  const now = Date.now();
 
-  // 1. Look for "Last run" timestamps or dated entries inside state files (strong real-usage signal)
-  for (const sf of stateCandidates) {
+  // 1. Fresh "Last run" timestamps in state files (not the mere presence of the words)
+  for (const sf of STATE_FILES) {
     try {
       const p = path.join(root, sf);
-      if (await fileExists(p)) {
-        const txt = await readFile(p, 'utf8');
-        if (/last\s*run|last updated|^\s*-\s*\d{4}-\d{2}-\d{2}/im.test(txt) || /triage|loop run|changelog drafter/i.test(txt)) {
-          evidence.push(`state:${sf}`);
-        }
-      }
+      if (!(await fileExists(p))) continue;
+      const txt = await readFile(p, 'utf8');
+      const when = parseLastRunTimestamp(txt);
+      if (when && isFreshTimestamp(when, now)) evidence.push(`state:${sf}:fresh`);
     } catch {}
   }
 
-  // 2. Presence of run log artifacts or dedicated log templates being used
-  const logHints = ['loop-run-log', 'run-log', 'loop.log', 'audit-report'];
+  // 2. Dated JSON rows in the run log (file presence alone is not a run)
   try {
-    const entries = await readdir(root, { withFileTypes: true });
-    for (const e of entries) {
-      if (e.isFile() && logHints.some(h => e.name.toLowerCase().includes(h))) {
-        evidence.push(`log:${e.name}`);
+    const logPath = path.join(root, 'loop-run-log.md');
+    if (await fileExists(logPath)) {
+      const txt = await readFile(logPath, 'utf8');
+      for (const line of txt.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('{')) continue;
+        try {
+          const row = JSON.parse(trimmed) as { run_id?: string };
+          if (!row.run_id) continue;
+          const when = new Date(row.run_id);
+          if (!Number.isNaN(when.getTime()) && isFreshTimestamp(when, now)) {
+            evidence.push('log:loop-run-log.md:fresh');
+            break;
+          }
+        } catch {
+          // ignore invalid JSON lines
+        }
       }
     }
   } catch {}
 
-  // 3. Workflow or LOOP evidence of scheduled execution
+  // 3. Git history on state / run-log files in the last 14 days — not arbitrary "triage" commit messages
   try {
-    const wfDir = path.join(root, '.github', 'workflows');
-    if (await fileExists(wfDir)) {
-      const wfs = await readdir(wfDir);
-      if (wfs.some(w => /triage|changelog|daily|loop|audit|pr-babysit/i.test(w))) {
-        evidence.push('github:loop-workflows');
-      }
-    }
-  } catch {}
-
-  // 4. Light git history scan for loop-related commits (best dynamic proof)
-  try {
-    const log = execSync('git log --oneline -25 -- .', {
-      cwd: root,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 1500,
-    });
-    const lower = log.toLowerCase();
-    if (/state\.md|loop|triage|changelog-drafter|post-merge|daily triage|audit/i.test(lower)) {
-      const firstMatch = log.trim().split('\n')[0] || '';
-      evidence.push(`git:${firstMatch.slice(0, 60)}`);
-    }
+    const log = execSync(
+      'git log --since=14.days --oneline -- STATE.md loop-run-log.md "*state.md" "*-state.md"',
+      {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+        timeout: 1500,
+      },
+    );
+    const first = log.trim().split('\n')[0] || '';
+    if (first) evidence.push(`git:${first.slice(0, 60)}`);
   } catch {
     // git not available or not a repo — ignore gracefully
   }
-
-  // 5. Check LOOP.md or a state for explicit "Last run" human-readable proof
-  try {
-    const loopP = path.join(root, 'LOOP.md');
-    if (await fileExists(loopP)) {
-      const txt = await readFile(loopP, 'utf8');
-      if (/last run|cadence|scheduled|automation/i.test(txt)) evidence.push('LOOP.md:active');
-    }
-  } catch {}
 
   return { present: evidence.length > 0, evidence: Array.from(new Set(evidence)).slice(0, 4) };
 }
@@ -579,11 +587,33 @@ export async function auditProject(target: string): Promise<AuditResult> {
     fleet,
   };
 
+  const thinLoopWorkflow = await fileExists(path.join(root, '.github', 'workflows', 'thin-loop.yml'));
+
   if (!signals.stateFile.present) {
-    findings.push({ level: 'fail', message: 'No state file (STATE.md or pattern-specific state).' });
-    recommendations.push('Copy starters/minimal-loop/STATE.md.example (or -claude / -codex variant) to STATE.md');
+    if (thinLoopWorkflow) {
+      findings.push({
+        level: 'warn',
+        message: 'No STATE.md — acceptable for a thin loop if GitHub issues/PRs are the spine. Add STATE.md when findings must persist across runs.',
+      });
+    } else {
+      findings.push({ level: 'fail', message: 'No state file (STATE.md or pattern-specific state).' });
+      recommendations.push('Copy starters/minimal-loop/STATE.md.example (or -claude / -codex variant) to STATE.md — or scaffold starters/thin-loop if the tracker is the state');
+    }
   } else {
     findings.push({ level: 'ok', message: `State file(s): ${statePaths.join(', ')}` });
+    for (const sf of statePaths) {
+      try {
+        const txt = await readFile(path.join(root, sf), 'utf8');
+        const when = parseLastRunTimestamp(txt);
+        if (when && !isFreshTimestamp(when)) {
+          findings.push({
+            level: 'warn',
+            message: `${sf} Last run is older than 14 days — files on disk are not loop activity.`,
+          });
+          recommendations.push(`Run the loop and commit ${sf} (or append loop-run-log.md) so Loop Ready can see a fresh timestamp`);
+        }
+      } catch {}
+    }
   }
 
   if (!signals.triage.present) {
@@ -795,23 +825,8 @@ export async function auditProject(target: string): Promise<AuditResult> {
 
   const { score, level, assessment } = computeScore(signals);
 
-  if (score >= 80 && !signals.harness.stack) {
-    recommendations.unshift(
-      'Loop Ready 80+: version this loop as a harness — npx @cobusgreyling/loop-init . --with-foundry · showcase https://github.com/cobusgreyling/harness-foundry/blob/main/docs/showcase.md',
-    );
-  }
-
-  if (score >= 80 && !signals.memory.tiers) {
-    recommendations.unshift(
-      "Loop Ready 80+: version this loop's memory — npx @cobusgreyling/loop-init . --with-memory",
-    );
-  }
-
-  if (score >= 80 && !signals.fleet.registry) {
-    recommendations.unshift(
-      "Loop Ready 80+: version this loop for a fleet — npx @cobusgreyling/loop-init . --with-fleet",
-    );
-  }
+  // Companion funnels stay available via --with-foundry / --with-memory / --with-fleet
+  // but are not pushed to the top of week-one recommendations.
 
   const costReady =
     signals.cost.budgetDoc &&

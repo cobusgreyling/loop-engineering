@@ -2,6 +2,15 @@
 
 All notable changes to `@cobusgreyling/loop-audit` are documented here.
 
+## [1.9.0] - 2026-08-28
+
+### Changed
+- Loop activity requires a **fresh** `Last run` (≤14 days), a dated `loop-run-log.md` row, or a git commit that actually touches state / run-log files
+- `LOOP.md` cadence text and a `triage` commit on README no longer count as activity
+- Activity is worth 14 points (was 6)
+- Missing `STATE.md` is a warning, not a fail, when `.github/workflows/thin-loop.yml` is present
+- Companion funnels are not pushed to the top of `--suggest`
+
 ## [1.8.0] - 2026-07-29
 
 ### Added

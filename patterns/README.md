@@ -21,13 +21,14 @@ Each pattern answers:
 | Post-Merge Cleanup | 1d–6h | Low | [post-merge-cleanup.md](./post-merge-cleanup.md) |
 | Dependency Sweeper | 6h–1d | Medium | [dependency-sweeper.md](./dependency-sweeper.md) |
 | Changelog Drafter | 1d | Low | [changelog-drafter.md](./changelog-drafter.md) |
+| Thin Loop | event + 1d | Low | [thin-loop.md](./thin-loop.md) |
 
 Machine-readable index: [registry.yaml](./registry.yaml)
 
 ## How to Use a Pattern
 
 1. Pick a pattern: [pattern-picker.md](../docs/pattern-picker.md)
-2. Scaffold with `npx @cobusgreyling/loop-init . --pattern <name> --tool grok` (or `--tool opencode` / `--tool claude`) or copy from `starters/`
+2. Scaffold with `npx @cobusgreyling/loop-init . --pattern <name> --tool claude` (or `--tool grok` / `--tool opencode`) or copy from `starters/`
 3. Copy skills from `templates/` if customizing beyond the starter
 4. Set up scheduling (`/loop`, `scheduler_create`, GitHub Action, Codex Automation)
 5. Run week one in **L1 report-only** mode before enabling fixes

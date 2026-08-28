@@ -52,7 +52,7 @@ patterns:
     goal: React to failing CI with minimal fixes and escalation
     cadence: 5m-15m
     risk: medium
-    tools: [grok, claude-code, codex, openclaw, opencode, github-actions]
+    tools: [grok, claude-code, codex, openclaw, opencode, github-actions, windsurf]
     skills: [ci-triage, minimal-fix]
     state: ci-sweeper-state.md
     phases: [detect, classify, fix, verify, escalate]
@@ -96,7 +96,7 @@ patterns:
     goal: Discover, safely apply, and verify dependency + vulnerability updates with human gates on risky changes
     cadence: 6h-1d
     risk: medium
-    tools: [grok, claude-code, codex, openclaw, opencode, github-actions]
+    tools: [grok, claude-code, codex, openclaw, opencode, github-actions, windsurf]
     skills: [dependency-triage, minimal-fix, loop-verifier]
     state: dependency-sweeper-state.md
     phases: [scan, triage-risk, patch-safe, verify-worktree, escalate-risky]
@@ -140,7 +140,7 @@ patterns:
     goal: Discover, deduplicate, prioritize and label incoming issues/discussions so the team always has a clean actionable queue. Excellent low-risk companion to Daily Triage.
     cadence: 2h-1d
     risk: low
-    tools: [grok, claude-code, codex, openclaw, opencode, github-actions]
+    tools: [grok, claude-code, codex, openclaw, opencode, github-actions, windsurf]
     skills: [issue-triage, loop-verifier]
     state: issue-triage-state.md
     phases: [discover, dedupe, score, propose-labels, human-review]
@@ -155,3 +155,25 @@ patterns:
       stable_fraction: 0.35
       suggested_daily_cap: 80000
       early_exit_required: false
+
+  - id: thin-loop
+    name: Thin Loop
+    file: thin-loop.md
+    goal: Report-only GitHub Action snapshot; the issue tracker is the state
+    cadence: 1d
+    risk: low
+    tools: [github-actions, grok, claude-code, codex, opencode]
+    skills: [loop-triage]
+    state: STATE.md
+    phases: [snapshot, summarize, optional-comment]
+    human_gates: [all-writes]
+    starter: starters/thin-loop
+    week_one_mode: L1
+    token_cost: low
+    cost:
+      tokens_noop: 1000
+      tokens_report: 5000
+      tokens_action: 1000
+      stable_fraction: 0.9
+      suggested_daily_cap: 20000
+      early_exit_required: true

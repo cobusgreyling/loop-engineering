@@ -16,7 +16,7 @@ import {
   type WizardPlan,
 } from './wizard.js';
 
-const VERSION = '0.1.2';
+const VERSION = '0.2.0';
 
 const PASS_THROUGH = new Set([
   'init',
@@ -46,7 +46,7 @@ Usage:
   loop context|worktree|gate|mcp|sandbox [args…]
 
 Week-one (recommended):
-  npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+  npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
   npx @cobusgreyling/loop doctor .
 
 Doctor exit codes:

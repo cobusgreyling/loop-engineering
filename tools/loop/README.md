@@ -3,7 +3,7 @@
 **Unified front door** for [Loop Engineering](https://github.com/cobusgreyling/loop-engineering) CLIs.
 
 ```bash
-npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
 npx @cobusgreyling/loop doctor .
 ```
 
@@ -28,7 +28,7 @@ This package does **not** replace `loop-init`, `loop-audit`, or the other tools.
 
 ```bash
 # 1. Scaffold (report-only)
-npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
 
 # 2. One health check
 npx @cobusgreyling/loop doctor .

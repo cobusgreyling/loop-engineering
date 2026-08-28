@@ -1,6 +1,6 @@
 {
   "name": "@cobusgreyling/loop",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Unified Loop Engineering CLI \u2014 one front door for init, audit, cost, sync, doctor, and status. Existing packages stay supported. npx @cobusgreyling/loop doctor .",
   "type": "module",
   "bin": {

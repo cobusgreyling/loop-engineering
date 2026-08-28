@@ -79,7 +79,7 @@ For opencode, the transfer usually means `skills/`, `STATE.md`, `AGENTS.md`, and
 
 Audit after copying: `npx @cobusgreyling/loop-audit . --suggest`
 
-Scaffold automatically: `npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok`
+Scaffold automatically: `npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude`
 
 ## Goals (run-until-done)
 

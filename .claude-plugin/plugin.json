@@ -1,0 +1,11 @@
+{
+  "name": "loop-engineering",
+  "description": "Loop engineering skills: daily triage, budget, constraints, verifier. Week one is report-only.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Cobus Greyling",
+    "url": "https://github.com/cobusgreyling"
+  },
+  "homepage": "https://github.com/cobusgreyling/loop-engineering",
+  "keywords": ["loop-engineering", "triage", "skills", "claude-code"]
+}

@@ -77,11 +77,11 @@ npx @cobusgreyling/loop init . --pattern daily-triage --tool grok  # after npm p
 bash scripts/before-after-demo.sh
 ```
 
-## Automation status (2026-07-10)
+## Automation status (2026-08-28)
 
 | Loop | Level | Automation | Notes |
 |------|-------|------------|-------|
-| Daily Triage | L1 | ✅ `daily-triage.yml` | Weekdays; `github-triage.mjs` writes `STATE.md` from open PRs/issues |
+| Daily Triage | L1 | ✅ `daily-triage.yml` | Weekdays; `github-triage.mjs` writes `STATE.md`; `update-last-run-badge.mjs` writes `docs/last-run.json` |
 | Fork PR gate | L1 | ✅ `fork-pr-gate.yml` | Content-only fork PRs get `validate`/`audit` statuses without workflow approval |
 | Changelog Drafter | L1 | ✅ `changelog-drafter.yml` | Mondays; opens release-prep issue |
 | Star History | L1 | ✅ `update-star-history.yml` | Daily; auto-PR to `main`; needs `STAR_HISTORY_TOKEN` secret (PAT). Skips (success) if secret unset — safe for forks |

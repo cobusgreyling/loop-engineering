@@ -20,6 +20,7 @@ Real-world loop engineering — including failures. Contribute yours via [CONTRI
 | [loop-worktree-week-two.md](./loop-worktree-week-two.md) | PR Babysitter + loop-worktree | Pair worktrees with `loop-context --check`; exact `outcome: failure` enum |
 | [ci-sweeper-symptom-patching-and-circuit-breaker.md](./ci-sweeper-symptom-patching-and-circuit-breaker.md) | CI Sweeper | Symptom masking via test timeout inflation; denylist test setup files + `loop-context` circuit breaker |
 | [loop-sandbox-ephemeral-isolation.md](./loop-sandbox-ephemeral-isolation.md) | CI Sweeper + loop-sandbox | Ephemeral worktree patch capture prevents hallucinated file deletions from dirtying working tree |
+| [thirty-weekday-runs.md](./thirty-weekday-runs.md) | Daily Triage (this repo) | Loop Ready 100 hid 22 report-only runs and a hardcoded token field |
 
 **Template for new stories:**
 

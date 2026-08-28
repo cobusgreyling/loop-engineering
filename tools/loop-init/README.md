@@ -2,19 +2,19 @@
 
 Scaffold loop engineering starters into your project by pattern and tool.
 
-**npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok** works immediately.
+**npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude** works immediately.
 
 See [docs/loop-init-validation.md](../../docs/loop-init-validation.md) for a validated pattern × --tool matrix.
 
 ## Install & Run
 
 ```bash
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool opencode
 npx @cobusgreyling/loop-init . -p pr-babysitter -t claude
 npx @cobusgreyling/loop-init . -p dependency-sweeper --dry-run
 # One-command LE → harness-foundry funnel:
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --with-foundry
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude --with-foundry
 ```
 
 See [docs/RELEASE.md](../../docs/RELEASE.md) for npm publish tags. The published package bundles `starters/` and `templates/` from this monorepo.

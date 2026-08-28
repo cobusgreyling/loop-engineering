@@ -23,17 +23,17 @@ Or start with **Daily Triage** if you just want to learn loop discipline with lo
 Run this in the root of any git project (no clone required):
 
 ```bash
-npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
 # One health check (audit + sync + top 3 actions):
 npx @cobusgreyling/loop doctor .
 # Optional one-command funnel into harness-foundry:
-npx @cobusgreyling/loop init . --pattern daily-triage --tool grok --with-foundry
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude --with-foundry
 ```
 
 Equivalent (old door, still supported):
 
 ```bash
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude
 ```
 
 Swap `--pattern` for any pattern from [patterns/registry.yaml](../patterns/registry.yaml). List all patterns:
@@ -46,8 +46,8 @@ npx @cobusgreyling/loop init --help
 
 | `--tool` value | Scaffolded by `loop-init`? | Notes |
 |----------------|---------------------------|-------|
-| `grok` | Yes (default) | Native `/loop` scheduling |
-| `claude` | Yes | Native `/loop` + `$skill` invocation |
+| `claude` | Yes (default) | Native `/loop` + `$skill` invocation |
+| `grok` | Yes | Native `/loop` scheduling |
 | `codex` | Yes | Automations tab for scheduling |
 | `opencode` | Yes | Cron/systemd + `opencode run` |
 | `cursor` | No — manual copy | Copy skills + `STATE.md`; use Automations — see [examples/cursor/](../examples/cursor/) |
@@ -109,7 +109,7 @@ npx @cobusgreyling/harness-foundry run --goal "Verify harness wiring"
 To configure provider-specific stacks like **MiniMax** during scaffolding:
 
 ```bash
-npx @cobusgreyling/loop init . --pattern daily-triage --tool grok \
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude \
   --with-foundry --model-provider minimax --region global_en --model MiniMax-M3
 ```
 
@@ -376,7 +376,7 @@ Windows contributors and loop operators should keep line-ending and process invo
 ```bash
 # Scaffold — --tool accepts: grok | claude | codex | opencode
 # (cursor, windsurf, openclaw: manual copy — see table in section 2)
-npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude
 
 # List patterns and flags
 npx @cobusgreyling/loop-init --help

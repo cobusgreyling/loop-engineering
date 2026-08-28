@@ -75,7 +75,7 @@ title: Loop Engineering — Showcase
 </nav>
 
 <header class="hero wrap">
-  <div class="badge">Open source · Tool-agnostic · Production-ready · L3 dogfood · 7 patterns · Interactive tools</div>
+  <div class="badge">Open source · Tool-agnostic · Production-ready · 8 patterns · Interactive tools</div>
   <h1>Stop prompting.<br>Design the loop.<br>Get a score.</h1>
   <p class="lead">
     Run one command in any repo. <code>@cobusgreyling/loop</code> is the front door (<code>init</code> + <code>doctor</code>). <code>loop-init</code> still works. Prints your <strong>Loop Ready</strong> score plus the first run line.
@@ -463,7 +463,7 @@ flowchart TB
       <span>terminal — minimal loop</span>
     </div>
     <pre><span class="comment"># Scaffold starter (or copy manually)</span>
-npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
 
 <span class="comment"># Score loop readiness (PRs get audit comments in CI)</span>
 npx @cobusgreyling/loop-audit . --suggest
@@ -825,7 +825,7 @@ const PATTERNS = {
     patternId: 'ci-sweeper',
     costLevel: 'L2',
     costCadence: '15m',
-    npx: 'npx @cobusgreyling/loop init . --pattern ci-sweeper --tool grok',
+    npx: 'npx @cobusgreyling/loop init . --pattern ci-sweeper --tool claude',
     loop: '/loop 15m Run ci-triage on failing CI. Update ci-sweeper-state.md. Fix only regressions in worktree. Max 3 attempts.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/ci-sweeper.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/ci-sweeper'
@@ -836,7 +836,7 @@ const PATTERNS = {
     patternId: 'pr-babysitter',
     costLevel: 'L1',
     costCadence: '10m',
-    npx: 'npx @cobusgreyling/loop init . --pattern pr-babysitter --tool grok',
+    npx: 'npx @cobusgreyling/loop init . --pattern pr-babysitter --tool claude',
     loop: '/loop 10m Run pr-review-triage. Update pr-babysitter-state.md. Worktree + verifier. No auto-merge by default.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/pr-babysitter.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/pr-babysitter'
@@ -847,7 +847,7 @@ const PATTERNS = {
     patternId: 'daily-triage',
     costLevel: 'L1',
     costCadence: '1d',
-    npx: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool grok',
+    npx: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool claude',
     loop: '/loop 1d Run loop-triage. Update STATE.md. No auto-fix in week one.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/daily-triage.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/minimal-loop'
@@ -858,7 +858,7 @@ const PATTERNS = {
     patternId: 'dependency-sweeper',
     costLevel: 'L2',
     costCadence: '6h',
-    npx: 'npx @cobusgreyling/loop init . --pattern dependency-sweeper --tool grok',
+    npx: 'npx @cobusgreyling/loop init . --pattern dependency-sweeper --tool claude',
     loop: '/loop 6h Run dependency-triage. Patch-only auto-fix in worktree + verifier. Escalate majors.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/dependency-sweeper.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/dependency-sweeper'
@@ -869,7 +869,7 @@ const PATTERNS = {
     patternId: 'post-merge-cleanup',
     costLevel: 'L1',
     costCadence: '1d',
-    npx: 'npx @cobusgreyling/loop init . --pattern post-merge-cleanup --tool grok',
+    npx: 'npx @cobusgreyling/loop init . --pattern post-merge-cleanup --tool claude',
     loop: '/loop 1d Run post-merge-scan on recent merges. Update post-merge-state.md. Small fixes only.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/post-merge-cleanup.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/post-merge-cleanup'
@@ -880,7 +880,7 @@ const PATTERNS = {
     patternId: 'changelog-drafter',
     costLevel: 'L1',
     costCadence: '1d',
-    npx: 'npx @cobusgreyling/loop init . --pattern changelog-drafter --tool grok',
+    npx: 'npx @cobusgreyling/loop init . --pattern changelog-drafter --tool claude',
     loop: '/loop 1d Run changelog-scan + draft-release-notes. Write RELEASE_NOTES_DRAFT.md. Human review only.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/changelog-drafter.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/changelog-drafter'
@@ -891,7 +891,7 @@ const PATTERNS = {
     patternId: 'issue-triage',
     costLevel: 'L1',
     costCadence: '1d',
-    npx: 'npx @cobusgreyling/loop init . --pattern issue-triage --tool grok',
+    npx: 'npx @cobusgreyling/loop init . --pattern issue-triage --tool claude',
     loop: '/loop 1d Run issue-triage. Update issue-triage-state.md. Propose labels and priorities only — no auto-close.',
     patternHref: 'https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/issue-triage.md',
     starterHref: 'https://github.com/cobusgreyling/loop-engineering/tree/main/starters/issue-triage'
@@ -998,7 +998,7 @@ function setupSimulator() {
     } else if (score >= 78 && hasVerifier && hasState && !costReady) {
       level = 'L2';
       assess = 'Strong signals but missing cost observability — add budget + run log before L3.';
-      reco = 'npx @cobusgreyling/loop init . --pattern daily-triage --tool grok (scaffolds loop-budget.md + loop-run-log.md)';
+      reco = 'npx @cobusgreyling/loop init . --pattern daily-triage --tool claude (scaffolds loop-budget.md + loop-run-log.md)';
     } else if (score >= 78 && hasVerifier && hasState && costReady && !hasActivity) {
       level = 'L2';
       assess = 'Strong structure but no proven loop runs yet.';
@@ -1014,7 +1014,7 @@ function setupSimulator() {
     } else {
       level = 'L0';
       assess = 'Not loop-ready — start with a starter from this repo (minimal-loop or pr-babysitter).';
-      reco = 'npx @cobusgreyling/loop init . --pattern daily-triage --tool grok';
+      reco = 'npx @cobusgreyling/loop init . --pattern daily-triage --tool claude';
     }
 
     scoreEl.textContent = score;

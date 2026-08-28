@@ -289,8 +289,28 @@ test('auditProject: missing fleet recommends --with-fleet', async () => {
   }
 });
 
-test('auditProject: git commit with triage counts as loop activity', async () => {
+test('auditProject: git commit of STATE.md counts as loop activity', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'loop-audit-git-'));
+  try {
+    execSync('git init', { cwd: dir, stdio: 'ignore' });
+    execSync('git config user.email "test@example.com"', { cwd: dir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: dir, stdio: 'ignore' });
+    const today = new Date().toISOString();
+    await writeFile(path.join(dir, 'STATE.md'), `# State\n\nLast run: ${today}\n`);
+    execSync('git add STATE.md', { cwd: dir, stdio: 'ignore' });
+    execSync('git commit -m "chore: daily triage update"', { cwd: dir, stdio: 'ignore' });
+    const result = await auditProject(dir);
+    assert.ok(result.signals.loopActivity.present);
+    assert.ok(
+      result.signals.loopActivity.evidence.some((e) => e.startsWith('git:') || e.startsWith('state:')),
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('auditProject: triage commit that does not touch state is not activity', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-audit-git-readme-'));
   try {
     execSync('git init', { cwd: dir, stdio: 'ignore' });
     execSync('git config user.email "test@example.com"', { cwd: dir, stdio: 'ignore' });
@@ -299,8 +319,44 @@ test('auditProject: git commit with triage counts as loop activity', async () =>
     execSync('git add README.md', { cwd: dir, stdio: 'ignore' });
     execSync('git commit -m "chore: daily triage update"', { cwd: dir, stdio: 'ignore' });
     const result = await auditProject(dir);
-    assert.ok(result.signals.loopActivity.present);
-    assert.ok(result.signals.loopActivity.evidence.some((e) => e.startsWith('git:')));
+    assert.equal(result.signals.loopActivity.present, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('auditProject: stale Last run is not activity', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-audit-stale-'));
+  try {
+    await writeFile(path.join(dir, 'STATE.md'), '# State\n\nLast run: 2020-01-01T00:00:00Z\n');
+    const result = await auditProject(dir);
+    assert.equal(result.signals.loopActivity.present, false);
+    assert.ok(result.findings.some((f) => /older than 14 days/i.test(f.message)));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('auditProject: LOOP.md cadence text is not activity', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-audit-loopmd-'));
+  try {
+    await writeFile(path.join(dir, 'LOOP.md'), '# Loop\nCadence: scheduled daily automation.\nLast run documented here as a heading only.\n');
+    const result = await auditProject(dir);
+    assert.equal(result.signals.loopActivity.present, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('auditProject: thin-loop workflow without STATE.md is a warning not a fail', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-audit-thin-'));
+  try {
+    await mkdir(path.join(dir, '.github', 'workflows'), { recursive: true });
+    await writeFile(path.join(dir, '.github', 'workflows', 'thin-loop.yml'), 'name: Thin loop\n');
+    const result = await auditProject(dir);
+    assert.equal(result.signals.stateFile.present, false);
+    assert.ok(result.findings.some((f) => f.level === 'warn' && /thin loop/i.test(f.message)));
+    assert.ok(!result.findings.some((f) => f.level === 'fail' && /No state file/i.test(f.message)));
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

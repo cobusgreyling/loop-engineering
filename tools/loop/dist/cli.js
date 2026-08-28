@@ -7,7 +7,7 @@ import { runTool } from './pass-through.js';
 import { runDoctor, formatDoctorHuman } from './doctor.js';
 import { runStatus, formatStatusHuman } from './status.js';
 import { defaultPlan, executePlan, printNonInteractiveHelp, resolvePattern, resolveTool, runInteractiveWizard, } from './wizard.js';
-const VERSION = '0.1.2';
+const VERSION = '0.2.0';
 const PASS_THROUGH = new Set([
     'init',
     'audit',
@@ -35,7 +35,7 @@ Usage:
   loop context|worktree|gate|mcp|sandbox [args…]
 
 Week-one (recommended):
-  npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+  npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
   npx @cobusgreyling/loop doctor .
 
 Doctor exit codes:

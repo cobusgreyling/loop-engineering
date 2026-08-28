@@ -36,6 +36,7 @@ The state file schema and skills are tool-agnostic — only the invocation step 
 | File | Trigger | Pattern |
 |------|---------|---------|
 | [daily-triage.yml](./daily-triage.yml) | Cron weekdays | Daily Triage |
+| [thin-loop.yml](../../starters/thin-loop/.github/workflows/thin-loop.yml) | Issues/PRs + weekday cron | Thin Loop (no STATE.md) |
 | [ci-sweeper.yml](./ci-sweeper.yml) | `workflow_run` failure | CI Sweeper |
 | [post-merge-cleanup.yml](./post-merge-cleanup.yml) | Push to main + nightly | Post-Merge Cleanup |
 | [issue-triage.yml](./issue-triage.yml) | Cron 2h weekdays + `issues` events | Issue Triage |

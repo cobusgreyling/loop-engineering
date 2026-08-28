@@ -39,8 +39,9 @@ Do **not** deprecate or remove existing `loop-init` / `loop-audit` usages you fi
    | Post-merge TODOs | `post-merge-cleanup` |
    | Stale release notes | `changelog-drafter` |
    | Noisy issues | `issue-triage` |
+   | One GitHub Action, almost no files | `thin-loop` |
 
-3. **Pick tool** — `grok` | `claude` | `codex` | `opencode` (default `grok`).
+3. **Pick tool** — `claude` | `grok` | `codex` | `opencode` (default `claude`).
 
 4. **Scaffold**
    ```bash

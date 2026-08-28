@@ -98,11 +98,11 @@ try {
         console.log('  # Then run:  loop-audit . --suggest   (again after changes)');
         console.log('');
         console.log('  # Or scaffold automatically:');
-        console.log('  npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok');
+        console.log('  npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude');
         console.log('  npx @cobusgreyling/loop-cost --pattern daily-triage --level L1');
         console.log('');
-        console.log('  # Version as a harness (harness-foundry) — one-command LE → Foundry funnel:');
-        console.log('  npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --with-foundry');
+        console.log('  # Optional companions (not required for week one):');
+        console.log('  npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude --with-foundry');
         console.log('  # or: npx @cobusgreyling/harness-foundry init --from loop-engineering:daily-triage');
         console.log('  npx @cobusgreyling/harness-foundry validate && npx @cobusgreyling/harness-foundry run --goal "Verify wiring"');
         console.log('');

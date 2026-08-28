@@ -17,7 +17,8 @@ type Pattern =
   | 'dependency-sweeper'
   | 'post-merge-cleanup'
   | 'changelog-drafter'
-  | 'issue-triage';
+  | 'issue-triage'
+  | 'thin-loop';
 
 type Tool = 'grok' | 'claude' | 'codex' | 'opencode';
 
@@ -29,6 +30,7 @@ const PATTERN_STARTERS: Record<Pattern, string> = {
   'post-merge-cleanup': 'post-merge-cleanup',
   'changelog-drafter': 'changelog-drafter',
   'issue-triage': 'issue-triage',
+  'thin-loop': 'thin-loop',
 };
 
 const TOOL_SUFFIX: Record<Tool, string> = {
@@ -37,6 +39,9 @@ const TOOL_SUFFIX: Record<Tool, string> = {
   codex: '-codex',
   opencode: '-opencode',
 };
+
+/** Patterns with a single tool-agnostic starter (no -claude / -codex suffix). */
+const TOOL_AGNOSTIC = new Set<Pattern>(['thin-loop']);
 
 const L2_PATTERNS = new Set<Pattern>(['ci-sweeper', 'dependency-sweeper']);
 
@@ -62,6 +67,7 @@ const STATE_FILES: Record<Pattern, string> = {
   'post-merge-cleanup': 'post-merge-state.md',
   'changelog-drafter': 'changelog-drafter-state.md',
   'issue-triage': 'issue-triage-state.md',
+  'thin-loop': 'STATE.md',
 };
 
 /** Mirrors patterns/registry.yaml cost caps — used when scaffolding observability files. */
@@ -76,6 +82,7 @@ const PATTERN_BUDGET: Record<
   'post-merge-cleanup': { name: 'Post-Merge Cleanup', maxRunsPerDay: 1, dailyCap: 200_000, maxSpawnsL1: 0, maxSpawnsL2: 2 },
   'changelog-drafter': { name: 'Changelog Drafter', maxRunsPerDay: 1, dailyCap: 100_000, maxSpawnsL1: 0, maxSpawnsL2: 2 },
   'issue-triage': { name: 'Issue Triage', maxRunsPerDay: 12, dailyCap: 80_000, maxSpawnsL1: 0, maxSpawnsL2: 1 },
+  'thin-loop': { name: 'Thin Loop', maxRunsPerDay: 24, dailyCap: 20_000, maxSpawnsL1: 0, maxSpawnsL2: 0 },
 };
 
 type FoundryPreset = 'minimal' | 'implementer';
@@ -89,6 +96,7 @@ const PATTERN_FOUNDRY_PRESET: Record<Pattern, FoundryPreset> = {
   'ci-sweeper': 'implementer',
   'dependency-sweeper': 'implementer',
   'post-merge-cleanup': 'implementer',
+  'thin-loop': 'minimal',
 };
 
 const FOUNDRY_SHOWCASE =
@@ -198,7 +206,7 @@ ${endpoints}`;
 
 function parseArgs(argv: string[]) {
   let pattern: Pattern = 'daily-triage';
-  let tool: Tool = 'grok';
+  let tool: Tool = 'claude';
   let target = '.';
   let dryRun = false;
   let withFoundry = false;
@@ -393,32 +401,14 @@ function printFoundryCta(opts: {
   score: number | null;
   preset?: FoundryPreset;
 }) {
-  const { pattern, tool, withFoundry, score, preset } = opts;
+  const { pattern, withFoundry, preset } = opts;
+  if (!withFoundry) return;
   const mapped = preset ?? PATTERN_FOUNDRY_PRESET[pattern];
   console.log('');
-  if (withFoundry) {
-    console.log(`Harness stack ready (.foundry/, preset: ${mapped} for ${pattern})`);
-    console.log('  npx @cobusgreyling/harness-foundry validate');
-    console.log('  npx @cobusgreyling/harness-foundry run --goal "Verify harness wiring"');
-    console.log(`  Showcase: ${FOUNDRY_SHOWCASE}`);
-    return;
-  }
-
-  const highReady = score !== null && score >= 80;
-  console.log(
-    highReady
-      ? 'Next after Loop Ready 80+: version this loop as a harness'
-      : 'Optional: make this loop a versioned harness (harness-foundry)',
-  );
-  console.log(
-    `  npx @cobusgreyling/loop-init . --pattern ${pattern} --tool ${tool} --with-foundry`,
-  );
-  console.log(
-    `  # or: npx @cobusgreyling/harness-foundry init --from loop-engineering:${pattern}`,
-  );
-  if (highReady) {
-    console.log(`  Showcase: ${FOUNDRY_SHOWCASE}`);
-  }
+  console.log(`Harness stack ready (.foundry/, preset: ${mapped} for ${pattern})`);
+  console.log('  npx @cobusgreyling/harness-foundry validate');
+  console.log('  npx @cobusgreyling/harness-foundry run --goal "Verify harness wiring"');
+  console.log(`  Showcase: ${FOUNDRY_SHOWCASE}`);
 }
 
 function printFleetCta(opts: {
@@ -427,22 +417,9 @@ function printFleetCta(opts: {
   withFleet: boolean;
   score: number | null;
 }) {
-  const { pattern, tool, withFleet, score } = opts;
+  if (!opts.withFleet) return;
   console.log('');
-  if (withFleet) {
-    console.log('Fleet engineering stack ready (fleet-registry.md, fleet-inbox.md)');
-    return;
-  }
-
-  const highReady = score !== null && score >= 80;
-  console.log(
-    highReady
-      ? 'Next after Loop Ready 80+: version this loop for a fleet (fleet-engineering)'
-      : 'Optional: add fleet-engineering for multi-agent populations',
-  );
-  console.log(
-    `  npx @cobusgreyling/loop-init . --pattern ${pattern} --tool ${tool} --with-fleet`,
-  );
+  console.log('Fleet engineering stack ready (fleet-registry.md, fleet-inbox.md)');
 }
 
 function printMemoryCta(opts: {
@@ -451,22 +428,9 @@ function printMemoryCta(opts: {
   withMemory: boolean;
   score: number | null;
 }) {
-  const { pattern, tool, withMemory, score } = opts;
+  if (!opts.withMemory) return;
   console.log('');
-  if (withMemory) {
-    console.log('Memory engineering stack ready (memory-tiers.md, memory-budget.md)');
-    return;
-  }
-
-  const highReady = score !== null && score >= 80;
-  console.log(
-    highReady
-      ? "Next after Loop Ready 80+: version this loop's memory (memory-engineering)"
-      : 'Optional: add memory-engineering for cross-session knowledge',
-  );
-  console.log(
-    `  npx @cobusgreyling/loop-init . --pattern ${pattern} --tool ${tool} --with-memory`,
-  );
+  console.log('Memory engineering stack ready (memory-tiers.md, memory-budget.md)');
 }
 
 async function exists(p: string): Promise<boolean> {
@@ -574,6 +538,7 @@ const LEDGER_GOAL: Record<Pattern, string> = {
   'post-merge-cleanup': 'Clean up regressions from recent merges',
   'changelog-drafter': 'Draft accurate release notes',
   'issue-triage': 'Triage the open issue queue',
+  'thin-loop': 'Snapshot open issues and PRs; do not edit code',
 };
 
 /**
@@ -591,6 +556,7 @@ const LEDGER_LEVEL: Record<Pattern, string> = {
   'post-merge-cleanup': 'L2',
   'changelog-drafter': 'L1',
   'issue-triage': 'L1',
+  'thin-loop': 'L1',
 };
 
 /**
@@ -779,6 +745,12 @@ function firstLoopCommand(pattern: Pattern, tool: Tool): string {
       codex: 'Automation 2h: issue-triage → issue-triage-state.md. Propose only.',
       opencode: `${OPENCODE_RUN} "Run issue-triage. Update issue-triage-state.md. Propose labels only — no auto-apply."`,
     },
+    'thin-loop': {
+      grok: 'Commit .github/workflows/thin-loop.yml. The Action is the loop — no STATE.md, no /loop required.',
+      claude: 'Commit .github/workflows/thin-loop.yml. The Action is the loop — no STATE.md, no /loop required.',
+      codex: 'Commit .github/workflows/thin-loop.yml. The Action is the loop — no STATE.md required.',
+      opencode: 'Commit .github/workflows/thin-loop.yml. The Action is the loop — no STATE.md required.',
+    },
   };
   return cmds[pattern][tool];
 }
@@ -852,10 +824,11 @@ Patterns:
   post-merge-cleanup
   changelog-drafter (new low-risk release notes pattern)
   issue-triage (new low-risk issue queue health companion to daily triage)
+  thin-loop (GitHub Action snapshot — no STATE.md)
 
 Options:
   -p, --pattern     Pattern to scaffold
-  -t, --tool        Tool target (default: grok)
+  -t, --tool        Tool target (default: claude)
   --with-foundry    Also scaffold .foundry/ stack (harness-foundry runtime)
   --with-memory     Also scaffold memory-engineering tiers and budget
   --with-fleet      Also scaffold fleet-engineering registry and inbox
@@ -870,8 +843,9 @@ Foundry presets (with --with-foundry):
   fix-capable patterns → implementer
 
 Examples:
-  npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
-  npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --with-foundry
+  npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude
+  npx @cobusgreyling/loop-init . --pattern thin-loop --tool claude
+  npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude --with-foundry
   npx @cobusgreyling/loop-init . -p pr-babysitter -t claude --with-foundry
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
@@ -912,7 +886,7 @@ Examples:
 
   const targetDir = path.resolve(target);
   const baseStarter = PATTERN_STARTERS[pattern];
-  const suffix = TOOL_SUFFIX[tool];
+  const suffix = TOOL_AGNOSTIC.has(pattern) ? '' : TOOL_SUFFIX[tool];
   const starterName = `${baseStarter}${suffix}`;
   const startersRoot = await resolveBundledOrMonorepo('starters');
   const templatesRoot = await resolveBundledOrMonorepo('templates');
@@ -1009,13 +983,27 @@ Examples:
     await copyFile(loopMd, path.join(targetDir, 'LOOP.md'), dryRun);
   }
 
-  await copyL2Templates(pattern, tool, targetDir, templatesRoot, dryRun);
-  await scaffoldCircuitBreaker(pattern, tool, targetDir, templatesRoot, dryRun);
-  await scaffoldObservability(pattern, tool, targetDir, templatesRoot, dryRun);
-  await scaffoldIntake(pattern, tool, targetDir, templatesRoot, dryRun);
+  const wfSrc = path.join(effectiveStarter, '.github', 'workflows');
+  if (await exists(wfSrc)) {
+    const wfEntries = await readDirNames(wfSrc);
+    for (const entry of wfEntries) {
+      if (!entry.endsWith('.yml') && !entry.endsWith('.yaml')) continue;
+      await copyFile(
+        path.join(wfSrc, entry),
+        path.join(targetDir, '.github', 'workflows', entry),
+        dryRun,
+      );
+    }
+  }
 
-  await scaffoldConstraints(targetDir, templatesRoot, tool, dryRun);
-  if (tool !== 'opencode' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
+  if (pattern !== 'thin-loop') {
+    await copyL2Templates(pattern, tool, targetDir, templatesRoot, dryRun);
+    await scaffoldCircuitBreaker(pattern, tool, targetDir, templatesRoot, dryRun);
+    await scaffoldObservability(pattern, tool, targetDir, templatesRoot, dryRun);
+    await scaffoldIntake(pattern, tool, targetDir, templatesRoot, dryRun);
+    await scaffoldConstraints(targetDir, templatesRoot, tool, dryRun);
+  }
+  if (tool !== 'opencode' && pattern !== 'thin-loop' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
     const agentsTemplate = `# AGENTS.md
 
 ## Test commands

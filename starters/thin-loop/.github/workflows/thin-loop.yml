@@ -1,0 +1,86 @@
+# Thin loop — L1 snapshot. The tracker is the state; this workflow is the heartbeat.
+# See starters/thin-loop/README.md and patterns/thin-loop.md.
+name: Thin loop
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened, ready_for_review]
+  schedule:
+    - cron: '0 8 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Snapshot open work
+        id: snap
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "# Thin loop snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            echo "L1 report-only. No code edits, labels, or closes."
+            echo
+            echo "## Open pull requests"
+            gh pr list --state open --limit 20 --json number,title,updatedAt \
+              --jq '.[] | "- #\(.number) \(.title) (updated \(.updatedAt))"' \
+              || echo "_none_"
+            echo
+            echo "## Open issues"
+            gh issue list --state open --limit 20 --json number,title,updatedAt \
+              --jq '.[] | "- #\(.number) \(.title) (updated \(.updatedAt))"' \
+              || echo "_none_"
+          } | tee "$GITHUB_STEP_SUMMARY" /tmp/thin-loop-summary.md
+
+      - name: Comment once on the triggering item
+        if: github.event_name == 'issues' || github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          MARKER='<!-- thin-loop -->'
+          if [ "$EVENT_NAME" = "issues" ]; then
+            NUMBER="$ISSUE_NUMBER"
+            KIND=issue
+          else
+            NUMBER="$PR_NUMBER"
+            KIND=pr
+          fi
+          if [ -z "$NUMBER" ]; then
+            echo "No item number — skip comment"
+            exit 0
+          fi
+          if [ "$KIND" = "issue" ]; then
+            COMMENTS=$(gh api "repos/${{ github.repository }}/issues/${NUMBER}/comments" --jq '.[].body' || true)
+          else
+            COMMENTS=$(gh api "repos/${{ github.repository }}/issues/${NUMBER}/comments" --jq '.[].body' || true)
+          fi
+          if printf '%s' "$COMMENTS" | grep -q 'thin-loop'; then
+            echo "Marker already present on #${NUMBER} — skip"
+            exit 0
+          fi
+          {
+            echo "$MARKER"
+            echo "Thin loop saw this thread (L1). Snapshot is in the [workflow summary](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+            echo
+            echo "No labels, closes, or code edits from this run."
+          } > /tmp/thin-loop-comment.md
+          if [ "$KIND" = "issue" ]; then
+            gh issue comment "$NUMBER" --body-file /tmp/thin-loop-comment.md
+          else
+            gh pr comment "$NUMBER" --body-file /tmp/thin-loop-comment.md
+          fi

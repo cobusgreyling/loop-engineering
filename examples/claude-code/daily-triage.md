@@ -2,6 +2,8 @@
 
 Same pattern as Grok; different scheduling primitives.
 
+Install skills via the [Claude Code plugin](./plugin.md), or copy folders below.
+
 ## Report-Only (Week 1)
 
 ```bash

@@ -19,11 +19,11 @@ Use **both**: triage to list the slices, `/goal` (or a human) to implement one s
 ### 0. Scaffold, do not code
 
 ```bash
-npx @cobusgreyling/loop init . --pattern daily-triage --tool opencode
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
 npx @cobusgreyling/loop doctor .
 ```
 
-`--tool opencode` matches the usual “I want a CLI agent on a schedule” setup. `grok` / `claude` / `codex` work the same. This writes `STATE.md`, `LOOP.md`, `loop-budget.md`, `loop-run-log.md`, and constraints. **Week one: report only.**
+Default `--tool` is `claude`. Use `opencode` for a CLI agent on cron; `grok` / `codex` work the same. This writes `STATE.md`, `LOOP.md`, `loop-budget.md`, `loop-run-log.md`, and constraints. **Week one: report only.**
 
 ### 1. Inventory (L1)
 

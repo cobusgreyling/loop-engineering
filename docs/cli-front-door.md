@@ -13,7 +13,7 @@ Loop Engineering ships several focused CLIs (`loop-init`, `loop-audit`, `loop-co
 3. **doctor** / **status** for activation and day-2 habit  
 
 ```text
-npx @cobusgreyling/loop init . -p daily-triage -t grok
+npx @cobusgreyling/loop init . -p daily-triage -t claude
 npx @cobusgreyling/loop doctor .
 ```
 

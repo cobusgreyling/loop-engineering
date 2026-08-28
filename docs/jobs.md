@@ -5,6 +5,7 @@ This repo is a **pattern library for operating agents around a codebase** — tr
 | I want to… | Start here | Do **not** start here |
 |------------|------------|------------------------|
 | Keep a repo healthy (issues, CI, deps, changelog) | [Quickstart](./QUICKSTART.md) → `daily-triage` | Unattended L3 on day one |
+| Run a loop as one GitHub Action with almost no files | [Thin loop](../starters/thin-loop/) | Expecting a high Loop Ready score |
 | Land and babysit pull requests | [PR Babysitter](../patterns/pr-babysitter.md) | Merging from the loop |
 | Fix a red build | [CI Sweeper](../patterns/ci-sweeper.md) | Patching flakes forever |
 | Upgrade dependencies safely | [Dependency Sweeper](../patterns/dependency-sweeper.md) | Major bumps without a human |
@@ -16,8 +17,8 @@ This repo is a **pattern library for operating agents around a codebase** — tr
 **Week-one rule still applies:** report only. Read what the loop writes before you let it act.
 
 ```bash
-npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
 npx @cobusgreyling/loop doctor .
 ```
 
-Swap `--tool` for `claude`, `codex`, or `opencode`. Unsure which pattern? [Pattern picker](https://cobusgreyling.github.io/loop-engineering/#interactive).
+`--tool` defaults to `claude`. Swap for `grok`, `codex`, or `opencode`. Unsure which pattern? [Pattern picker](https://cobusgreyling.github.io/loop-engineering/#interactive).

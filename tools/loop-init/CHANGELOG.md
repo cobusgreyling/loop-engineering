@@ -4,6 +4,15 @@ All notable changes to `@cobusgreyling/loop-init` are documented here.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-08-28
+
+### Added
+- `thin-loop` pattern: one GitHub Action, no `STATE.md` / skills / budget files
+- Default `--tool` is `claude`
+
+### Changed
+- Companion CTAs (`--with-foundry`, `--with-memory`, `--with-fleet`) print only when those flags are passed
+
 ## [1.6.0] - 2026-07-29
 
 ### Added

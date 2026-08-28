@@ -155,3 +155,25 @@ patterns:
       stable_fraction: 0.35
       suggested_daily_cap: 80000
       early_exit_required: false
+
+  - id: thin-loop
+    name: Thin Loop
+    file: thin-loop.md
+    goal: Report-only GitHub Action snapshot; the issue tracker is the state
+    cadence: 1d
+    risk: low
+    tools: [github-actions, grok, claude-code, codex, opencode]
+    skills: [loop-triage]
+    state: STATE.md
+    phases: [snapshot, summarize, optional-comment]
+    human_gates: [all-writes]
+    starter: starters/thin-loop
+    week_one_mode: L1
+    token_cost: low
+    cost:
+      tokens_noop: 1000
+      tokens_report: 5000
+      tokens_action: 1000
+      stable_fraction: 0.9
+      suggested_daily_cap: 20000
+      early_exit_required: true

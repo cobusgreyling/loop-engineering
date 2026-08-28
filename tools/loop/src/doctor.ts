@@ -138,13 +138,13 @@ export async function runDoctor(target: string): Promise<DoctorReport> {
     actions.push({
       priority: 1,
       text: 'Scaffold a first loop (report-only week one)',
-      command: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool grok',
+      command: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool claude',
     });
   } else if (!stateName) {
     actions.push({
       priority: 2,
       text: 'Add a state file (STATE.md or pattern state)',
-      command: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool grok',
+      command: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool claude',
     });
   }
   if (!loopMd) {
@@ -157,7 +157,7 @@ export async function runDoctor(target: string): Promise<DoctorReport> {
     actions.push({
       priority: 10,
       text: 'Add loop-budget.md with daily token caps and kill switch',
-      command: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool grok',
+      command: 'npx @cobusgreyling/loop init . --pattern daily-triage --tool claude',
     });
   }
   if (!runLog) {

@@ -14,12 +14,13 @@ export const PAIN_OPTIONS = [
     { id: '5', label: 'Merge debt / TODOs piling up', pattern: 'post-merge-cleanup' },
     { id: '6', label: 'Stale release notes / changelogs', pattern: 'changelog-drafter' },
     { id: '7', label: 'Noisy issue backlog / duplicates', pattern: 'issue-triage' },
+    { id: '8', label: 'Just a GitHub Action, no extra files', pattern: 'thin-loop' },
 ];
 export const TOOLS = ['grok', 'claude', 'codex', 'opencode'];
 export function defaultPlan() {
     return {
         pattern: 'daily-triage',
-        tool: 'grok',
+        tool: 'claude',
         target: '.',
         withFoundry: false,
     };
@@ -41,7 +42,7 @@ export function formatPainMenu() {
         lines.push(`  ${p.id}) ${p.label}  →  ${p.pattern}`);
     }
     lines.push('');
-    lines.push('  Enter 1-7, or pattern id (default: daily-triage)');
+    lines.push('  Enter 1-8, or pattern id (default: daily-triage)');
     return lines.join('\n');
 }
 export function resolvePattern(answer) {
@@ -63,7 +64,7 @@ export function resolveTool(answer) {
     const t = answer.trim().toLowerCase();
     if (TOOLS.includes(t))
         return t;
-    return 'grok';
+    return 'claude';
 }
 export async function runInteractiveWizard() {
     const rl = readline.createInterface({ input, output });
@@ -72,7 +73,7 @@ export async function runInteractiveWizard() {
         console.log(formatPainMenu());
         const pain = await rl.question('> ');
         const pattern = resolvePattern(pain);
-        console.log(`\nCoding agent tool? (${TOOLS.join(' / ')}) [grok]`);
+        console.log(`\nCoding agent tool? (${TOOLS.join(' / ')}) [claude]`);
         const toolAns = await rl.question('> ');
         const tool = resolveTool(toolAns);
         console.log('\nTarget directory? [.]');
@@ -88,12 +89,12 @@ export function printNonInteractiveHelp() {
     console.log(formatWizardBanner());
     console.log(`Week-one path (copy/paste):
 
-  npx @cobusgreyling/loop init . --pattern daily-triage --tool grok
+  npx @cobusgreyling/loop init . --pattern daily-triage --tool claude
   npx @cobusgreyling/loop doctor .
 
 Or pick a pain point, then scaffold:
 
-${PAIN_OPTIONS.map((p) => `  ${p.id}. ${p.label}\n     npx @cobusgreyling/loop init . -p ${p.pattern} -t grok`).join('\n\n')}
+${PAIN_OPTIONS.map((p) => `  ${p.id}. ${p.label}\n     npx @cobusgreyling/loop init . -p ${p.pattern} -t claude`).join('\n\n')}
 
 Commands:
   loop init|audit|cost|sync|doctor|status|badge|wizard
