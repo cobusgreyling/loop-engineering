@@ -1,6 +1,6 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-08-27T11:15:21Z (automated daily-triage workflow)
+Last run: 2026-08-28T11:41:46Z (automated daily-triage workflow)
 
 ## High Priority (loop is acting or waiting on human)
 
@@ -9,12 +9,9 @@ Last run: 2026-08-27T11:15:21Z (automated daily-triage workflow)
 ## Watch List
 
 - [#403](https://github.com/cobusgreyling/loop-engineering/issues/403) loop-report — Loop report — week of 2026-07-27
-- [#262](https://github.com/cobusgreyling/loop-engineering/issues/262) idle 34d — Adopter: Pluribus — market/adoption research loop
-- [#246](https://github.com/cobusgreyling/loop-engineering/issues/246) idle 47d — Resource suggestion: loop.js — a loop-engineering runtime where an independent Verify agent defines done
-- [#173](https://github.com/cobusgreyling/loop-engineering/issues/173) stale **good first issue** (51d) — Share an Issue Triage week-one story
-- [#120](https://github.com/cobusgreyling/loop-engineering/issues/120) stale **good first issue** (56d) — Add your project to the adopters list
-- [#119](https://github.com/cobusgreyling/loop-engineering/issues/119) stale **good first issue** (56d) — Share a PR Babysitter failure story
-- [#118](https://github.com/cobusgreyling/loop-engineering/issues/118) stale **good first issue** (56d) — Share your week-one Daily Triage story
+- [#262](https://github.com/cobusgreyling/loop-engineering/issues/262) idle 35d — Adopter: Pluribus — market/adoption research loop
+- [#246](https://github.com/cobusgreyling/loop-engineering/issues/246) idle 48d — Resource suggestion: loop.js — a loop-engineering runtime where an independent Verify agent defines done
+- [#120](https://github.com/cobusgreyling/loop-engineering/issues/120) stale **good first issue** (57d) — Add your project to the adopters list
 
 - Loop Ready **100** (L3) — informational, not a reason to act.
 
