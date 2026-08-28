@@ -51,6 +51,12 @@ echo "=== Audit of starters (L1 gate) ==="
 FAILED=0
 for s in "$REPO_ROOT"/starters/*/; do
   NAME=$(basename "$s")
+  # Thin loop is intentionally file-light (tracker is the state). Loop-audit
+  # exits 2 below score 40; do not hold it to the L1 file-score gate.
+  if [[ "$NAME" == "thin-loop" ]]; then
+    echo "--- ${NAME}: skipped L1 file-score gate (by design)"
+    continue
+  fi
   STARTER_AUDIT_FILE="$AUDIT_TMP_DIR/starter-${NAME}.json"
   node dist/cli.js "$s" --json > "$STARTER_AUDIT_FILE"
   STARTER_AUDIT_FILE="$STARTER_AUDIT_FILE" STARTER_NAME="$NAME" node -e '

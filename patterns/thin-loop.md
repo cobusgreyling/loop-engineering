@@ -21,9 +21,12 @@ Do **not** start here if you need attempt caps, a maker/checker split, or a toke
 
 Week one: **L1**. The workflow writes `$GITHUB_STEP_SUMMARY`. It comments on the triggering issue/PR only when that thread does not already have a thin-loop marker.
 
-## Required skills / state
+## Required Skills
 
-None required. Optional: copy `loop-triage` if you later wire an agent into the `command` step via [loop-action](../tools/loop-action/).
+None required at L1. The workflow uses `gh` only.
+
+- `loop-triage` — optional, if you later wire an agent into the Action via [loop-action](../tools/loop-action/)
+- `loop-verifier` — optional, required before any write; maker/checker still applies once an implementer exists
 
 State file: **not required**. GitHub issues/PRs carry the backlog. A `loop-run-log.md` line is optional proof for Loop Ready activity scoring.
 
@@ -35,9 +38,11 @@ State file: **not required**. GitHub issues/PRs carry the backlog. A `loop-run-l
 4. If the event is an issue or PR, a short L1 comment is posted once.
 5. Human reads the summary or comment. No code edits, no auto-merge.
 
-## Verification
+## Verification Strategy
 
-There is no implementer, so there is no verifier. The check is mechanical: `gh` succeeded and the summary is non-empty. If you later invoke an agent, add [loop-verifier](../templates/SKILL.md.verifier) before any write.
+There is no implementer, so there is no verifier. The check is mechanical: `gh` succeeded and the summary is non-empty.
+
+If you later invoke an agent, add [loop-verifier](../templates/SKILL.md.verifier) before any write — maker/checker, not the same session grading its own homework.
 
 ## Human hand-off
 
