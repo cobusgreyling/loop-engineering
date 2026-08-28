@@ -53,5 +53,5 @@ jobs:
           # package.json keeps registry range (^1.x) for the published tarball
           npm publish --access public --provenance
         env:
-          # OIDC trusted publishing — do not set NODE_AUTH_TOKEN (it overrides OIDC)
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"

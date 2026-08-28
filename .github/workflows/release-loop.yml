@@ -51,5 +51,6 @@ jobs:
         working-directory: tools/loop
         run: npm publish --access public --provenance
         env:
-          # OIDC trusted publishing — do not set NODE_AUTH_TOKEN (it overrides OIDC)
+          # Trusted publisher OIDC 404'd (npm GAT). Fall back to repo NPM_TOKEN.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
