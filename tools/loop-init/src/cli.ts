@@ -104,10 +104,11 @@ const FOUNDRY_SHOWCASE =
 
 /**
  * Model providers selectable for the implementer preset's `interface` layer.
- * The implementer stack defaults to the existing primitive; `minimax` emits a
- * `model/minimax` provider primitive with regional endpoints and model options.
+ * The implementer stack defaults to the existing primitive; `minimax` and
+ * `orcarouter` emit their own provider primitive with endpoints and model
+ * options instead.
  */
-type ModelProvider = 'anthropic' | 'minimax';
+type ModelProvider = 'anthropic' | 'minimax' | 'orcarouter';
 
 type MiniMaxRegion = 'global_en' | 'cn_zh';
 
@@ -168,6 +169,67 @@ const MINIMAX_REGIONS: MiniMaxRegionEndpoint[] = [
 
 const MINIMAX_MODEL_IDS = MINIMAX_MODELS.map((m) => m.id);
 const MINIMAX_REGION_IDS = MINIMAX_REGIONS.map((r) => r.region);
+
+const ORCAROUTER_DEFAULT_MODEL = 'orcarouter/fusion';
+const ORCAROUTER_BASE_URL = 'https://api.orcarouter.ai';
+
+const ORCAROUTER_MODELS = [
+  {
+    id: 'orcarouter/fusion',
+    contextWindow: 1_000_000,
+    thinking: ['adaptive', 'disabled'],
+    notes: 'Adaptive-routing flagship; multi-model aggregate with automatic failover',
+  },
+  {
+    id: 'orcarouter/fusion-flash',
+    contextWindow: 200_000,
+    thinking: ['adaptive', 'disabled'],
+    notes: 'Fast adaptive-routing tier for high-volume, latency-sensitive loops',
+  },
+  {
+    id: 'orcarouter/auto',
+    contextWindow: 1_000_000,
+    thinking: ['adaptive', 'disabled'],
+    notes: 'Cost-optimized routing tier',
+  },
+  {
+    id: 'orcarouter/free',
+    contextWindow: 200_000,
+    thinking: ['disabled'],
+    notes: 'Zero-cost tier for report-only loops',
+  },
+];
+
+const ORCAROUTER_MODEL_IDS = ORCAROUTER_MODELS.map((m) => m.id);
+
+/**
+ * Render the `model/orcarouter` interface primitive for the implementer stack.
+ * OrcaRouter exposes an OpenAI-compatible gateway that routes a single model
+ * id across many upstream models. Both protocol shapes live on the same
+ * gateway base URL — the OpenAI and Anthropic-compatible paths are identical
+ * and the client picks the wire format via its request headers.
+ */
+function orcarouterInterfaceYaml(model: string): string {
+  const models = ORCAROUTER_MODELS.map((m) =>
+    [
+      `          - id: ${m.id}`,
+      `            context_window: ${m.contextWindow}`,
+      `            thinking: [${m.thinking.join(', ')}]`,
+      `            notes: "${m.notes}"`,
+    ].join('\n'),
+  ).join('\n');
+
+  return `    - primitive: model/orcarouter
+      config:
+        model: ${model}
+        models:
+${models}
+        endpoints:
+          global:
+            openai_base_url: ${ORCAROUTER_BASE_URL}/v1
+            anthropic_base_url: ${ORCAROUTER_BASE_URL}/v1
+            docs_root: https://www.orcarouter.ai`;
+}
 
 /** Render the `model/minimax` interface primitive for the implementer stack. */
 function minimaxInterfaceYaml(model: string, region: MiniMaxRegion): string {
@@ -247,7 +309,9 @@ function foundryStackYaml(
     const interfaceLayer =
       provider === 'minimax'
         ? minimaxInterfaceYaml(model, region)
-        : `    - primitive: model/anthropic
+        : provider === 'orcarouter'
+          ? orcarouterInterfaceYaml(model)
+          : `    - primitive: model/anthropic
       config:
         model: claude-sonnet-4-6`;
     return `name: ${stackName}
@@ -832,9 +896,9 @@ Options:
   --with-foundry    Also scaffold .foundry/ stack (harness-foundry runtime)
   --with-memory     Also scaffold memory-engineering tiers and budget
   --with-fleet      Also scaffold fleet-engineering registry and inbox
-  --model-provider  Implementer interface provider (default: anthropic; minimax)
+  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter)
   --region          MiniMax region when --model-provider minimax (global_en, cn_zh)
-  --model           MiniMax model when --model-provider minimax (MiniMax-M3, MiniMax-M2.7)
+  --model           Provider model when --model-provider minimax/orcarouter (default: MiniMax-M3 / orcarouter/fusion)
   --dry-run         Print actions without copying
   -h, --help        This help
 
@@ -849,6 +913,7 @@ Examples:
   npx @cobusgreyling/loop-init . -p pr-babysitter -t claude --with-foundry
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
   npx @cobusgreyling/loop-init . --with-memory
   npx @cobusgreyling/loop-init . --with-fleet
@@ -856,7 +921,7 @@ Examples:
     process.exit(0);
   }
 
-  const { pattern, tool, target, dryRun, withFoundry, withMemory, withFleet, modelProvider, region, model } = args;
+  let { pattern, tool, target, dryRun, withFoundry, withMemory, withFleet, modelProvider, region, model } = args;
 
   const validPatterns = Object.keys(PATTERN_STARTERS) as Pattern[];
   const validTools = Object.keys(TOOL_SUFFIX) as Tool[];
@@ -868,7 +933,7 @@ Examples:
     console.error(`Unknown tool: ${tool}. Valid: ${validTools.join(', ')}`);
     process.exit(1);
   }
-  const validProviders: ModelProvider[] = ['anthropic', 'minimax'];
+  const validProviders: ModelProvider[] = ['anthropic', 'minimax', 'orcarouter'];
   if (!validProviders.includes(modelProvider)) {
     console.error(`Unknown model provider: ${modelProvider}. Valid: ${validProviders.join(', ')}`);
     process.exit(1);
@@ -881,6 +946,18 @@ Examples:
     if (!MINIMAX_MODEL_IDS.includes(model)) {
       console.error(`Unknown model: ${model}. Valid: ${MINIMAX_MODEL_IDS.join(', ')}`);
       process.exit(1);
+    }
+  }
+  if (modelProvider === 'orcarouter') {
+    // `model` defaults to the MiniMax default; if the user did not pass
+    // `--model` explicitly, fall back to the OrcaRouter default instead.
+    if (!ORCAROUTER_MODEL_IDS.includes(model)) {
+      if (model === MINIMAX_DEFAULT_MODEL) {
+        model = ORCAROUTER_DEFAULT_MODEL;
+      } else {
+        console.error(`Unknown model: ${model}. Valid: ${ORCAROUTER_MODEL_IDS.join(', ')}`);
+        process.exit(1);
+      }
     }
   }
 
