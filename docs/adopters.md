@@ -39,6 +39,7 @@ Or open a PR that adds a row to the table below:
 | [Hermes Agent](https://github.com/NousResearch/hermes-agent) by [Nous Research](https://nousresearch.com) | Daily Triage | Hermes | L1 | Six loop primitives in one binary — `hermes cron` + skill + `delegate_task` + MCP + memory. Reference: [examples/hermes/daily-triage.md](../examples/hermes/daily-triage.md) |
 | [Pluribus](https://github.com/caioribeiroclw-pixel/pluribus) | Daily Triage, Issue Triage | Mixed (OpenClaw) | L2 | Hourly market/adoption research loop; durable state in control plane; cross-tool privacy-safe receipts needed |
 | [QA API Automation](https://github.com/Ayush02jain/qa-api-automation) | CI Sweeper | GitHub Actions | L1 | Report-only CI failure detection for the API Automation Tests workflow |
+| [sofagent](https://github.com/KongFangXun/sofagent) | PR Audit Gate (dogfood) | GitHub Actions | L2 | 24-rule commit-time audit on every PR (base..head diff, secrets/out-of-scope/blind edits); audit-pass → bot auto-approve, merge stays human |
 
 *Your project here — see [CONTRIBUTING.md](../CONTRIBUTING.md).*
 
