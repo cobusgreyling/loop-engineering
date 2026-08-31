@@ -1,22 +1,25 @@
 # Loop State — loop-engineering reference
 
-Last run: 2026-08-28T11:41:46Z (automated daily-triage workflow)
+Last run: 2026-08-31T08:00:56Z (automated daily-triage workflow)
 
 ## High Priority (loop is acting or waiting on human)
 
-- No blocked PRs, failing checks, or unanswered issues.
+- **2** dogfood workflow(s) failing — investigate `validate-patterns` / `audit`.
+- [#569](https://github.com/cobusgreyling/loop-engineering/pull/569) **blocked** (missing required checks or review) — feat(loop-init): add orcarouter model provider
 
 ## Watch List
 
+- [#568](https://github.com/cobusgreyling/loop-engineering/pull/568) merge UNSTABLE — docs: add QA API Automation as adopter
 - [#403](https://github.com/cobusgreyling/loop-engineering/issues/403) loop-report — Loop report — week of 2026-07-27
-- [#262](https://github.com/cobusgreyling/loop-engineering/issues/262) idle 35d — Adopter: Pluribus — market/adoption research loop
-- [#246](https://github.com/cobusgreyling/loop-engineering/issues/246) idle 48d — Resource suggestion: loop.js — a loop-engineering runtime where an independent Verify agent defines done
-- [#120](https://github.com/cobusgreyling/loop-engineering/issues/120) stale **good first issue** (57d) — Add your project to the adopters list
+- [#262](https://github.com/cobusgreyling/loop-engineering/issues/262) idle 38d — Adopter: Pluribus — market/adoption research loop
+- [#246](https://github.com/cobusgreyling/loop-engineering/issues/246) idle 51d — Resource suggestion: loop.js — a loop-engineering runtime where an independent Verify agent defines done
+- [#120](https://github.com/cobusgreyling/loop-engineering/issues/120) stale **good first issue** (60d) — Add your project to the adopters list
 
 - Loop Ready **100** (L3) — informational, not a reason to act.
 
 ## Recent Noise (ignored this run)
 
+- [#567](https://github.com/cobusgreyling/loop-engineering/issues/567) AI Skill Shield scan report: cobusgreyling/loop-engineering (41 skills)
 - [#522](https://github.com/cobusgreyling/loop-engineering/issues/522) 如果我有一个项目需要重构，loop-engineering 怎么帮助我，来分解todo，然后自动进行，以下流程如何改造，有没有教程？
 - [#508](https://github.com/cobusgreyling/loop-engineering/issues/508) Possible complementary direction: LongHorizon-Harness for sustained agent tasks
 - [#486](https://github.com/cobusgreyling/loop-engineering/issues/486) Area owner invite: @AIMindCrafter for docs / examples / stories
