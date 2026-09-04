@@ -41,8 +41,9 @@ See the files in this directory:
 - `github-propose.json` — read + limited write for comments and draft PRs (sign comments as the loop).
 - `linear.json` — example for creating/updating issues from loop state.
 - `slack-read.json` — ingest channel threads into triage.
-- `knos.mcp.json` — local shared state for parallel loops; the record lives in
-  `.knos/decisions.md` in the repo, so a fresh clone reads it with nothing installed.
+- `knos.mcp.json` — local shared state for parallel loops (`pip install knos`,
+  Python 3.10+). The record lives in `.knos/decisions.md` in the repo, so a fresh
+  clone reads it with nothing installed; the server is only needed for live claims.
 - `safe-write-pattern.md` — the recommended architecture for any mutating action.
 
 ## Usage in a Loop Prompt (Grok example)
