@@ -2,6 +2,14 @@
 
 <!-- Written by `knos export`. Commit this file. -->
 
+<!--
+Reading this file needs nothing installed: it is plain markdown, and a fresh
+clone picks it up as-is. The live claim/withhold server is a separate, optional
+step - `pip install knos` (Python 3.10+), which the MCP entry launches as
+`python -m knos.mcp`. Without it, everything below still reads normally.
+-->
+
+
 A second clone reads this on its first question — it is one of the decision
 records knos looks for. Nothing here is private: secrets and private paths
 never reach it.
