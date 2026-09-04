@@ -1,6 +1,9 @@
+<!-- Example record shape only. Not this repository's state.
+     `knos export` writes this file; live state stays untracked. -->
+
 # Decisions and current work
 
-<!-- Written by `knos export`. Commit this file. -->
+<!-- Written by `knos export` in an adopting repo. -->
 
 <!--
 Reading this file needs nothing installed: it is plain markdown, and a fresh

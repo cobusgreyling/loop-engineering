@@ -42,8 +42,9 @@ See the files in this directory:
 - `linear.json` — example for creating/updating issues from loop state.
 - `slack-read.json` — ingest channel threads into triage.
 - `knos.mcp.json` — local shared state for parallel loops (`pip install knos`,
-  Python 3.10+). The record lives in `.knos/decisions.md` in the repo, so a fresh
-  clone reads it with nothing installed; the server is only needed for live claims.
+  Python 3.10+). `knos-decisions.example.md` beside it shows the record shape; it
+  is plain markdown, so it reads with nothing installed and the server is only
+  needed for live claims.
 - `safe-write-pattern.md` — the recommended architecture for any mutating action.
 
 ## Usage in a Loop Prompt (Grok example)
