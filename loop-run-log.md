@@ -21,9 +21,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-08-05T08:51:41Z","pattern":"daily-triage","duration_s":5,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"30990758214"}
-{"run_id":"2026-08-06T08:52:05Z","pattern":"daily-triage","duration_s":9,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"31086642482"}
-{"run_id":"2026-08-07T08:21:23Z","pattern":"daily-triage","duration_s":9,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"31161330464"}
 {"run_id":"2026-08-10T08:28:12Z","pattern":"daily-triage","duration_s":6,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"31370181800"}
 {"run_id":"2026-08-11T08:17:37Z","pattern":"daily-triage","duration_s":17,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"31472531090"}
 {"run_id":"2026-08-12T08:26:01Z","pattern":"daily-triage","duration_s":12,"items_found":1,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"31578280884"}
@@ -44,3 +41,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-09-02T08:00:41Z","pattern":"daily-triage","duration_s":8,"items_found":9,"actions_taken":1,"escalations":2,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"33606428461"}
 {"run_id":"2026-09-03T08:00:46Z","pattern":"daily-triage","duration_s":11,"items_found":9,"actions_taken":1,"escalations":0,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"33731028165"}
 {"run_id":"2026-09-04T08:03:05Z","pattern":"daily-triage","duration_s":158,"items_found":8,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"33851327595"}
+{"run_id":"2026-09-07T08:00:46Z","pattern":"daily-triage","duration_s":11,"items_found":9,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"34098301292"}
