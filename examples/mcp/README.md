@@ -30,6 +30,7 @@ The local clone/dev path still works if you want to inspect or change the server
 | Linear | Read/update issues from state, create follow-up tickets | API key with project + issue write limited to specific teams | Post-Merge, Dependency Sweeper, CI Sweeper |
 | Slack (read) | Ingest threads / alerts the loop should triage | Read-only on specific channels | Daily Triage |
 | Safe propose flow | Any write action | Loop opens PR / draft / comment. Human merges or approves. | All L2+ patterns |
+| Knos (shared state) | Give parallel loops one state record instead of one STATE.md each | Local only; no network, no account | Anti-pattern 5, PR Babysitter, Daily Triage |
 
 ## Example Configurations
 
@@ -40,6 +41,10 @@ See the files in this directory:
 - `github-propose.json` — read + limited write for comments and draft PRs (sign comments as the loop).
 - `linear.json` — example for creating/updating issues from loop state.
 - `slack-read.json` — ingest channel threads into triage.
+- `knos.mcp.json` — local shared state for parallel loops (`pip install knos`,
+  Python 3.10+). `knos-decisions.example.md` beside it shows the record shape; it
+  is plain markdown, so it reads with nothing installed and the server is only
+  needed for live claims.
 - `safe-write-pattern.md` — the recommended architecture for any mutating action.
 
 ## Usage in a Loop Prompt (Grok example)
