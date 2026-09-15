@@ -37,13 +37,26 @@ test('successRatePct stays within [0, 100] when a single run logs more than one 
   assert.ok(metrics.successRatePct >= 0 && metrics.successRatePct <= 100);
 });
 
-test('filterEntries keeps entries with unparseable run_id when a timeframe is set', () => {
+test('filterEntries keeps non-ISO run IDs and filters ISO dates within a timeframe', (t) => {
+  const RealDate = Date;
+  t.mock.method(globalThis, 'Date', class extends RealDate {
+    constructor(...args) {
+      super(...(args.length ? args : ['2026-08-01T12:00:00Z']));
+    }
+  });
+
   const entries = [
     { run_id: '2026-07-30T08:50:34Z', pattern: 'daily-triage', duration_s: 5, items_found: 1, actions_taken: 2, escalations: 1, tokens_estimate: 52000, outcome: 'report-only' },
-    // Numeric GitHub run id is not a parseable date and must not be dropped.
-    { run_id: '29231015995', pattern: 'daily-triage', duration_s: 8, items_found: 1, actions_taken: 1, escalations: 0, tokens_estimate: 52000, outcome: 'report-only' },
+    ...['29231015995', 'run-1', '123', '2026', 'custom-run', '2026-99-99'].map(run_id => ({
+      run_id, pattern: 'daily-triage', duration_s: 8, items_found: 1, actions_taken: 1, escalations: 0, tokens_estimate: 52000, outcome: 'report-only'
+    })),
+    { run_id: '2026-06-01T08:50:34Z', pattern: 'daily-triage', duration_s: 5, items_found: 0, actions_taken: 0, escalations: 0, tokens_estimate: 1000, outcome: 'no-op' },
+    { run_id: 'run-2', pattern: 'ci-sweeper', duration_s: 5, items_found: 0, actions_taken: 0, escalations: 0, tokens_estimate: 1000, outcome: 'no-op' },
   ];
 
   const filtered = filterEntries(entries, 'daily-triage', 30);
-  assert.strictEqual(filtered.length, 2, 'unparseable run_id entries are kept, not dropped');
+  assert.deepStrictEqual(filtered.map(e => e.run_id), [
+    '2026-07-30T08:50:34Z', '29231015995', 'run-1', '123', '2026', 'custom-run', '2026-99-99'
+  ]);
+  assert.strictEqual(filterEntries(entries), entries, 'no filters preserve every entry');
 });

@@ -32,6 +32,10 @@ export function filterEntries(entries, pattern, days) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
         filtered = filtered.filter(e => {
+            // Match the run-log pruner: Date also accepts IDs such as "run-1"
+            // as old dates, so only ISO-shaped IDs can establish a run's age.
+            if (!/^\d{4}-\d{2}-\d{2}/.test(e.run_id))
+                return true;
             const entryDate = new Date(e.run_id);
             // An unparseable run_id (e.g. a numeric GitHub run id or a custom
             // slug) yields Invalid Date; keep the entry rather than silently
