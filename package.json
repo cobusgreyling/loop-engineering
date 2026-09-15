@@ -28,6 +28,6 @@
   },
   "devDependencies": {
     "ajv": "^8.17.1",
-    "yaml": "^2.8.0"
+    "yaml": "^2.9.1"
   }
 }
