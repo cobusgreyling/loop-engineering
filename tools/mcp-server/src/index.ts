@@ -9,6 +9,7 @@ import { loadGateConfig, checkGate } from '@cobusgreyling/loop-gate';
 import { auditProject } from '@cobusgreyling/loop-audit/dist/auditor.js';
 import { checkCircuitBreaker, DEFAULT_BREAKER, Ledger } from '@cobusgreyling/loop-context';
 import { estimateCost } from '@cobusgreyling/loop-cost/dist/estimator.js';
+import { classifyTrace, guardText, routeTask } from '@cobusgreyling/loop-jev';
 import {
   resolveProjectRoot,
   loadRegistry,
@@ -535,6 +536,49 @@ server.tool(
     ];
     
     return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+  },
+);
+
+server.tool(
+  'loop_jev_route',
+  'Ask TypeSafe Jev which coding-agent model tier should handle this loop task (nano/fast/balanced/frontier/reasoning). Heuristic fallback if no API key.',
+  {
+    goal: z.string().describe('The loop task / user goal'),
+    pattern: z.string().optional().describe('Pattern id, e.g. daily-triage'),
+    level: z.enum(['L1', 'L2', 'L3']).optional().describe('Readiness level'),
+  },
+  async ({ goal, pattern, level }) => {
+    const decision = await routeTask({ goal, pattern, level });
+    return { content: [{ type: 'text' as const, text: JSON.stringify(decision, null, 2) }] };
+  },
+);
+
+server.tool(
+  'loop_jev_guard',
+  'Screen a message going into or out of the coding agent for jailbreaks, prompt injection, secret leaks, and denylist pressure.',
+  {
+    text: z.string().describe('Message to screen'),
+    side: z.enum(['input', 'output']).describe('input = user/issue/PR; output = model reply'),
+    policy: z.enum(['strict', 'permissive']).optional(),
+  },
+  async ({ text, side, policy }) => {
+    const decision = await guardText({ text, side, policy: policy ?? 'strict' });
+    return { content: [{ type: 'text' as const, text: JSON.stringify(decision, null, 2) }] };
+  },
+);
+
+server.tool(
+  'loop_jev_classify',
+  'Classify a loop trace or ledger for failure mode (tool loop, budget burn, drift, …) and whether to escalate.',
+  {
+    events: z
+      .array(z.object({ type: z.string().optional(), detail: z.string().optional() }))
+      .describe('Trace events (type + optional detail)'),
+    goal: z.string().optional(),
+  },
+  async ({ events, goal }) => {
+    const decision = await classifyTrace({ goal, events });
+    return { content: [{ type: 'text' as const, text: JSON.stringify(decision, null, 2) }] };
   },
 );
 

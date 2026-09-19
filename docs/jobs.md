@@ -11,6 +11,7 @@ This repo is a **pattern library for operating agents around a codebase** — tr
 | Upgrade dependencies safely | [Dependency Sweeper](../patterns/dependency-sweeper.md) | Major bumps without a human |
 | **Ship a feature or refactor** (break work into todos, run them) | **[Refactor / change path](./refactor.md)** | A single “refactor the repo” loop |
 | Run until a scoped objective is done | [Goal Engineering](https://github.com/cobusgreyling/goal-engineering) (`/goal`) | Pretending `daily-triage` is a task runner |
+| Route models, re-rank context, screen LLM errors | [Jev / loop-jev](./jev.md) | A second LLM moderator on every turn |
 | Persist memory across sessions | [Memory Engineering](https://github.com/cobusgreyling/memory-engineering) | Stuffing everything into `STATE.md` |
 | Govern many agents | [Fleet Engineering](https://github.com/cobusgreyling/fleet-engineering) | One `LOOP.md` for a whole org |
 
