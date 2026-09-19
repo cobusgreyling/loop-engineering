@@ -16,6 +16,7 @@ Same patterns, different tools. Skills and state schemas are shared; only schedu
 | GitHub Actions | [github-actions/](./github-actions/) |
 | Aider CLI | [primitives-matrix § Aider](../docs/primitives-matrix.md#appendix-aider-cli) — CLI-first loops via cron + `--read` skills |
 | MCP connectors | [mcp/](./mcp/) — config example, including `loop-engineering.mcp.json`; reference server in [tools/mcp-server/](../tools/mcp-server/) |
+| Jev (System One) | [grok/loop-jev.md](./grok/loop-jev.md) · [claude-code/loop-jev.md](./claude-code/loop-jev.md) — model routing, retrieval, guardrails, traces |
 
 Start with [primitives-matrix.md](../docs/primitives-matrix.md) to map capabilities.
 

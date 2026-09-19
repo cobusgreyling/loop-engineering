@@ -61,6 +61,12 @@ Do **not** deprecate or remove existing `loop-init` / `loop-audit` usages you fi
    npx @cobusgreyling/loop cost -p <pattern> -l L1 -c 1d
    ```
 
+   Optional semantic layer (model routing, guardrails, trace classification):
+   ```bash
+   npx @cobusgreyling/loop jev doctor
+   ```
+   See [docs/jev.md](../../docs/jev.md). Never commit a TypeSafe API key.
+
 7. **Week-one rule**
    - Report only. No auto-fix, no auto-merge.
    - Tell the human the first `/loop` or scheduler command from init output.

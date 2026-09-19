@@ -65,6 +65,12 @@ const TOOLS = {
         bin: 'dist/cli.js',
         command: 'loop-sandbox',
     },
+    jev: {
+        pkg: '@cobusgreyling/loop-jev',
+        dir: 'loop-jev',
+        bin: 'dist/cli.js',
+        command: 'loop-jev',
+    },
 };
 async function exists(p) {
     try {

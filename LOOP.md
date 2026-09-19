@@ -64,6 +64,7 @@ See [docs/multi-loop.md](docs/multi-loop.md). Priority: CI Sweeper → PR Babysi
 - Denylist: showcase HTML/CSS, core primitives docs, audit scoring logic without human review
 - Live loop state: `STATE.md` at repo root
 - `loop-gate check` mechanically enforces the denylist + auto-merge allowlist above from `gate.yaml`; see `tools/loop-gate`
+- `loop-jev` is the semantic layer on top of those globs: model routing, context re-rank, LLM guardrails, trace classification. See [docs/jev.md](docs/jev.md). Do not store a TypeSafe key in this repo.
 
 ## How to run locally
 

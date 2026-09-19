@@ -111,6 +111,11 @@ cd ../loop-drill
 npm ci
 npm test
 
+echo "Building and testing loop-jev…"
+cd ../loop-jev
+npm ci
+npm test
+
 # Dogfood: prove this repo's own gate.yaml and circuit breaker actually fire.
 # Exit 1 means a drill was skipped (an unconfigured guardrail) and is tolerated;
 # exit 2 means a guardrail failed to fire and must fail CI.

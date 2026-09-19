@@ -1,0 +1,54 @@
+{
+  "name": "@cobusgreyling/loop-jev",
+  "version": "0.1.0",
+  "description": "TypeSafe Jev (System One) decision layer for Loop Engineering — model routing, semantic retrieval, LLM guardrails, and reasoning-trace classification at a fraction of an LLM call.",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "bin": {
+    "loop-jev": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "prepublishOnly": "npm test",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "loop-engineering",
+    "jev",
+    "typesafe",
+    "system-one",
+    "model-routing",
+    "guardrails",
+    "retrieval",
+    "ai-agents"
+  ],
+  "author": "Cobus Greyling",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cobusgreyling/loop-engineering.git",
+    "directory": "tools/loop-jev"
+  },
+  "homepage": "https://github.com/cobusgreyling/loop-engineering/tree/main/tools/loop-jev#readme",
+  "bugs": {
+    "url": "https://github.com/cobusgreyling/loop-engineering/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
