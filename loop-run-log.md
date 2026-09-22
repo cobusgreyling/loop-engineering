@@ -42,3 +42,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-09-17T08:00:46Z","pattern":"daily-triage","duration_s":9,"items_found":10,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"35197386151"}
 {"run_id":"2026-09-18T08:00:54Z","pattern":"daily-triage","duration_s":14,"items_found":10,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"35322186125"}
 {"run_id":"2026-09-21T08:00:31Z","pattern":"daily-triage","duration_s":9,"items_found":11,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"35575643988"}
+{"run_id":"2026-09-22T08:00:44Z","pattern":"daily-triage","duration_s":9,"items_found":11,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"35702478201"}
