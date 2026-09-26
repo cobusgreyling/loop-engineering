@@ -31,6 +31,20 @@ loop to have read this file: `loop-gate check --action <type> --paths <changed f
 exits `2` to escalate, `0` to proceed — same convention `loop-context --check`
 already uses, so control scripts chain both.
 
+Semantic hazards (jailbreaks in an issue body, prompt injection, secret
+exfiltration, instruction drift) are not globs. Screen those with
+[`loop-jev guard`](../tools/loop-jev) on the way in and out of the coding
+agent. Jev assesses; your thresholds decide pass / review / block. Chain it
+with the mechanical gates:
+
+```bash
+loop-jev guard --side input --text "$GOAL" || exit 2
+loop-context --check --ledger run.json || exit 2
+loop-gate check --action auto-merge --paths a.ts,b.ts || exit 2
+```
+
+See [docs/jev.md](./jev.md). Never put a TypeSafe API key in `STATE.md`, traces, or git.
+
 `gate.yaml` also sets `maxFiles: 10` — a change touching more than 10 files
 escalates regardless of which paths it touches, on the assumption that a loop
 proposing a large diff has lost the plot.

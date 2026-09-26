@@ -103,6 +103,7 @@ flowchart TB
         Sched[Automations / Scheduling]
         Patterns[patterns/registry.yaml]
         Cost[loop-cost: estimate spend]
+        Jev[loop-jev: route, retrieve, guard, classify]
     end
 
     subgraph Memory["Durable memory"]
@@ -130,12 +131,15 @@ flowchart TB
     Sched --> Patterns
     Patterns --> Cost
     Cost --> Context
+    Patterns --> Jev
+    Jev --> Maker
     Patterns --> WT
     State <--> Sync
     WT --> Maker
     Maker --> Verifier
     Verifier --> Context
     Context --> Gate
+    Jev --> Gate
     Verifier --> MCP
     Gate --> Review
     Audit --> Design

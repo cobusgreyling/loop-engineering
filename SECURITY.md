@@ -17,7 +17,7 @@ For general loop safety guidance, see [docs/safety.md](docs/safety.md).
 |------|------------|
 | Auto-merge of malicious dependency | Denylist + verifier + no auto-merge week one |
 | MCP over-permission | Read-only connectors for L1; scope write to PR comments only |
-| Secret exfiltration via prompts | Denylist `.env`, credentials paths; never log secrets in STATE.md |
+| Secret exfiltration via prompts | Denylist `.env`, credentials paths; never log secrets in STATE.md; screen turns with `loop-jev guard` |
 | Infinite fix loops burning budget | Hard attempt caps; kill switch in LOOP.md |
 | Supply-chain in loop-produced PRs | Human review for anything outside allowlist |
 
@@ -28,6 +28,7 @@ For general loop safety guidance, see [docs/safety.md](docs/safety.md).
 - [ ] No auto-merge without explicit allowlist
 - [ ] MCP connectors use least privilege
 - [ ] `loop-run-log.md` or equivalent observability
+- [ ] `loop-jev guard` on agent input/output if the loop reads untrusted issues/PRs
 
 ## Supported versions
 

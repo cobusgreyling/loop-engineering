@@ -76,6 +76,17 @@ npx @cobusgreyling/loop context --check --ledger loop-ledger.json
 
 Exit `0` = continue · `2` = escalate to a human. The breaker trips on max iterations, the same error repeating N× in a row, too many consecutive failures, or a token budget cap. Full API: [tools/loop-context/README.md](../tools/loop-context/README.md).
 
+### Jev — cheap semantic decisions (optional)
+
+TypeSafe Jev is a System One model: typed questions in, probabilities out, no prose. Use it to pick a model tier, re-rank context, screen jailbreaks, and classify traces without a second LLM call:
+
+```bash
+npx @cobusgreyling/loop jev doctor
+npx @cobusgreyling/loop jev route --goal "Draft daily triage" --level L1 --json
+```
+
+Set `TYPESAFE_API_KEY` (or `~/.config/typesafe/api_key`, mode 600). Never commit the key. Without it, a heuristic fallback still runs. See [docs/jev.md](./jev.md).
+
 #### Token budget negotiation (`budget-negotiator`)
 
 When an L3 autonomous loop reaches ≥90% of its daily token cap in `loop-budget.md` with critical `High Priority` items remaining, it can use the [`budget-negotiator`](../skills/budget-negotiator/SKILL.md) skill to request an extension instead of an abrupt hard stop.

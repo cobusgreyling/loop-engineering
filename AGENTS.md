@@ -15,6 +15,10 @@ cd tools/loop-audit && npm ci && npm run build
 node dist/cli.js ../..              # audit repo root
 node dist/cli.js ../.. --suggest    # show copy commands for gaps
 
+# Jev decision layer (route / retrieve / guard / classify)
+cd tools/loop-jev && npm ci && npm test
+node dist/cli.js doctor
+
 # Before/after demo (scores an empty dir → starter → L2)
 bash scripts/before-after-demo.sh
 ```

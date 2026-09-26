@@ -1,5 +1,9 @@
 # Changelog — @cobusgreyling/loop-mcp-server
 
+## 1.3.0
+
+- `loop_jev_route`, `loop_jev_guard`, `loop_jev_classify` tools (TypeSafe Jev System One)
+
 ## 1.2.0 — 2026-07-29
 
 - `loop_audit_score` tool for runtime Loop Ready scoring
