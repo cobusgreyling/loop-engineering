@@ -1,7 +1,7 @@
 /**
  * loop-drill — fire drills for loop guardrails.
  *
- * docs/failure-modes.md names ten ways loops fail. Some have mechanical
+ * docs/failure-modes.md names the ways loops fail. Some have mechanical
  * counterparts (loop-gate, loop-context's circuit breaker); loop-audit scores
  * whether those counterparts are *present*. Nothing checked whether they
  * actually fire.
@@ -20,7 +20,7 @@ import { type GateConfig } from '@cobusgreyling/loop-gate';
 import { type CircuitBreakerConfig } from '@cobusgreyling/loop-context';
 export type DrillOutcome = 'passed' | 'failed' | 'skipped';
 /** Named failure modes from docs/failure-modes.md. */
-export type FailureMode = 'Infinite Fix Loop' | 'Token Burn' | 'Over-Reach (Wrong Scope)' | 'Verifier Theater' | 'Escalation Failure';
+export type FailureMode = 'Infinite Fix Loop' | 'Token Burn' | 'Over-Reach (Wrong Scope)' | 'Verifier Theater' | 'Escalation Failure' | 'Prompt Injection via Untrusted Input';
 export interface DrillResult {
     /** Stable id, e.g. 'gate.denylist'. */
     id: string;

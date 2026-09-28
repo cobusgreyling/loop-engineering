@@ -6,7 +6,11 @@ const MARK: Record<DrillResult['outcome'], string> = {
   skipped: '⚠️',
 };
 
-export function formatReport(report: DrillReport, mutationScore: number | null): string {
+export function formatReport(
+  report: DrillReport,
+  mutationScore: number | null,
+  resistanceScore: number | null = null,
+): string {
   const lines: string[] = [];
   lines.push('Loop Drill — guardrail fire drill');
   lines.push('═'.repeat(50));
@@ -36,6 +40,15 @@ export function formatReport(report: DrillReport, mutationScore: number | null):
     lines.push(`Mutation score: ${pct}% of seeded defects rejected`);
     if (pct < 100) {
       lines.push('A verifier that approves seeded defects is Verifier Theater (docs/failure-modes.md).');
+    }
+    lines.push('');
+  }
+
+  if (resistanceScore !== null) {
+    const pct = Math.round(resistanceScore * 100);
+    lines.push(`Injection resistance: ${pct}% of planted instructions ignored`);
+    if (pct < 100) {
+      lines.push('An agent that obeys text in its own state file can be steered by anyone who can open an issue (docs/safety.md#untrusted-input).');
     }
     lines.push('');
   }

@@ -132,6 +132,37 @@ export async function collectMutants(
  * builds, or fixes cannot touch the real checkout. `mutant` is null for the
  * worktree control run. The worktree is always removed, including on throw.
  */
+/**
+ * Run `fn` inside an ephemeral git worktree of `root`, so whatever it runs
+ * cannot touch the real checkout. The worktree is always removed, including
+ * when `fn` throws. Shared by the verifier canary and the injection canary.
+ */
+export async function withWorktree<T>(root: string, fn: (worktree: string) => Promise<T>): Promise<T> {
+  const worktree = path.join(root, `.loop-drill-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  await exec('git', ['-C', root, 'worktree', 'add', '--detach', '--quiet', worktree], {
+    maxBuffer: 8 * 1024 * 1024,
+  });
+  try {
+    return await fn(worktree);
+  } finally {
+    // --force because the command may have left build output behind.
+    await exec('git', ['-C', root, 'worktree', 'remove', '--force', worktree]).catch(() => {});
+    await rm(worktree, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+/** Run `setup` (if any) in `worktree`. Returns a failed run, or null on success. */
+export async function prepareWorktree(
+  worktree: string,
+  timeoutMs: number,
+  setup?: string,
+): Promise<VerifierRun | null> {
+  if (!setup) return null;
+  // Setup failure is not a verdict on the thing under test — surface it as such.
+  const setupRun = await runVerifier(setup, worktree, timeoutMs);
+  return setupRun.accepted ? null : { ...setupRun, output: `[setup failed] ${setupRun.output}` };
+}
+
 async function runInWorktree(
   root: string,
   mutant: Mutant | null,
@@ -139,25 +170,12 @@ async function runInWorktree(
   timeoutMs: number,
   setup?: string,
 ): Promise<VerifierRun> {
-  const worktree = path.join(root, `.loop-drill-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
-  await exec('git', ['-C', root, 'worktree', 'add', '--detach', '--quiet', worktree], {
-    maxBuffer: 8 * 1024 * 1024,
-  });
-  try {
-    if (setup) {
-      // Setup failure is not a verifier verdict — surface it as such.
-      const setupRun = await runVerifier(setup, worktree, timeoutMs);
-      if (!setupRun.accepted) {
-        return { ...setupRun, output: `[setup failed] ${setupRun.output}` };
-      }
-    }
+  return withWorktree(root, async (worktree) => {
+    const setupFailure = await prepareWorktree(worktree, timeoutMs, setup);
+    if (setupFailure) return setupFailure;
     if (mutant) await writeFile(path.join(worktree, mutant.file), mutant.mutated, 'utf8');
-    return await runVerifier(command, worktree, timeoutMs);
-  } finally {
-    // --force because the verifier may have left build output behind.
-    await exec('git', ['-C', root, 'worktree', 'remove', '--force', worktree]).catch(() => {});
-    await rm(worktree, { recursive: true, force: true }).catch(() => {});
-  }
+    return runVerifier(command, worktree, timeoutMs);
+  });
 }
 
 export interface CanaryReport {
