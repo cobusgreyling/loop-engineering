@@ -58,7 +58,11 @@ test('computeScore: full L2 signals', () => {
   assert.ok(score >= 58 && score < 78);
 });
 
-test('computeScore: L3 requires verifier, high score, cost observability, and activity', () => {
+function provenGate() {
+  return { present: true, proven: ['breaker', 'gate'], failed: [], untested: [], stale: [], failures: [], skipReasons: {} };
+}
+
+test('computeScore: L3 requires verifier, high score, cost observability, activity, and a proven gate', () => {
   const s = emptySignals();
   s.stateFile = { present: true, paths: ['STATE.md'] };
   s.triage = { present: true };
@@ -73,9 +77,39 @@ test('computeScore: L3 requires verifier, high score, cost observability, and ac
   s.registry = { present: true };
   s.cost = { budgetDoc: true, runLog: true, loopMdBudget: true, budgetSkill: true };
   s.loopActivity = { present: true, evidence: ['git:state update', 'state:STATE.md'] };
+  s.proof = provenGate();
   const { level, score } = computeScore(s);
   assert.equal(level, 'L3');
   assert.ok(score >= 78);
+});
+
+test('computeScore: every L3 file present but guardrails unproven caps at L2', () => {
+  const s = emptySignals();
+  s.stateFile = { present: true, paths: ['STATE.md'] };
+  s.triage = { present: true };
+  s.loopConfig = { present: true, path: 'LOOP.md' };
+  s.agentsMd = { present: true };
+  s.skills = { count: 3, loopSkills: ['loop-triage', 'minimal-fix', 'loop-verifier'] };
+  s.verifier = { present: true };
+  s.safety = { loopMdMentionsSafety: true, safetyDocPresent: true };
+  s.github = { present: true, workflows: true };
+  s.mcp = { present: true };
+  s.worktreeEvidence = { present: true };
+  s.registry = { present: true };
+  s.cost = { budgetDoc: true, runLog: true, loopMdBudget: true, budgetSkill: true };
+  s.loopActivity = { present: true, evidence: ['state:STATE.md'] };
+
+  assert.equal(computeScore(s).level, 'L2', 'no record at all');
+  assert.match(computeScore(s).assessment, /guardrails are unproven/);
+
+  s.proof = { ...provenGate(), proven: ['breaker'] };
+  assert.equal(computeScore(s).level, 'L2', 'breaker alone does not prove the gate');
+
+  s.proof = { ...provenGate(), failed: ['injection'], failures: ['injection.visible'] };
+  assert.equal(computeScore(s).level, 'L2', 'any failing guardrail blocks L3');
+
+  s.proof = provenGate();
+  assert.equal(computeScore(s).level, 'L3');
 });
 
 test('computeScore: L3 blocked without cost observability', () => {
