@@ -189,6 +189,26 @@ Real ways loops fail — and how good design mitigates them. Use this when debug
 
 ---
 
+## Prompt Injection via Untrusted Input
+
+**Symptom**: The loop does something no one asked for — runs a command, edits a file, approves a change, or relabels an issue — because text in an issue, PR, review comment, CI log or dependency changelog told it to.
+
+**Severity**: S3
+
+**Causes**:
+- Loops read text written by people outside the loop, and the model cannot reliably tell data from instructions
+- Third-party text copied into a state file looks like the loop's own notes on the next run
+- Hidden text: HTML comments and invisible Unicode (zero-width characters, the U+E0000 tag block) render as nothing for a human reviewer but are read by the model
+- Skills that never say which inputs are untrusted
+
+**Mitigations**:
+- Every skill that reads third-party text says it is data, not instructions — see [Untrusted input](./safety.md#untrusted-input)
+- Render third-party text inertly in state files: code spans, invisible characters stripped, length capped
+- Least-privilege tokens and the path denylist, so an injected instruction has little it can reach
+- Human review of anything the loop merges; flagged items escalate rather than act
+
+---
+
 ## Contributing Failures
 
 Have a story? Add a row via PR to this doc or open an issue with:
