@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "tool": "@cobusgreyling/loop-drill",
+  "guardrails": {
+    "breaker": {
+      "recordedAt": "2026-09-28T15:17:23.617Z",
+      "results": [
+        {
+          "id": "breaker.stagnation",
+          "failureMode": "Infinite Fix Loop",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "breaker.no-progress",
+          "failureMode": "Infinite Fix Loop",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "breaker.token-budget",
+          "failureMode": "Token Burn",
+          "direction": "sensitivity",
+          "outcome": "skipped",
+          "detail": "No tokenBudget configured — nothing caps spend mid-run. See loop-budget.md."
+        },
+        {
+          "id": "breaker.healthy",
+          "failureMode": "Infinite Fix Loop",
+          "direction": "specificity",
+          "outcome": "passed"
+        }
+      ]
+    },
+    "gate": {
+      "recordedAt": "2026-09-28T15:17:23.617Z",
+      "results": [
+        {
+          "id": "gate.denylist[**/.env]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/.env.*]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/secrets/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/credentials/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/*_key*]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/*_secret*]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/.terraform/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/k8s/production/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/migrations/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/auth/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/payments/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.denylist[**/billing/**]",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.file-count",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.auto-merge",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "sensitivity",
+          "outcome": "passed"
+        },
+        {
+          "id": "gate.benign",
+          "failureMode": "Over-Reach (Wrong Scope)",
+          "direction": "specificity",
+          "outcome": "passed"
+        }
+      ],
+      "input": {
+        "file": "gate.yaml",
+        "sha256": "151e4609f03384e705735874db2ddce3b73ebd136b20888b7281d4ed43f9d53b"
+      }
+    }
+  }
+}
