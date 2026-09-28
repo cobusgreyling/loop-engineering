@@ -6,10 +6,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 import { classifyPr, classifyIssue, buildSections, renderState } from './github-triage.mjs';
 
 const exec = promisify(execFile);
-const SCRIPT = new URL('./github-triage.mjs', import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: on Windows .pathname is "/C:/...", which
+// resolves to "C:\C:\..." and makes this test fail on every Windows checkout.
+const SCRIPT = fileURLToPath(new URL('./github-triage.mjs', import.meta.url));
 const NOW = Date.parse('2026-08-26T12:00:00Z');
 
 test('classifyPr: empty checks is high (fork CI not approved)', () => {
