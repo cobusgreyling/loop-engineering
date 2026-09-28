@@ -60,6 +60,41 @@ test('cli rejects invalid --max-iterations values', () => {
   assert.match(r.stderr, /--max-iterations must be a positive integer/);
 });
 
+test('cli rejects a percentage-style --similarity-threshold instead of disabling stagnation', () => {
+  // 95 was accepted and meant no two errors could ever match: the same failure
+  // repeated forever came back CONTINUE with exit 0.
+  for (const value of ['95', '100', '1.5', 'Infinity']) {
+    const r = runCli(['--check', '--similarity-threshold', value, '--json']);
+    assert.equal(r.status, 1, value);
+    assert.equal(r.stdout, '', `${value}: no decision is printed`);
+    assert.match(r.stderr, /--similarity-threshold must be a fraction greater than 0 and at most 1/, value);
+    assert.match(r.stderr, /stagnation rule would never fire/, value);
+  }
+  assert.match(runCli(['--check', '--similarity-threshold', '95']).stderr, /If you meant 95%, use 0\.95/);
+});
+
+test('cli rejects zero, negative and non-numeric --similarity-threshold', () => {
+  for (const value of ['0', '-0.5', 'abc']) {
+    const r = runCli(['--check', '--similarity-threshold', value, '--json']);
+    assert.equal(r.status, 1, value);
+    assert.ok(r.stderr.includes(`got ${value}.`), value);
+  }
+});
+
+test('cli accepts --similarity-threshold across (0, 1] and still trips stagnation', () => {
+  for (const value of ['1', '0.95', '0.5', '0.01']) {
+    const r = runCli(['--check', '--similarity-threshold', value, '--json']);
+    assert.equal(r.status, 2, value);
+    assert.equal(JSON.parse(r.stdout).trigger, 'stagnation', value);
+  }
+});
+
+test('cli validates --similarity-threshold for --prune too', () => {
+  const r = runCli(['--prune', '--similarity-threshold', '85']);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /If you meant 85%, use 0\.85/);
+});
+
 test('cli rejects missing numeric flag values', () => {
   const r = runCli(['--check', '--stagnation']);
   assert.equal(r.status, 1);

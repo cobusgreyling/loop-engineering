@@ -8,6 +8,7 @@ import {
   summarizeAttempts,
   DEFAULT_BREAKER,
   DEFAULT_PRUNE,
+  assertSimilarityThreshold,
   type Ledger,
   type CircuitBreakerConfig,
   type PruneConfig,
@@ -52,14 +53,18 @@ function parsePositiveIntFlag(raw: string | undefined, flag: string): number {
   return n;
 }
 
-function parsePositiveFloatFlag(raw: string | undefined, flag: string): number {
+/**
+ * A similarity threshold is a fraction in (0, 1]. "95" (meant as 95%) used to
+ * be accepted and silently switched off the stagnation rule, because no two
+ * errors are ever more than 1.0 similar.
+ */
+function parseFractionFlag(raw: string | undefined, flag: string): number {
   if (raw === undefined || raw === '') {
-    throw new Error(`${flag} requires a positive number value.`);
+    throw new Error(`${flag} requires a value between 0 and 1 (e.g. 0.85).`);
   }
   const n = Number(raw);
-  if (Number.isNaN(n) || n <= 0) {
-    throw new Error(`${flag} must be a positive number; got "${raw}".`);
-  }
+  // Report "abc" rather than NaN when the value is not a number at all.
+  assertSimilarityThreshold(Number.isNaN(n) ? raw : n, flag);
   return n;
 }
 
@@ -109,7 +114,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--window') prune.window = parsePositiveIntFlag(argv[++i], '--window');
     else if (a === '--max-trace-lines') prune.maxTraceLines = parsePositiveIntFlag(argv[++i], '--max-trace-lines');
     else if (a === '--similarity-threshold') {
-      const val = parsePositiveFloatFlag(argv[++i], '--similarity-threshold');
+      const val = parseFractionFlag(argv[++i], '--similarity-threshold');
       breaker.similarityThreshold = val;
       prune.similarityThreshold = val;
     }
@@ -189,7 +194,8 @@ Options:
   --on-exceed <script>      On escalate, pipe the decision as JSON to this
                             script's stdin (fire-and-forget; its exit code
                             is not checked and does not change --check's own).
-  --similarity-threshold <f> Float 0.0-1.0 to cluster similar errors (default: ${DEFAULT_BREAKER.similarityThreshold})
+  --similarity-threshold <f> Fraction in (0, 1] to cluster similar errors (default: ${DEFAULT_BREAKER.similarityThreshold}).
+                             A fraction, not a percentage: 0.95, not 95
   --window <n>              Attempts kept when pruning (default: ${DEFAULT_PRUNE.window})
   --max-trace-lines <n>     Stack-trace lines kept (default: ${DEFAULT_PRUNE.maxTraceLines})
   -h, --help                This help
