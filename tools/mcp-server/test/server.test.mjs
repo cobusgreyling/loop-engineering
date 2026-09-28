@@ -20,6 +20,8 @@ import {
   listPatternDocs,
   loadPatternDoc,
   loadGatePolicy,
+  markUntrustedState,
+  UNTRUSTED_STATE_NOTICE,
 } from '../dist/resolver.js';
 
 let tmpRoot;
@@ -552,6 +554,72 @@ test('loop_gate_check tool returns policy decision', async () => {
     const text = res.get(1).result.content[0].text;
     assert.ok(text.includes('BLOCKED'));
     assert.ok(text.includes('denylist'));
+  } finally {
+    await cleanup();
+  }
+});
+
+// ── Untrusted state ────────────────────────────────────────────────
+// State files carry text copied from issues and PRs. The server must tell the
+// model so on every surface that returns state content.
+
+test('markUntrustedState prepends the notice and keeps the file verbatim', () => {
+  const body = '# Loop State\n\n- `a title <!-- x -->`\n';
+  const out = markUntrustedState(body);
+  assert.ok(out.startsWith(UNTRUSTED_STATE_NOTICE));
+  assert.ok(out.endsWith(body), 'file content is unchanged after the notice');
+});
+
+test('loadState still returns the raw file, without the notice', async () => {
+  const root = await setup();
+  try {
+    const state = await loadState(root, 'STATE.md');
+    assert.ok(!state.includes(UNTRUSTED_STATE_NOTICE));
+  } finally {
+    await cleanup();
+  }
+});
+
+test('loop_get_state tool marks the content as untrusted', async () => {
+  const root = await setup();
+  try {
+    const res = await callServer(root, [{
+      id: 1, method: 'tools/call',
+      params: { name: 'loop_get_state', arguments: { stateFile: 'STATE.md' } },
+    }]);
+    const text = res.get(1).result.content[0].text;
+    assert.ok(text.startsWith(UNTRUSTED_STATE_NOTICE));
+    assert.ok(text.includes('## High Priority\n- Fix CI'), 'state content follows the notice');
+  } finally {
+    await cleanup();
+  }
+});
+
+test('state resource marks the content as untrusted', async () => {
+  const root = await setup();
+  try {
+    const res = await callServer(root, [{
+      id: 1, method: 'resources/read',
+      params: { uri: 'loop://state/STATE.md' },
+    }]);
+    const text = res.get(1).result.contents[0].text;
+    assert.ok(text.startsWith(UNTRUSTED_STATE_NOTICE));
+    assert.ok(text.includes('- Fix CI'));
+  } finally {
+    await cleanup();
+  }
+});
+
+test('a missing state file is reported without the untrusted notice', async () => {
+  const root = await setup();
+  try {
+    const res = await callServer(root, [{
+      id: 1, method: 'tools/call',
+      params: { name: 'loop_get_state', arguments: { stateFile: 'ci-sweeper-state.md' } },
+    }]);
+    const text = res.get(1).result.content[0].text;
+    assert.match(text, /not found/);
+    assert.ok(!text.includes(UNTRUSTED_STATE_NOTICE));
   } finally {
     await cleanup();
   }

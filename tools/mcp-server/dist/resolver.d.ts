@@ -38,6 +38,17 @@ export declare function loadRegistry(root: string): Promise<RegistryData | null>
 export declare function loadPatternDoc(root: string, patternId: string): Promise<string | null>;
 export declare function listSkills(root: string): Promise<SkillInfo[]>;
 export declare function loadSkill(root: string, skillName: string): Promise<SkillInfo | null>;
+/**
+ * Prepended to state-file content served over MCP.
+ *
+ * The loop writes state files, but they carry text it copied from GitHub:
+ * issue and PR titles, check names, CI excerpts. Anyone can open an issue, so
+ * an agent reading STATE.md through this server is reading third-party text.
+ * loadState() keeps returning the file verbatim; the server adds this notice
+ * so the model is told where the content came from.
+ */
+export declare const UNTRUSTED_STATE_NOTICE: string;
+export declare function markUntrustedState(content: string): string;
 export declare function loadState(root: string, stateFile?: string): Promise<string | null>;
 export declare function listStateFiles(root: string): Promise<string[]>;
 export declare function loadLoopConfig(root: string): Promise<string | null>;
