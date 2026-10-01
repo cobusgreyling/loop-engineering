@@ -466,6 +466,94 @@ test('loop-init --help documents --model-provider orcarouter', async () => {
   assert.match(stdout, /orcarouter/);
 });
 
+test('loop-init --with-foundry --model-provider cheaperinference emits Cheaper Inference provider primitive', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-cheaperinference-'));
+  try {
+    const { stdout } = await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'grok',
+      '--with-foundry',
+      '--model-provider',
+      'cheaperinference',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /primitive: model\/cheaperinference/);
+    // default model
+    assert.match(stack, /model: gpt-5\.4-mini/);
+    // model options table
+    assert.match(stack, /- id: gpt-5\.4-mini/);
+    assert.match(stack, /- id: claude-sonnet-5/);
+    assert.match(stack, /- id: gemini-3\.1-pro/);
+    assert.match(stack, /- id: glm-5\.3/);
+    // OpenAI- and Anthropic-compatible endpoints on the same gateway
+    assert.match(stack, /openai_base_url: https:\/\/api\.cheaperinference\.com\/v1/);
+    assert.match(stack, /anthropic_base_url: https:\/\/api\.cheaperinference\.com$/m);
+    assert.doesNotMatch(stack, /model\/anthropic/);
+    assert.doesNotMatch(stack, /model\/minimax/);
+    assert.doesNotMatch(stack, /model\/orcarouter/);
+    assert.match(stdout, /preset: implementer/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init --with-foundry cheaperinference --model selects a different model', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-cheaperinference-model-'));
+  try {
+    await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'grok',
+      '--with-foundry',
+      '--model-provider',
+      'cheaperinference',
+      '--model',
+      'claude-sonnet-5',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /model: claude-sonnet-5/);
+    // all model options remain available in config
+    assert.match(stack, /- id: gpt-5\.4-mini/);
+    assert.match(stack, /- id: deepseek-v4-flash/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init rejects unknown cheaperinference model', async () => {
+  await assert.rejects(
+    () =>
+      exec('node', [
+        CLI,
+        '.',
+        '--pattern',
+        'ci-sweeper',
+        '--tool',
+        'grok',
+        '--with-foundry',
+        '--model-provider',
+        'cheaperinference',
+        '--model',
+        'not-a-model',
+        '--dry-run',
+      ]),
+    (err) => err.stderr?.includes('Unknown model') || err.message?.includes('Unknown model'),
+  );
+});
+
+test('loop-init --help documents --model-provider cheaperinference', async () => {
+  const { stdout } = await exec('node', [CLI, '--help']);
+  assert.match(stdout, /--model-provider/);
+  assert.match(stdout, /cheaperinference/);
+});
+
 test('loop-init rejects unknown model provider', async () => {
   await assert.rejects(
     () =>
