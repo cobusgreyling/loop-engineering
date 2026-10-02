@@ -53,6 +53,11 @@ These provide important context and guardrails for loop design.
   Curated knowledge graph of open-source AI/agent tools. Maps `loop-engineering` in context with related agent frameworks and gateways (`bemyagent`, `squid`, `atook`, `lynkr`). Closes [#300](https://github.com/cobusgreyling/loop-engineering/issues/300).
 
 
+## Harness Prompt Archives
+
+- **Continuum AI** — [OrcaPromptVault](https://github.com/Continuum-AI-Corp/OrcaPromptVault) (September 2026)
+  Records the system prompt and tool declarations a harness sends before the user's first token, per tool, per entrypoint and dated, with the command or runbook that reproduces each capture. Relevant here because a loop pays that fixed text on every iteration, and because the interactive and `-p` entrypoints of the same build do not send the same prompt. Counts change as the archive grows, so none are quoted here.
+
 ## How This Repo Relates
 
 We treat the above sources as the current best articulation of the idea and aim to turn the abstract framework into practical, copyable patterns, templates, and tool-specific guidance (with special attention to the Grok Build TUI, which has strong native support for the primitives).
