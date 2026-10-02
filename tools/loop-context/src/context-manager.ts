@@ -82,6 +82,50 @@ export const DEFAULT_PRUNE: PruneConfig = {
   similarityThreshold: 0.85,
 };
 
+// ── Config validation ──────────────────────────────────────────────
+//
+// Every breaker rule compares a count or a similarity against a threshold, so
+// an out-of-range value does not error on its own: it quietly turns the rule
+// off. calculateSimilarity() tops out at 1.0, so a similarityThreshold of 95
+// (meant as 95%) means no two errors ever match and stagnation never fires;
+// NaN makes every comparison false. A breaker that silently stops breaking is
+// worse than one that refuses to start, so bad configs throw.
+
+/** Throw unless value is a similarity threshold: a fraction in (0, 1]. */
+export function assertSimilarityThreshold(value: unknown, label = 'similarityThreshold'): asserts value is number {
+  // NaN fails both comparisons and Infinity fails the second, so this range check covers them.
+  if (typeof value === 'number' && value > 0 && value <= 1) return;
+  let why = '';
+  if (typeof value === 'number' && value > 1) {
+    why = ' Similarity is at most 1.0, so no two errors would ever match and the stagnation rule would never fire.';
+    if (Number.isInteger(value) && value <= 100) why += ` If you meant ${value}%, use ${value / 100}.`;
+  }
+  throw new Error(
+    `${label} must be a fraction greater than 0 and at most 1 (default ${DEFAULT_BREAKER.similarityThreshold}); got ${String(value)}.${why}`,
+  );
+}
+
+function assertPositiveInteger(value: unknown, label: string): void {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 1) return;
+  throw new Error(`${label} must be a positive integer; got ${String(value)}. An invalid value would switch this rule off.`);
+}
+
+/** Throw if any rule in the config could never fire (or would fire on nothing). */
+export function validateBreakerConfig(config: CircuitBreakerConfig): void {
+  assertPositiveInteger(config.maxIterations, 'maxIterations');
+  assertPositiveInteger(config.stagnationThreshold, 'stagnationThreshold');
+  assertPositiveInteger(config.frustrationThreshold, 'frustrationThreshold');
+  assertPositiveInteger(config.noProgressThreshold, 'noProgressThreshold');
+  if (config.tokenBudget !== undefined) assertPositiveInteger(config.tokenBudget, 'tokenBudget');
+  assertSimilarityThreshold(config.similarityThreshold);
+}
+
+export function validatePruneConfig(config: PruneConfig): void {
+  assertPositiveInteger(config.maxTraceLines, 'maxTraceLines');
+  assertPositiveInteger(config.window, 'window');
+  assertSimilarityThreshold(config.similarityThreshold);
+}
+
 // ── Error normalization ────────────────────────────────────────────
 
 /**
@@ -181,6 +225,7 @@ export function checkCircuitBreaker(
   ledger: Ledger,
   config: CircuitBreakerConfig = DEFAULT_BREAKER,
 ): BreakerDecision {
+  validateBreakerConfig(config);
   const iterations = ledger.attempts.length;
   const tokensUsed = totalTokens(ledger);
   const base = { iterations, tokensUsed };
@@ -286,6 +331,7 @@ export function pruneStackTrace(trace: string, maxLines: number): string {
  * returns a new object.
  */
 export function pruneLedger(ledger: Ledger, config: PruneConfig = DEFAULT_PRUNE): Ledger {
+  validatePruneConfig(config);
   const recent = ledger.attempts.slice(-config.window);
 
   const collapsed: Attempt[] = [];
@@ -337,6 +383,7 @@ export interface AttemptSummary {
 
 /** Deterministic factual rollup of the whole run — no LLM required. */
 export function summarizeAttempts(ledger: Ledger, similarityThreshold: number = 0.85): AttemptSummary {
+  assertSimilarityThreshold(similarityThreshold);
   const groups = new Map<string, ErrorGroup>();
   const actions = new Set<string>();
   let successes = 0;

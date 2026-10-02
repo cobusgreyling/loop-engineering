@@ -62,6 +62,7 @@ Each drill is tagged with the `docs/failure-modes.md` entry it exercises, so the
 | `breaker.no-progress` | Infinite Fix Loop | N consecutive failures | Escalates |
 | `breaker.token-budget` | Token Burn | Attempt over budget | Escalates |
 | `breaker.healthy` | Infinite Fix Loop | A healthy run | **Does not escalate** |
+| `breaker.config` | Infinite Fix Loop | Only reported when `loop-context` rejects the config (e.g. `similarityThreshold: 95`) | Never passes; the other breaker drills can't run |
 | `verifier.control` | Verifier Theater | Nothing (clean tree) | **Accepts** |
 | `verifier.mutant[op]` | Verifier Theater | One seeded defect | Rejects |
 

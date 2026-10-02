@@ -141,18 +141,17 @@ const DISTINCT_ERRORS = [
     'OutOfMemoryError during the bundle step',
     'Segmentation fault in the native addon',
 ];
-/**
- * Exercise loop-context's circuit breaker with synthetic ledgers: repeated
- * identical failures must trip stagnation, a long run of unrelated failures
- * must trip no-progress, blowing the token budget must trip, and a healthy run
- * must not.
- *
- * Each drill asserts the *specific* trigger, not merely that the breaker
- * escalated. Escalating for another reason means the rule under test is still
- * unproven — the same standard the gate drills apply to `trigger !==
- * 'denylist'`.
- */
-export function runBreakerDrills(config = DEFAULT_BREAKER) {
+export function runBreakerDrills(config = DEFAULT_BREAKER, check = checkCircuitBreaker) {
+    try {
+        return breakerDrills(config, check);
+    }
+    catch (err) {
+        return [
+            fail('breaker.config', 'loop-context accepts the breaker config', 'Infinite Fix Loop', 'sensitivity', 'a config loop-context accepts', `rejected: ${err.message}`, 'loop-context refuses to run with a rule switched off, so no breaker rule was drilled. Fix the value and re-run.'),
+        ];
+    }
+}
+function breakerDrills(config, check) {
     const results = [];
     // Sensitivity: the same error repeated trips stagnation.
     {
@@ -165,12 +164,12 @@ export function runBreakerDrills(config = DEFAULT_BREAKER) {
             outcome: 'failure',
             error: "TypeError: Cannot read properties of undefined (reading 'id')",
         }));
-        const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+        const decision = check(ledgerOf(attempts), config);
         results.push(decision.trigger === 'stagnation'
             ? pass(id, name, mode, 'sensitivity', 'escalate via stagnation', decision.reason)
             : fail(id, name, mode, 'sensitivity', 'escalate via stagnation', decision.escalate ? `escalated via ${decision.trigger}` : 'continued', decision.escalate
                 ? 'The breaker stopped the loop, but not by the rule under test — stagnation stays unproven.'
-                : 'The loop would keep retrying an identical failure — the exact shape of an Infinite Fix Loop. Check similarityThreshold: it is a 0.0-1.0 fraction, and a percentage (e.g. 95) never matches.'));
+                : 'The loop would keep retrying an identical failure — the exact shape of an Infinite Fix Loop.'));
     }
     // Sensitivity: a long run of unrelated failures trips no-progress.
     {
@@ -183,7 +182,7 @@ export function runBreakerDrills(config = DEFAULT_BREAKER) {
             outcome: 'failure',
             error: DISTINCT_ERRORS[i % DISTINCT_ERRORS.length],
         }));
-        const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+        const decision = check(ledgerOf(attempts), config);
         results.push(decision.trigger === 'no-progress'
             ? pass(id, name, mode, 'sensitivity', 'escalate via no-progress', decision.reason)
             : fail(id, name, mode, 'sensitivity', 'escalate via no-progress', decision.escalate ? `escalated via ${decision.trigger}` : 'continued', decision.escalate
@@ -203,7 +202,7 @@ export function runBreakerDrills(config = DEFAULT_BREAKER) {
                 tokensUsed: config.tokenBudget + 1,
             },
         ];
-        const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+        const decision = check(ledgerOf(attempts), config);
         results.push(decision.trigger === 'token-budget'
             ? pass(id, name, mode, 'sensitivity', 'escalate via token-budget', decision.reason)
             : fail(id, name, mode, 'sensitivity', 'escalate via token-budget', decision.escalate ? `escalated via ${decision.trigger}` : 'continued'));
@@ -220,7 +219,7 @@ export function runBreakerDrills(config = DEFAULT_BREAKER) {
             { iteration: 1, action: 'read the failing test', outcome: 'success' },
             { iteration: 2, action: 'apply a minimal fix', outcome: 'success' },
         ];
-        const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+        const decision = check(ledgerOf(attempts), config);
         results.push(!decision.escalate
             ? pass(id, name, mode, 'specificity', 'continue', 'continued')
             : fail(id, name, mode, 'specificity', 'continue', `escalated (${decision.trigger})`, 'The breaker escalates a healthy run. It will halt working loops and train the team to ignore escalations.'));
