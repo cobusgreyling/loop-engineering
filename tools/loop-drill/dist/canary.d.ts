@@ -53,6 +53,19 @@ export declare function candidateFiles(root: string, scope?: string): Promise<st
  * reads that module.
  */
 export declare function collectMutants(root: string, files: string[], count: number): Promise<Mutant[]>;
+/**
+ * Run the verifier inside an ephemeral git worktree, so a verifier that writes,
+ * builds, or fixes cannot touch the real checkout. `mutant` is null for the
+ * worktree control run. The worktree is always removed, including on throw.
+ */
+/**
+ * Run `fn` inside an ephemeral git worktree of `root`, so whatever it runs
+ * cannot touch the real checkout. The worktree is always removed, including
+ * when `fn` throws. Shared by the verifier canary and the injection canary.
+ */
+export declare function withWorktree<T>(root: string, fn: (worktree: string) => Promise<T>): Promise<T>;
+/** Run `setup` (if any) in `worktree`. Returns a failed run, or null on success. */
+export declare function prepareWorktree(worktree: string, timeoutMs: number, setup?: string): Promise<VerifierRun | null>;
 export interface CanaryReport {
     results: DrillResult[];
     /** Mutants rejected / mutants run. Null when no mutant could be built. */

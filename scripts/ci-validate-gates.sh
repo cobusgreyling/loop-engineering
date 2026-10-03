@@ -34,10 +34,12 @@ echo "Templates present ✓"
 npm install --no-save yaml@2 ajv@8
 node scripts/validate-registry.mjs
 node scripts/check-loop-init-sync.mjs
+node scripts/sync-untrusted-input.mjs --check
 
 echo "Smoke-testing scripts…"
 node scripts/append-run-log.test.mjs
 node scripts/github-triage.test.mjs
+node scripts/sync-untrusted-input.test.mjs
 
 echo "Building and testing readiness-core…"
 (

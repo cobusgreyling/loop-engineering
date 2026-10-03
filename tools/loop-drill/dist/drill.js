@@ -1,7 +1,7 @@
 /**
  * loop-drill — fire drills for loop guardrails.
  *
- * docs/failure-modes.md names ten ways loops fail. Some have mechanical
+ * docs/failure-modes.md names the ways loops fail. Some have mechanical
  * counterparts (loop-gate, loop-context's circuit breaker); loop-audit scores
  * whether those counterparts are *present*. Nothing checked whether they
  * actually fire.
@@ -234,6 +234,7 @@ const ALL_MODES = [
     'Over-Reach (Wrong Scope)',
     'Verifier Theater',
     'Escalation Failure',
+    'Prompt Injection via Untrusted Input',
 ];
 export function buildReport(results) {
     const covered = [];
