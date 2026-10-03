@@ -96,4 +96,8 @@ You then add:
 
 The best loops are the ones where each new primitive is added only when the previous version has proven its value (and its failure modes).
 
+## + System One decisions (Jev)
+
+Mechanical gates (`loop-gate`) and circuit breakers (`loop-context`) cannot see jailbreaks in an issue body or tell a typo from a multi-file refactor. [Jev](./jev.md) is TypeSafe’s System One model: typed Choice / Score / Noul questions, calibrated probabilities, no prose. `loop-jev` uses it for model routing, semantic retrieval, LLM guardrails, and trace classification — cheap enough to run every turn.
+
 See [architecture-diagrams.md](architecture-diagrams.md) for how these primitives map onto the actual `tools/` packages, plus the run-lifecycle and sequence diagrams.

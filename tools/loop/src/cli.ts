@@ -16,7 +16,7 @@ import {
   type WizardPlan,
 } from './wizard.js';
 
-const VERSION = '0.2.0';
+const VERSION = '0.2.1';
 
 const PASS_THROUGH = new Set([
   'init',
@@ -28,6 +28,7 @@ const PASS_THROUGH = new Set([
   'gate',
   'mcp',
   'sandbox',
+  'jev',
 ]);
 
 function printHelp(): void {
@@ -43,7 +44,7 @@ Usage:
   loop status [path] [--json]   Day-2 dashboard from STATE / run-log
   loop badge [path]             README badge (→ loop-audit --badge)
   loop wizard [--yes]           Guided scaffold + doctor
-  loop context|worktree|gate|mcp|sandbox [args…]
+  loop context|worktree|gate|mcp|sandbox|jev [args…]
 
 Week-one (recommended):
   npx @cobusgreyling/loop init . --pattern daily-triage --tool claude

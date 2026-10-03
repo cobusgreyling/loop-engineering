@@ -1,4 +1,4 @@
-export type ToolId = 'init' | 'audit' | 'cost' | 'sync' | 'context' | 'worktree' | 'gate' | 'mcp' | 'sandbox';
+export type ToolId = 'init' | 'audit' | 'cost' | 'sync' | 'context' | 'worktree' | 'gate' | 'mcp' | 'sandbox' | 'jev';
 /** Resolve absolute path to a tool CLI script, or null if only npx remains. */
 export declare function resolveToolScript(id: ToolId): Promise<string | null>;
 export interface SpawnResult {
