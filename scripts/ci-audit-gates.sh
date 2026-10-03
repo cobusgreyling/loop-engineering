@@ -82,6 +82,22 @@ ROOT_AUDIT_FILE="$ROOT_AUDIT_FILE" node -e '
     console.error("Reference score below L2 threshold (58). Restore dogfood signals: STATE.md, skills/, AGENTS.md.");
     process.exit(2);
   }
+  // loop-drill.json is the proof loop-audit scores L3 on. ci-validate-gates.sh
+  // re-runs the drills, so a committed record cannot claim more than they show;
+  // this catches a gate.yaml edited without re-recording.
+  const proof = data.signals.proof || {};
+  const problems = [];
+  if (!proof.present) problems.push("loop-drill.json is missing");
+  if (proof.error) problems.push("loop-drill.json is unreadable: " + proof.error);
+  if ((proof.stale || []).length) problems.push("stale for " + proof.stale.join(", "));
+  if ((proof.failed || []).length) problems.push("failing: " + proof.failures.join(", "));
+  if (!problems.length && !(proof.proven || []).includes("gate")) problems.push("gate is not proven");
+  if (problems.length) {
+    console.error("Reference guardrails are not proven (" + problems.join("; ") + ").");
+    console.error("Re-record from the repo root: (cd tools/loop-drill && npm ci && npm run build) && node tools/loop-drill/dist/cli.js . --record");
+    process.exit(2);
+  }
+  console.log("Reference guardrails proven: " + proof.proven.join(", "));
 '
 
 if [[ -n "${LOOP_AUDIT_OUTPUT_FILE:-}" ]]; then

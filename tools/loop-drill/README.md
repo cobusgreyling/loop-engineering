@@ -10,15 +10,9 @@
 
 Nothing checked whether they fire.
 
-The sharpest case is the verifier. `loop-audit` gives its joint-largest signal (14 points) for a verifier and gates L3 on it, by checking whether a file whose *name* contains `verifier` exists:
+The sharpest case is the verifier. `loop-audit` gives its joint-largest signal (14 points) for a verifier and gates L3 on it. From files alone it can only check that a verifier *loads*: a skill or agent file with a `name` and a `description`. A verifier that approves everything loads just as well. `docs/failure-modes.md` calls the resulting failure **Verifier Theater** and rates it S2; `docs/primitives.md` calls maker/checker *"the single most important structural pattern for reliable loops"*.
 
-```ts
-if (base.includes('verifier') || base === 'loop-verifier')   // auditor.ts:181
-```
-
-An empty file passes. On a scratch repo, `touch .claude/agents/verifier.md` moves the score from **34 (L0)** to **55 (L1)**. `docs/failure-modes.md` calls the resulting failure **Verifier Theater** and rates it S2; `docs/primitives.md` calls maker/checker *"the single most important structural pattern for reliable loops"*.
-
-loop-drill closes that gap by running the real verifier against real seeded defects.
+loop-drill closes that gap by running the real verifier against real seeded defects, and [`--record`](#recording-proof-for-loop-audit) hands the result back to `loop-audit`.
 
 ## Usage
 
@@ -29,6 +23,9 @@ npx @cobusgreyling/loop-drill .
 # The verifier canary
 npx @cobusgreyling/loop-drill . --only verifier \
   --verifier-cmd "npm test" --setup "npm ci"
+
+# Record the results for loop-audit (commit loop-drill.json)
+npx @cobusgreyling/loop-drill . --record
 ```
 
 ### Options
@@ -44,6 +41,7 @@ npx @cobusgreyling/loop-drill . --only verifier \
 | `--gate-file <path>` | Policy file (default: `gate.yaml`) |
 | `--benign-path <path>` | Path the specificity drill treats as ordinary |
 | `--token-budget <n>` | Token budget for the breaker drill |
+| `--record` | Write the results to `loop-drill.json` for `loop-audit`. Replaces only the guardrails drilled this run |
 | `--json` | Machine-readable output |
 
 Exit codes match `loop-gate` and `loop-context` so control scripts chain all three: **0** all passed, **1** some skipped, **2** a guardrail failed to fire.
@@ -73,6 +71,33 @@ Every guardrail is drilled twice, because only one direction is easy:
 - **specificity** — benign input is *not* caught. A guardrail that blocks everything passes every sensitivity drill while being useless.
 
 A `denylist: ["**"]` catches every seeded fault and still fails, because it blocks an ordinary docs change too.
+
+## Recording proof for loop-audit
+
+`loop-audit` scores what a repo has. `--record` lets it score what works. It writes `loop-drill.json` at the repo root, grouped by guardrail:
+
+```json
+{
+  "schema": 1,
+  "tool": "@cobusgreyling/loop-drill",
+  "guardrails": {
+    "gate": {
+      "recordedAt": "2026-09-28T15:08:23.379Z",
+      "input": { "file": "gate.yaml", "sha256": "…" },
+      "results": [
+        { "id": "gate.denylist[**/.env]", "failureMode": "Over-Reach (Wrong Scope)", "direction": "sensitivity", "outcome": "passed" },
+        { "id": "gate.benign", "failureMode": "Over-Reach (Wrong Scope)", "direction": "specificity", "outcome": "passed" }
+      ]
+    }
+  }
+}
+```
+
+- **Failures are recorded too.** `loop-audit` withdraws the points for a guardrail shown not to fire, so a verifier that approves seeded defects stops counting as a verifier.
+- **Only the guardrails you ran are replaced.** `--only verifier --record` refreshes the canary and keeps the gate and breaker results, so a slow canary doesn't have to be repeated to refresh a cheap drill.
+- **The gate proof is tied to the policy it drilled.** The record keeps a sha256 of `gate.yaml` (line endings normalised). Edit the file and `loop-audit` treats the old proof as stale until you record again. Canary results expire after 30 days, because the code and the agent they tested keep changing.
+
+`loop-audit` needs the current `gate.yaml` **proven** for L3. That means at least one drill caught its fault, at least one benign case got through, and nothing failed. It's the same [both-directions rule](#both-directions-always) the drills follow.
 
 ## How the verifier canary works
 

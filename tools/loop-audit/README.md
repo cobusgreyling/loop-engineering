@@ -76,6 +76,7 @@ npm publish --access public
 | Human-escalation path   | LOOP.md / safety docs define when to stop and hand off to a human |
 | **loopActivity (v1.4)** | **Dynamic proof**: "Last run" timestamps in state, loop-related git commits, scheduled workflows, run logs |
 | **Harness Runtime (v1.7)** | `.foundry/stack.yaml`, lock, sessions/traces, outerloop emit, host integrate — LE → [harness-foundry](https://github.com/cobusgreyling/harness-foundry) funnel |
+| **Guardrail proof** | `loop-drill.json` from [`loop-drill --record`](../loop-drill): the gate, breaker and verifier shown firing — see below |
 
 When score ≥ 80 and no `.foundry/stack.yaml`, audit recommends:
 
@@ -83,7 +84,36 @@ When score ≥ 80 and no `.foundry/stack.yaml`, audit recommends:
 npx @cobusgreyling/loop-init . --with-foundry
 ```
 
-L3 requires verifier + state + cost observability (budget + run log + LOOP.md budget) **and** proven loop activity (not just files on disk).
+L3 requires verifier + state + cost observability (budget + run log + LOOP.md budget), proven loop activity (not just files on disk), **and proven guardrails**: a `loop-drill.json` showing the current `gate.yaml` passing its drills, with no recorded guardrail failing.
+
+## Present is not proven
+
+Every signal counts content, not filenames:
+
+- **Empty files don't score.** A file that is empty or whitespace, or JSON that is just `{}` / `[]`, is a placeholder. The audit lists each one under *Not counted* instead of crediting it.
+- **Skills must load.** A skill is a directory with a `SKILL.md` that has `name` and `description` frontmatter, which every host needs before it will invoke it. The same goes for a Claude Code verifier agent. A bare directory, or a file with no frontmatter, doesn't count, whatever it's called.
+- **`gate.yaml` must be a policy.** It needs `version: 1` and a `denylist:`. Anything else would be refused by `loop-gate`, so it earns nothing and is reported as a failure.
+
+Files can only show a guardrail is configured. [`loop-drill`](../loop-drill) shows whether it fires, by running it against a seeded fault and a benign case. Record the results and commit them:
+
+```bash
+npx @cobusgreyling/loop-drill . --record          # gate + breaker: offline, no tokens
+npx @cobusgreyling/loop-drill . --only verifier --verifier-cmd "npm test" --setup "npm ci" --record
+git add loop-drill.json
+```
+
+The audit reads the record per guardrail:
+
+| Result | Meaning | Effect |
+|---|---|---|
+| **proven** | A drill caught the fault **and** a drill let the benign case through, and nothing failed | Counts. The gate being proven is required for L3 |
+| **failed** | A drill failed: the guardrail didn't fire, or blocked the benign case | The guardrail's points are withdrawn (gate → `gateYaml`, verifier → `verifier`, breaker → stall detection), and L3 is blocked |
+| **untested** | Every drill was skipped, or only one direction passed | Not proven. For the gate this means `loop-gate` couldn't drill it, so `gateYaml` is withdrawn |
+| **stale** | The gate was drilled against a different `gate.yaml`, or a canary (verifier, injection) is over 30 days old | Ignored until re-recorded |
+
+The gate proof is tied to a sha256 of `gate.yaml` (line endings normalised), so weakening the policy after recording drops L3 until the drills are run again. Gate and breaker drills are deterministic, so they don't expire otherwise.
+
+The record is a claim the repo makes about itself, like a `Last run:` timestamp, so a determined author can hand-write one. Re-run the drills in CI to keep it honest; this repo's own CI does (see `scripts/ci-validate-gates.sh` and `scripts/ci-audit-gates.sh`).
 
 ## Levels
 

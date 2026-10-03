@@ -109,6 +109,10 @@ try {
         console.log('  # IMPORTANT (v1.4): After scaffolding, actually RUN a loop (report-only) and commit the updated STATE.md.');
         console.log('  # This creates the "loopActivity" evidence that pushes you toward real L2/L3 scores.');
         console.log('');
+        console.log('  # L3: prove the guardrails fire, not just exist, then commit the record');
+        console.log('  npx @cobusgreyling/loop-drill . --record');
+        console.log('  git add loop-drill.json');
+        console.log('');
         console.log('See docs/loop-design-checklist.md and patterns/ for full guidance.');
     }
     if (!json && !badge && !md)
