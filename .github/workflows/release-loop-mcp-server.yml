@@ -66,7 +66,12 @@ jobs:
       - name: Publish to npm
         if: steps.check.outputs.skip != 'true'
         working-directory: tools/mcp-server
-        run: npm publish --access public --provenance
+        run: |
+          # Publishing a tarball does not run prepublishOnly; keep its test gate.
+          npm run prepublishOnly
+          mkdir -p "$RUNNER_TEMP/loop-mcp-server"
+          npm run pack:publish -- --pack-destination "$RUNNER_TEMP/loop-mcp-server"
+          npm publish "$RUNNER_TEMP/loop-mcp-server/"*.tgz --access public --provenance
         env:
           # OIDC trusted publishing — do not set NODE_AUTH_TOKEN (it overrides OIDC)
           NPM_CONFIG_PROVENANCE: "true"

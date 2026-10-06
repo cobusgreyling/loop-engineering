@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && node --test test/server.test.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "pack:publish": "node scripts/pack-for-publish.mjs",
     "prepublishOnly": "npm test",
     "start": "node dist/index.js"
   },
