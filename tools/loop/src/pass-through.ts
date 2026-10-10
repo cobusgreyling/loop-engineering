@@ -21,7 +21,8 @@ export type ToolId =
   | 'worktree'
   | 'gate'
   | 'mcp'
-  | 'sandbox';
+  | 'sandbox'
+  | 'jev';
 
 interface ToolSpec {
   /** npm package name */
@@ -88,6 +89,12 @@ const TOOLS: Record<ToolId, ToolSpec> = {
     dir: 'loop-sandbox',
     bin: 'dist/cli.js',
     command: 'loop-sandbox',
+  },
+  jev: {
+    pkg: '@cobusgreyling/loop-jev',
+    dir: 'loop-jev',
+    bin: 'dist/cli.js',
+    command: 'loop-jev',
   },
 };
 

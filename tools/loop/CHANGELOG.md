@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Pass-through `loop jev …` → `@cobusgreyling/loop-jev` (TypeSafe System One: route, retrieve, guard, classify)
+
 ## 0.2.0
 
 - Default `--tool` is `claude` (was `grok`)

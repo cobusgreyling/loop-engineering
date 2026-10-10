@@ -93,7 +93,7 @@ Loop Ready now **weights recent runs harder than files on disk**. A 30-day-old `
 
 ## Operating & safety
 
-[Failure modes](docs/failure-modes.md) · [Anti-patterns](docs/anti-patterns.md) · [Safety](docs/safety.md) · [Operating loops](docs/operating-loops.md) · [Stories](stories/) (wins **and** failures)
+[Failure modes](docs/failure-modes.md) · [Anti-patterns](docs/anti-patterns.md) · [Safety](docs/safety.md) · [Jev (System One)](docs/jev.md) · [Operating loops](docs/operating-loops.md) · [Stories](stories/) (wins **and** failures)
 
 Loop engineering amplifies judgment. Token costs can explode. Unattended loops make unattended mistakes. Read what the loop ships.
 
@@ -113,7 +113,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Unified front door: `npx @cobusgreyling/loop` (`init` · `doctor` · `status` · `audit` · `cost`). Older packages (`loop-init`, `loop-audit`, …) stay supported.
 
-Companions exist for later: [memory-engineering](https://github.com/cobusgreyling/memory-engineering), [harness-foundry](https://github.com/cobusgreyling/harness-foundry), [outerloop](https://github.com/cobusgreyling/outerloop), [fleet-engineering](https://github.com/cobusgreyling/fleet-engineering), [goal-engineering](https://github.com/cobusgreyling/goal-engineering). Do not add them until a loop has actually run.
+Companions exist for later: [Jev](https://github.com/cobusgreyling/Jev) (System One routing / guardrails), [memory-engineering](https://github.com/cobusgreyling/memory-engineering), [harness-foundry](https://github.com/cobusgreyling/harness-foundry), [outerloop](https://github.com/cobusgreyling/outerloop), [fleet-engineering](https://github.com/cobusgreyling/fleet-engineering), [goal-engineering](https://github.com/cobusgreyling/goal-engineering). Do not add them until a loop has actually run.
 
 </details>
 

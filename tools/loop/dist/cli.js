@@ -7,7 +7,7 @@ import { runTool } from './pass-through.js';
 import { runDoctor, formatDoctorHuman } from './doctor.js';
 import { runStatus, formatStatusHuman } from './status.js';
 import { defaultPlan, executePlan, printNonInteractiveHelp, resolvePattern, resolveTool, runInteractiveWizard, } from './wizard.js';
-const VERSION = '0.2.0';
+const VERSION = '0.2.1';
 const PASS_THROUGH = new Set([
     'init',
     'audit',
@@ -18,6 +18,7 @@ const PASS_THROUGH = new Set([
     'gate',
     'mcp',
     'sandbox',
+    'jev',
 ]);
 function printHelp() {
     console.log(`loop — Loop Engineering unified CLI v${VERSION}
@@ -32,7 +33,7 @@ Usage:
   loop status [path] [--json]   Day-2 dashboard from STATE / run-log
   loop badge [path]             README badge (→ loop-audit --badge)
   loop wizard [--yes]           Guided scaffold + doctor
-  loop context|worktree|gate|mcp|sandbox [args…]
+  loop context|worktree|gate|mcp|sandbox|jev [args…]
 
 Week-one (recommended):
   npx @cobusgreyling/loop init . --pattern daily-triage --tool claude

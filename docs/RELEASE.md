@@ -16,6 +16,7 @@ This repo ships public npm packages from `tools/`. **Front door for users:** `@c
 | `@cobusgreyling/loop-sandbox` | `tools/loop-sandbox` | `loop-sandbox-v*` |
 | `@cobusgreyling/loop-swarm` | `tools/loop-swarm` | `loop-swarm-v*` |
 | `@cobusgreyling/loop-gate` | `tools/loop-gate` | `loop-gate-v*` |
+| `@cobusgreyling/loop-jev` | `tools/loop-jev` | `loop-jev-v*` |
 | `@cobusgreyling/goal-audit` | `tools/goal-audit` | `goal-audit-v*` |
 | `@cobusgreyling/goal-init` | `tools/goal-init` | `goal-init-v*` |
 
@@ -37,6 +38,7 @@ Link npm to GitHub, then for **each package** on [npmjs.com](https://www.npmjs.c
 | `@cobusgreyling/loop-sandbox` | `cobusgreyling/loop-engineering` | `release-loop-sandbox.yml` |
 | `@cobusgreyling/loop-swarm` | `cobusgreyling/loop-engineering` | `release-loop-swarm.yml` |
 | `@cobusgreyling/loop-gate` | `cobusgreyling/loop-engineering` | `release-loop-gate.yml` |
+| `@cobusgreyling/loop-jev` | `cobusgreyling/loop-engineering` | `release-loop-jev.yml` |
 | `@cobusgreyling/goal-audit` | `cobusgreyling/loop-engineering` | `release-goal-audit.yml` |
 | `@cobusgreyling/goal-init` | `cobusgreyling/loop-engineering` | `release-goal-init.yml` |
 

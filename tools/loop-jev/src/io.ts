@@ -1,0 +1,78 @@
+import { readFile } from 'node:fs/promises';
+import type { Passage } from './retrieve.js';
+import type { ClassifyInput, TraceEvent } from './classify.js';
+
+export async function readStdin(): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+export async function readTextArg(value: string | undefined): Promise<string> {
+  if (value === undefined || value === '') {
+    throw new Error('Missing text. Pass --text, a positional string, or "-" for stdin.');
+  }
+  if (value === '-') return (await readStdin()).trim();
+  return value;
+}
+
+export async function loadPassages(file: string): Promise<Passage[]> {
+  const raw = await readFile(file, 'utf8');
+  const parsed = JSON.parse(raw) as unknown;
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${file} must be a JSON array of {id, text} passages.`);
+  }
+  return parsed.map((item, i) => {
+    if (typeof item === 'string') return { id: `p${i}`, text: item };
+    if (item && typeof item === 'object') {
+      const rec = item as Record<string, unknown>;
+      return {
+        id: String(rec.id ?? rec.path ?? `p${i}`),
+        text: String(rec.text ?? rec.content ?? rec.body ?? ''),
+      };
+    }
+    throw new Error(`Passage ${i} in ${file} is not an object or string.`);
+  });
+}
+
+function parseJsonl(trimmed: string): TraceEvent[] {
+  const events: TraceEvent[] = [];
+  for (const line of trimmed.split('\n')) {
+    if (!line.trim()) continue;
+    events.push(JSON.parse(line) as TraceEvent);
+  }
+  return events;
+}
+
+export async function loadClassifyInput(file: string): Promise<ClassifyInput> {
+  const raw = await readFile(file, 'utf8');
+  const trimmed = raw.trim();
+  if (!trimmed) return { events: [] };
+
+  if (trimmed.startsWith('[')) {
+    return { events: JSON.parse(trimmed) as TraceEvent[] };
+  }
+
+  try {
+    const obj = JSON.parse(trimmed) as Record<string, unknown>;
+    if (Array.isArray(obj.events)) {
+      return {
+        goal: typeof obj.goal === 'string' ? obj.goal : undefined,
+        events: obj.events as TraceEvent[],
+        ledger: obj.ledger as ClassifyInput['ledger'],
+        runLogExcerpt: typeof obj.runLogExcerpt === 'string' ? obj.runLogExcerpt : undefined,
+      };
+    }
+    if (Array.isArray(obj.attempts)) {
+      return {
+        goal: typeof obj.goal === 'string' ? obj.goal : undefined,
+        ledger: { goal: typeof obj.goal === 'string' ? obj.goal : undefined, attempts: obj.attempts as never },
+      };
+    }
+    return { events: [obj as TraceEvent] };
+  } catch {
+    return { events: parseJsonl(trimmed) };
+  }
+}
