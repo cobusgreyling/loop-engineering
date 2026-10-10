@@ -5,6 +5,7 @@
  * Exit codes follow loop-gate / loop-context so control scripts can chain all
  * three: 0 proceed, 1 warnings, 2 escalate.
  */
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { loadGateConfig } from '@cobusgreyling/loop-gate';
 import { DEFAULT_BREAKER } from '@cobusgreyling/loop-context';
@@ -12,6 +13,7 @@ import { buildReport, exitCodeFor, runBreakerDrills, runGateDrills, skip, } from
 import { runCanary } from './canary.js';
 import { runInjectionCanary } from './injection.js';
 import { formatReport } from './report.js';
+import { buildGroups, fingerprint, RECORD_FILE, writeRecord } from './record.js';
 const HELP = `loop-drill — fire drills for loop guardrails
 
 Injects a known fault and asserts the guardrail actually fires. Turns L3
@@ -36,6 +38,9 @@ Options:
   --benign-path <path>   Path the gate specificity drill treats as ordinary
                          (default: docs/README.md)
   --token-budget <n>     Token budget for the breaker drill
+  --record               Write the results to loop-drill.json, which loop-audit
+                         reads as proof the guardrails fire. Replaces only the
+                         guardrails drilled this run; commit the file
   --json                 Machine-readable output
   --help, -h             Show this message
 
@@ -46,6 +51,7 @@ Examples:
   loop-drill . --only verifier --verifier-cmd "npm test" --setup "npm ci"
   loop-drill . --only injection --agent-cmd "claude -p 'run the loop-triage skill'"
   loop-drill . --only gate,breaker --json
+  loop-drill . --record
 `;
 function parseArgs(argv) {
     const flags = {
@@ -55,6 +61,7 @@ function parseArgs(argv) {
         mutants: 3,
         timeoutMs: 120_000,
         stateFile: 'STATE.md',
+        record: false,
     };
     const positional = [];
     for (let i = 0; i < argv.length; i++) {
@@ -72,6 +79,9 @@ function parseArgs(argv) {
                 break;
             case '--json':
                 flags.json = true;
+                break;
+            case '--record':
+                flags.record = true;
                 break;
             case '--only':
                 flags.only = next();
@@ -140,8 +150,8 @@ async function main() {
     const selected = new Set((flags.only ?? 'gate,breaker').split(',').map((s) => s.trim()).filter(Boolean));
     const results = [];
     let mutationScore = null;
+    const gateFile = path.resolve(root, flags.gateFile ?? 'gate.yaml');
     if (selected.has('gate')) {
-        const gateFile = path.resolve(root, flags.gateFile ?? 'gate.yaml');
         try {
             const config = await loadGateConfig(gateFile);
             results.push(...runGateDrills({ config, benignPath: flags.benignPath }));
@@ -201,6 +211,24 @@ async function main() {
     }
     else {
         console.log(formatReport(report, mutationScore, resistanceScore));
+    }
+    if (flags.record) {
+        // Failures are recorded too: loop-audit withdraws credit for a guardrail
+        // that was shown not to fire.
+        const gateText = await readFile(gateFile, 'utf8').catch(() => null);
+        const groups = buildGroups(results, selected, {
+            recordedAt: report.timestamp,
+            gateFile: path.relative(root, gateFile).split(path.sep).join('/'),
+            gateSha256: gateText === null ? null : fingerprint(gateText),
+            verifierCommand: flags.verifierCmd,
+            mutationScore,
+        });
+        await writeRecord(root, groups);
+        const note = `Recorded ${Object.keys(groups).join(', ')} to ${RECORD_FILE} — commit it so loop-audit can see the proof.`;
+        if (flags.json)
+            console.error(note);
+        else
+            console.log(note);
     }
     process.exit(code);
 }

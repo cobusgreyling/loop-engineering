@@ -2,6 +2,19 @@
 
 All notable changes to `@cobusgreyling/loop-audit` are documented here.
 
+## [Unreleased]
+
+### Changed
+- **Placeholders no longer score.** Empty or whitespace-only files, and `{}` / `[]` JSON, earn nothing and are listed under *Not counted*. A repo of 19 empty files (142 bytes) used to score 100/L3; it now scores 72/L1
+- A skill counts only with a `SKILL.md` carrying `name` + `description` frontmatter (bare directories used to count); the same for Claude Code verifier agents
+- `gate.yaml` must declare `version: 1` and a `denylist:`; one `loop-gate` would refuse is a failure, not a signal
+- `.github/` and workflows count only when they contain a non-empty file
+- **L3 requires proven guardrails**: a `loop-drill.json` (from `loop-drill --record`) showing the current `gate.yaml` passing its drills in both directions, with no recorded guardrail failing. Repos that were L3 on files alone drop to L2 until they record
+
+### Added
+- `signals.proof`: guardrails that are proven, failed, untested or stale, read from `loop-drill.json`
+- A guardrail that `loop-drill` shows failing loses its points: gate → `gateYaml`, verifier → `verifier` (Verifier Theater), breaker → stall detection
+
 ## [1.9.0] - 2026-08-28
 
 ### Changed

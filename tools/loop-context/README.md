@@ -70,10 +70,13 @@ cat run.json | loop-context --check
 | `--stagnation <n>` | 3 | Escalate when the same error repeats N× in a row |
 | `--no-progress <n>` | 5 | Escalate after N consecutive failures |
 | `--token-budget <n>` | none | Escalate when cumulative tokens reach the cap |
+| `--similarity-threshold <f>` | 0.85 | How alike two errors (or actions) must be to count as a repeat. A fraction in (0, 1], **not a percentage**: `0.95`, not `95` |
 | `--window <n>` | 5 | Attempts kept when pruning |
 | `--max-trace-lines <n>` | 8 | Stack-trace lines kept when pruning |
 
 Exit codes: `0` continue · `2` escalate · `1` error.
+
+A value that would switch a rule off is refused with exit `1` instead of being accepted. That covers a threshold of `0` or a fraction like `1.5`, and a similarity threshold above `1`: similarity is at most 1.0, so `95` would mean no two errors ever match and the stagnation rule never fires.
 
 ## Resolving the token budget from a pattern
 
@@ -178,6 +181,8 @@ const decision = checkCircuitBreaker(ledger);
 if (decision.escalate) escalateToHuman(decision.reason);
 else runNextIteration(buildContextInjection(ledger));
 ```
+
+`checkCircuitBreaker`, `pruneLedger`, `summarizeAttempts` and `buildContextInjection` throw on a config that would switch a rule off (a non-positive or fractional count, or a `similarityThreshold` outside (0, 1]), rather than quietly never escalating. Call `validateBreakerConfig` / `validatePruneConfig` to check a config up front.
 
 ## Where it fits
 

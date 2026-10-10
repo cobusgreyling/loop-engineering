@@ -21,6 +21,7 @@ import { checkGate, type GateConfig } from '@cobusgreyling/loop-gate';
 import {
   checkCircuitBreaker,
   DEFAULT_BREAKER,
+  type BreakerDecision,
   type CircuitBreakerConfig,
   type Ledger,
 } from '@cobusgreyling/loop-context';
@@ -296,8 +297,38 @@ const DISTINCT_ERRORS = [
  * escalated. Escalating for another reason means the rule under test is still
  * unproven — the same standard the gate drills apply to `trigger !==
  * 'denylist'`.
+ *
+ * loop-context throws on a config that would switch a rule off (a similarity
+ * threshold of 95 meant as 95%, say). That is reported as a failed drill, not
+ * a crash: a breaker that refuses to start protects nothing either.
+ *
+ * `check` defaults to loop-context's breaker; tests pass a stand-in to
+ * exercise the trigger-attribution logic against a breaker that misbehaves.
  */
-export function runBreakerDrills(config: CircuitBreakerConfig = DEFAULT_BREAKER): DrillResult[] {
+export type BreakerCheck = (ledger: Ledger, config: CircuitBreakerConfig) => BreakerDecision;
+
+export function runBreakerDrills(
+  config: CircuitBreakerConfig = DEFAULT_BREAKER,
+  check: BreakerCheck = checkCircuitBreaker,
+): DrillResult[] {
+  try {
+    return breakerDrills(config, check);
+  } catch (err) {
+    return [
+      fail(
+        'breaker.config',
+        'loop-context accepts the breaker config',
+        'Infinite Fix Loop',
+        'sensitivity',
+        'a config loop-context accepts',
+        `rejected: ${(err as Error).message}`,
+        'loop-context refuses to run with a rule switched off, so no breaker rule was drilled. Fix the value and re-run.',
+      ),
+    ];
+  }
+}
+
+function breakerDrills(config: CircuitBreakerConfig, check: BreakerCheck): DrillResult[] {
   const results: DrillResult[] = [];
 
   // Sensitivity: the same error repeated trips stagnation.
@@ -311,7 +342,7 @@ export function runBreakerDrills(config: CircuitBreakerConfig = DEFAULT_BREAKER)
       outcome: 'failure' as const,
       error: "TypeError: Cannot read properties of undefined (reading 'id')",
     }));
-    const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+    const decision = check(ledgerOf(attempts), config);
     results.push(
       decision.trigger === 'stagnation'
         ? pass(id, name, mode, 'sensitivity', 'escalate via stagnation', decision.reason)
@@ -324,7 +355,7 @@ export function runBreakerDrills(config: CircuitBreakerConfig = DEFAULT_BREAKER)
             decision.escalate ? `escalated via ${decision.trigger}` : 'continued',
             decision.escalate
               ? 'The breaker stopped the loop, but not by the rule under test — stagnation stays unproven.'
-              : 'The loop would keep retrying an identical failure — the exact shape of an Infinite Fix Loop. Check similarityThreshold: it is a 0.0-1.0 fraction, and a percentage (e.g. 95) never matches.',
+              : 'The loop would keep retrying an identical failure — the exact shape of an Infinite Fix Loop.',
           ),
     );
   }
@@ -340,7 +371,7 @@ export function runBreakerDrills(config: CircuitBreakerConfig = DEFAULT_BREAKER)
       outcome: 'failure' as const,
       error: DISTINCT_ERRORS[i % DISTINCT_ERRORS.length],
     }));
-    const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+    const decision = check(ledgerOf(attempts), config);
     results.push(
       decision.trigger === 'no-progress'
         ? pass(id, name, mode, 'sensitivity', 'escalate via no-progress', decision.reason)
@@ -371,7 +402,7 @@ export function runBreakerDrills(config: CircuitBreakerConfig = DEFAULT_BREAKER)
         tokensUsed: config.tokenBudget + 1,
       },
     ];
-    const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+    const decision = check(ledgerOf(attempts), config);
     results.push(
       decision.trigger === 'token-budget'
         ? pass(id, name, mode, 'sensitivity', 'escalate via token-budget', decision.reason)
@@ -405,7 +436,7 @@ export function runBreakerDrills(config: CircuitBreakerConfig = DEFAULT_BREAKER)
       { iteration: 1, action: 'read the failing test', outcome: 'success' as const },
       { iteration: 2, action: 'apply a minimal fix', outcome: 'success' as const },
     ];
-    const decision = checkCircuitBreaker(ledgerOf(attempts), config);
+    const decision = check(ledgerOf(attempts), config);
     results.push(
       !decision.escalate
         ? pass(id, name, mode, 'specificity', 'continue', 'continued')

@@ -282,7 +282,7 @@ Commit the scaffold + first run update so `loop-audit` sees activity on the next
 |------|---------|
 | End of week one | Re-run `loop-audit . --suggest` — aim for L1 (score ~40+) |
 | Week two | Add a verifier skill; try one assisted fix in a worktree (L2) — see [loop-worktree](#l2-isolated-fix-attempts-loop-worktree) below |
-| Before unattended (L3) | `loop-budget.md` + `loop-run-log.md` filled, human gates in `LOOP.md`, proven runs |
+| Before unattended (L3) | `loop-budget.md` + `loop-run-log.md` filled, human gates in `LOOP.md`, proven runs, and `gate.yaml` proven with `npx @cobusgreyling/loop-drill . --record` (commit `loop-drill.json`) |
 | Unsure which pattern | [pattern-picker.md](./pattern-picker.md) · [loop-design-checklist.md](./loop-design-checklist.md) |
 | Something broke | [failure-modes.md](./failure-modes.md) · [stories/](../stories/) |
 

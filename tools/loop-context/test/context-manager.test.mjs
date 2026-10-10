@@ -10,6 +10,9 @@ import {
   calculateSimilarity,
   DEFAULT_BREAKER,
   DEFAULT_PRUNE,
+  validateBreakerConfig,
+  validatePruneConfig,
+  assertSimilarityThreshold,
 } from '../dist/context-manager.js';
 
 function attempt(iteration, outcome, opts = {}) {
@@ -271,4 +274,66 @@ test('buildContextInjection shows OK status for a healthy run', () => {
   const l = ledger([attempt(1, 'noop'), attempt(2, 'success')]);
   const block = buildContextInjection(l);
   assert.ok(block.includes('Circuit breaker: OK'));
+});
+
+// ── config validation ──────────────────────────────────────────────
+
+const identicalFailures = () =>
+  ledger([1, 2, 3, 4].map((i) => attempt(i, 'failure', { action: 'same fix', error: 'TypeError: boom' })));
+
+test('checkCircuitBreaker throws on a similarityThreshold above 1 instead of never stagnating', () => {
+  // Similarity tops out at 1.0, so 95 (a percentage) silently switched stagnation off.
+  for (const similarityThreshold of [95, 1.0001, Infinity]) {
+    assert.throws(
+      () => checkCircuitBreaker(identicalFailures(), { ...DEFAULT_BREAKER, similarityThreshold }),
+      /similarityThreshold must be a fraction/,
+      String(similarityThreshold),
+    );
+  }
+});
+
+test('checkCircuitBreaker throws on configs that would switch a rule off', () => {
+  const bad = [
+    { similarityThreshold: NaN },
+    { similarityThreshold: 0 },
+    { similarityThreshold: -0.1 },
+    { similarityThreshold: '0.85' },
+    { maxIterations: 0 },
+    { stagnationThreshold: NaN },
+    { frustrationThreshold: 2.5 },
+    { noProgressThreshold: Infinity },
+    { tokenBudget: 0 },
+    { tokenBudget: -100 },
+  ];
+  for (const override of bad) {
+    assert.throws(() => checkCircuitBreaker(identicalFailures(), { ...DEFAULT_BREAKER, ...override }), undefined, JSON.stringify(override));
+  }
+});
+
+test('valid configs, including the boundaries, still trip stagnation', () => {
+  for (const similarityThreshold of [1, 0.5, Number.MIN_VALUE]) {
+    const d = checkCircuitBreaker(identicalFailures(), { ...DEFAULT_BREAKER, similarityThreshold });
+    assert.equal(d.trigger, 'stagnation', String(similarityThreshold));
+  }
+  assert.doesNotThrow(() => validateBreakerConfig({ ...DEFAULT_BREAKER, tokenBudget: 1 }));
+  assert.doesNotThrow(() => validateBreakerConfig(DEFAULT_BREAKER));
+  assert.doesNotThrow(() => validatePruneConfig(DEFAULT_PRUNE));
+});
+
+test('pruneLedger, summarizeAttempts and buildContextInjection reject a percentage threshold', () => {
+  assert.throws(() => pruneLedger(identicalFailures(), { ...DEFAULT_PRUNE, similarityThreshold: 85 }), /If you meant 85%, use 0\.85/);
+  assert.throws(() => pruneLedger(identicalFailures(), { ...DEFAULT_PRUNE, window: 0 }), /window must be a positive integer/);
+  assert.throws(() => summarizeAttempts(identicalFailures(), 85), /similarityThreshold must be a fraction/);
+  assert.throws(
+    () => buildContextInjection(identicalFailures(), { ...DEFAULT_BREAKER, similarityThreshold: 85 }),
+    /similarityThreshold must be a fraction/,
+  );
+});
+
+test('assertSimilarityThreshold only gives the percentage hint for whole-number percentages', () => {
+  assert.throws(() => assertSimilarityThreshold(95), /If you meant 95%, use 0\.95/);
+  assert.throws(() => assertSimilarityThreshold(1.5), (err) => !/If you meant/.test(err.message));
+  assert.throws(() => assertSimilarityThreshold(0), (err) => !/never fire/.test(err.message));
+  assert.throws(() => assertSimilarityThreshold(150), (err) => /never fire/.test(err.message) && !/If you meant/.test(err.message));
+  assert.throws(() => assertSimilarityThreshold(95, '--similarity-threshold'), /^Error: --similarity-threshold must/);
 });

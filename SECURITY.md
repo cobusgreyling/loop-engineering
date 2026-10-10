@@ -28,6 +28,7 @@ For general loop safety guidance, see [docs/safety.md](docs/safety.md).
 - [ ] No auto-merge without explicit allowlist
 - [ ] MCP connectors use least privilege
 - [ ] `loop-run-log.md` or equivalent observability
+- [ ] Guardrails shown to fire, not just configured: `loop-drill . --record`, with `loop-drill.json` committed
 
 ## Supported versions
 

@@ -64,6 +64,11 @@ export interface PruneConfig {
 }
 export declare const DEFAULT_BREAKER: CircuitBreakerConfig;
 export declare const DEFAULT_PRUNE: PruneConfig;
+/** Throw unless value is a similarity threshold: a fraction in (0, 1]. */
+export declare function assertSimilarityThreshold(value: unknown, label?: string): asserts value is number;
+/** Throw if any rule in the config could never fire (or would fire on nothing). */
+export declare function validateBreakerConfig(config: CircuitBreakerConfig): void;
+export declare function validatePruneConfig(config: PruneConfig): void;
 /**
  * Reduce a raw error / stack trace to a stable signature so that "the same
  * error" can be recognized across iterations even when volatile details

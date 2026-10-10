@@ -1,7 +1,8 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
-import { Finding, BaseAuditResult, fileExists, scanSkillDirectories } from '@cobusgreyling/readiness-core';
+import { Finding, BaseAuditResult, fileExists } from '@cobusgreyling/readiness-core';
+import { PROOF_FILE, readProof, type ProofSignals } from './proof.js';
 
 export interface LoopSignals {
   stateFile: { present: boolean; paths: string[] };
@@ -49,9 +50,12 @@ export interface LoopSignals {
     registry: boolean;
     inbox: boolean;
   };
+  /** Guardrails loop-drill showed firing (loop-drill.json). Optional so older callers still type-check. */
+  proof?: ProofSignals;
 }
 
 export type { Finding };
+export type { ProofSignals };
 
 export interface AuditResult extends BaseAuditResult<'L0' | 'L1' | 'L2' | 'L3', LoopSignals> {}
 
@@ -164,23 +168,121 @@ const ESCALATION_HINTS = [
   /\bexit 2\b/i,
 ];
 
-async function findSkills(root: string): Promise<string[]> {
-  const found = await scanSkillDirectories(root);
+const SKILL_DIRS = ['.grok/skills', '.claude/skills', '.codex/skills', 'skills'];
+
+/**
+ * A signal file counts only when it has content. Empty and whitespace-only
+ * files, and JSON that is just {} or [], are placeholders: `touch` is not setup.
+ */
+export async function hasContent(p: string): Promise<boolean> {
+  let text: string;
+  try {
+    const info = await stat(p);
+    if (!info.isFile()) return false;
+    if (info.size > 64 * 1024) return true;
+    text = await readFile(p, 'utf8');
+  } catch {
+    return false;
+  }
+  const trimmed = text.replace(/^﻿/, '').trim();
+  if (!trimmed) return false;
+  if (p.toLowerCase().endsWith('.json')) {
+    try {
+      const value = JSON.parse(trimmed);
+      if (value !== null && typeof value === 'object' && Object.keys(value).length === 0) return false;
+    } catch {
+      // Not valid JSON, but still content; other checks judge the format.
+    }
+  }
+  return true;
+}
+
+/**
+ * Frontmatter with a name and a description: what Claude Code, Codex and Grok
+ * need before they will load a skill or subagent. Without it the file is
+ * never invoked, whatever it is called.
+ */
+export function hasSkillFrontmatter(text: string): boolean {
+  const m = text.replace(/^﻿/, '').match(/^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/);
+  if (!m) return false;
+  return /^name:[ \t]*\S/m.test(m[1]) && /^description:[ \t]*\S/m.test(m[1]);
+}
+
+async function isLoadableSkill(p: string): Promise<boolean> {
+  try {
+    return hasSkillFrontmatter(await readFile(p, 'utf8'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A gate.yaml loop-gate can load declares `version: 1` and a denylist. This is
+ * a shape check, not a parse; loop-drill's record proves the policy works.
+ */
+export function looksLikeGatePolicy(text: string): boolean {
+  return /^version:[ \t]*1[ \t]*(?:#.*)?$/m.test(text) && /^denylist:/m.test(text);
+}
+
+async function anyFileWithContent(dir: string, depth: number, accept: (name: string) => boolean): Promise<boolean> {
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return false;
+  }
+  for (const e of entries) {
+    const p = path.join(dir, e.name);
+    if (e.isFile() && accept(e.name) && (await hasContent(p))) return true;
+    if (e.isDirectory() && depth > 0 && (await anyFileWithContent(p, depth - 1, accept))) return true;
+  }
+  return false;
+}
+
+interface SkillScan {
+  names: string[];
+  /** Skill and agent files that exist but could never be loaded. */
+  hollow: string[];
+}
+
+async function findSkills(root: string): Promise<SkillScan> {
+  const found = new Set<string>();
+  const hollow: string[] = [];
+
+  // A skill is a directory with a loadable SKILL.md. A bare directory, or a
+  // SKILL.md with no frontmatter, used to count just for its name.
+  for (const dir of SKILL_DIRS) {
+    let entries;
+    try {
+      entries = await readdir(path.join(root, dir), { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      const rel = `${dir}/${e.name}/SKILL.md`;
+      if (await isLoadableSkill(path.join(root, rel))) found.add(e.name);
+      else hollow.push(rel);
+    }
+  }
 
   // Claude Code agents and Codex subagents can host the verifier role
-  const agentDirs = [
-    path.join(root, '.claude', 'agents'),
-    path.join(root, '.codex', 'agents'),
-  ];
-  for (const dir of agentDirs) {
-    if (!(await fileExists(dir))) continue;
-    const entries = await readdir(dir, { withFileTypes: true });
+  for (const dir of ['.claude/agents', '.codex/agents']) {
+    let entries;
+    try {
+      entries = await readdir(path.join(root, dir), { withFileTypes: true });
+    } catch {
+      continue;
+    }
     for (const e of entries) {
       if (!e.isFile()) continue;
       const base = e.name.replace(/\.(md|toml)$/i, '');
-      if (base.includes('verifier') || base === 'loop-verifier') {
-        found.push('loop-verifier');
-      }
+      if (!(base.includes('verifier') || base === 'loop-verifier')) continue;
+      const rel = `${dir}/${e.name}`;
+      const abs = path.join(root, rel);
+      const loadable = /\.md$/i.test(e.name) ? await isLoadableSkill(abs) : await hasContent(abs);
+      if (loadable) found.add('loop-verifier');
+      else hollow.push(rel);
     }
   }
 
@@ -195,7 +297,7 @@ async function findSkills(root: string): Promise<string[]> {
       for (const [key, def] of Object.entries(agents)) {
         const name = (def?.name ?? key).toLowerCase();
         if (name.includes('verifier') || key.toLowerCase().includes('verifier')) {
-          found.push('loop-verifier');
+          found.add('loop-verifier');
           break;
         }
       }
@@ -204,7 +306,16 @@ async function findSkills(root: string): Promise<string[]> {
     }
   }
 
-  return found;
+  return { names: [...found], hollow };
+}
+
+/**
+ * L3 means unattended actions behind gates, so the gate has to be shown to
+ * fire, not just to exist: loop-drill must have drilled the current gate.yaml
+ * in both directions, and no recorded guardrail may be failing.
+ */
+export function guardrailsProven(proof: ProofSignals | undefined): boolean {
+  return !!proof && proof.proven.includes('gate') && proof.failed.length === 0;
 }
 
 /** Activity older than this does not count toward Loop Ready. */
@@ -329,7 +440,8 @@ export function computeScore(signals: LoopSignals): { score: number; level: 'L0'
     signals.cost.runLog &&
     signals.cost.loopMdBudget;
   const hasRealActivity = signals.loopActivity.present;
-  const l3Ready = costReady && hasRealActivity;
+  const proven = guardrailsProven(signals.proof);
+  const l3Ready = costReady && hasRealActivity && proven;
 
   let level: 'L0' | 'L1' | 'L2' | 'L3' = 'L0';
   if (score >= LEVEL_THRESHOLDS.L3 && signals.verifier.present && signals.stateFile.present && l3Ready) level = 'L3';
@@ -344,11 +456,13 @@ export function computeScore(signals: LoopSignals): { score: number; level: 'L0'
         ? 'Strong signals but missing cost observability (loop-budget.md, loop-run-log.md, LOOP.md budget) — add before L3.'
         : score >= 82 && !hasRealActivity
           ? 'Strong structure but no proven loop runs yet — run one L1 cycle and commit state before L3.'
-          : score >= 62
-            ? 'Good foundation — add missing verifier + safety docs for L3.'
-            : score >= 42
-              ? 'Early loop setup — focus on L1 state + triage before enabling actions.'
-              : 'Not loop-ready — start with a starter from this repo (minimal-loop or pr-babysitter).';
+          : score >= 82 && !proven
+            ? 'Strong structure but guardrails are unproven — run loop-drill --record and commit loop-drill.json before L3.'
+            : score >= 62
+              ? 'Good foundation — add missing verifier + safety docs for L3.'
+              : score >= 42
+                ? 'Early loop setup — focus on L1 state + triage before enabling actions.'
+                : 'Not loop-ready — start with a starter from this repo (minimal-loop or pr-babysitter).';
 
   return { score, level, assessment };
 }
@@ -358,18 +472,32 @@ export async function auditProject(target: string): Promise<AuditResult> {
   const findings: Finding[] = [];
   const recommendations: string[] = [];
 
+  // Every file signal goes through here, so an empty file never scores and is
+  // reported instead of silently counted.
+  const placeholders: string[] = [];
+  const present = async (rel: string): Promise<boolean> => {
+    const p = path.join(root, rel);
+    if (await hasContent(p)) return true;
+    if (await fileExists(p)) placeholders.push(rel);
+    return false;
+  };
+
   const statePaths: string[] = [];
   for (const f of STATE_FILES) {
-    if (await fileExists(path.join(root, f))) statePaths.push(f);
+    if (await present(f)) statePaths.push(f);
   }
 
-  const loopMd = await fileExists(path.join(root, 'LOOP.md'));
-  const agentsMd = await fileExists(path.join(root, 'AGENTS.md')) ||
-    await fileExists(path.join(root, 'CLAUDE.md'));
-  const skillNames = await findSkills(root);
+  const loopMd = await present('LOOP.md');
+  const agentsMd = (await present('AGENTS.md')) || (await present('CLAUDE.md'));
+  const skillScan = await findSkills(root);
+  const skillNames = skillScan.names;
+  const proof = await readProof(root);
   const loopSkills = skillNames.filter((s) => LOOP_SKILL_NAMES.includes(s));
 
-  const verifier = skillNames.includes('loop-verifier');
+  // A verifier loop-drill caught approving seeded defects is Verifier Theater:
+  // it earns nothing, whatever its file is called.
+  const verifierFound = skillNames.includes('loop-verifier');
+  const verifier = verifierFound && !proof.failed.includes('verifier');
   const triage = skillNames.includes('loop-triage') ||
     skillNames.includes('pr-review-triage') ||
     skillNames.includes('ci-triage') ||
@@ -383,18 +511,23 @@ export async function auditProject(target: string): Promise<AuditResult> {
     loopMdContent = await readFile(path.join(root, 'LOOP.md'), 'utf8');
   }
 
-  // New expanded signals
-  const githubDir = await fileExists(path.join(root, '.github'));
-  const hasWorkflows = await fileExists(path.join(root, '.github', 'workflows'));
+  // New expanded signals. A .github/ of empty files is not a dogfooding setup.
+  const githubDir = await anyFileWithContent(path.join(root, '.github'), 3, () => true);
+  const hasWorkflows = await anyFileWithContent(path.join(root, '.github', 'workflows'), 0, (n) =>
+    /\.ya?ml$/i.test(n),
+  );
 
   // Proper safety doc detection
   let safetyDocPresent = false;
   for (const f of SAFETY_FILES) {
-    if (await fileExists(path.join(root, f))) { safetyDocPresent = true; break; }
+    if (await present(f)) { safetyDocPresent = true; break; }
   }
 
-  const mcpPresent = (await Promise.all(MCP_FILES.map(f => fileExists(path.join(root, f))))).some(Boolean) ||
-    /MCP|mcp server|plugins & connectors/i.test(loopMdContent);
+  let mcpConfig = false;
+  for (const f of MCP_FILES) {
+    if (await present(f)) { mcpConfig = true; break; }
+  }
+  const mcpPresent = mcpConfig || /MCP|mcp server|plugins & connectors/i.test(loopMdContent);
 
   // Light evidence of worktree usage (common in patterns/starters/LOOP)
   let worktreeEvidence = false;
@@ -416,42 +549,19 @@ export async function auditProject(target: string): Promise<AuditResult> {
     } catch {}
   }
 
-  const registryPresent = await fileExists(path.join(root, 'patterns', 'registry.yaml'));
+  const registryPresent = await present('patterns/registry.yaml');
 
-  const budgetDoc = await fileExists(path.join(root, 'loop-budget.md'));
-  const runLog = await fileExists(path.join(root, 'loop-run-log.md'));
+  const budgetDoc = await present('loop-budget.md');
+  const runLog = await present('loop-run-log.md');
   const loopMdBudget = BUDGET_HINTS.some((re) => re.test(loopMdContent));
 
-  const budgetSkillDirs = [
-    path.join(root, 'skills', 'loop-budget'),
-    path.join(root, '.grok', 'skills', 'loop-budget'),
-    path.join(root, '.claude', 'skills', 'loop-budget'),
-    path.join(root, '.codex', 'skills', 'loop-budget'),
-  ];
-  let budgetSkill = false;
-  for (const dir of budgetSkillDirs) {
-    if (await fileExists(path.join(dir, 'SKILL.md'))) {
-      budgetSkill = true;
-      break;
-    }
-  }
+  // findSkills only lists skills with a loadable SKILL.md.
+  const budgetSkill = skillNames.includes('loop-budget');
 
   const loopActivity = await detectLoopActivity(root);
 
-  const constraintsFile = await fileExists(path.join(root, 'loop-constraints.md'));
-  const constraintsSkillDirs = [
-    path.join(root, 'skills', 'loop-constraints'),
-    path.join(root, '.grok', 'skills', 'loop-constraints'),
-    path.join(root, '.claude', 'skills', 'loop-constraints'),
-    path.join(root, '.codex', 'skills', 'loop-constraints'),
-  ];
-  let constraintsSkill = false;
-  for (const dir of constraintsSkillDirs) {
-    if (await fileExists(path.join(dir, 'SKILL.md'))) {
-      constraintsSkill = true;
-      break;
-    }
-  }
+  const constraintsFile = await present('loop-constraints.md');
+  const constraintsSkill = skillNames.includes('loop-constraints');
 
   // Governance corpus: docs where scope / stall / escalation rules are written.
   let governanceCorpus = loopMdContent;
@@ -499,21 +609,27 @@ export async function auditProject(target: string): Promise<AuditResult> {
     const rootEntries = await readdir(root, { withFileTypes: true });
     ledgerPresent = rootEntries.some((e) => e.isFile() && /ledger/i.test(e.name));
   } catch {}
-  const stallDetection =
+  const stallClaimed =
     skillNames.includes('loop-context') ||
     skillNames.includes('loop-guard') ||
     ledgerPresent ||
     STALL_HINTS.some((re) => re.test(governanceCorpus));
+  const stallDetection = stallClaimed && !proof.failed.includes('breaker');
 
   const escalation = ESCALATION_HINTS.some((re) => re.test(governanceCorpus));
-  const gateYaml = await fileExists(path.join(root, 'gate.yaml'));
+
+  // gate.yaml must look like a policy, and must not be one loop-drill found
+  // broken: failing, or impossible to drill at all (loop-gate refused it).
+  let gatePolicy = false;
+  if (await present('gate.yaml')) {
+    gatePolicy = looksLikeGatePolicy(await readFile(path.join(root, 'gate.yaml'), 'utf8'));
+  }
+  const gateYaml = gatePolicy && !proof.failed.includes('gate') && !proof.untested.includes('gate');
 
   // Harness Runtime (harness-foundry) — versioned stack, sessions/traces, outerloop emit, host bridge
   const foundryStackPath = path.join(root, '.foundry', 'stack.yaml');
-  const harnessStack = await fileExists(foundryStackPath);
-  const harnessLock =
-    (await fileExists(path.join(root, '.foundry', 'stack.lock'))) ||
-    (await fileExists(path.join(root, '.foundry', 'stack.lock.yaml')));
+  const harnessStack = await present('.foundry/stack.yaml');
+  const harnessLock = (await present('.foundry/stack.lock')) || (await present('.foundry/stack.lock.yaml'));
 
   let harnessSessions = false;
   const sessionsDir = path.join(root, '.foundry', 'sessions');
@@ -535,15 +651,15 @@ export async function auditProject(target: string): Promise<AuditResult> {
       if (/emit\/outerloop-evidence|outerloop/i.test(stackTxt)) harnessEmit = true;
     } catch {}
   }
-  if (!harnessEmit && (await fileExists(path.join(root, '.foundry', 'hooks', 'outerloop.yaml')))) {
+  if (!harnessEmit && (await present('.foundry/hooks/outerloop.yaml'))) {
     harnessEmit = true;
   }
 
   const harnessHost =
     (await fileExists(path.join(root, '.foundry', 'host', 'cursor'))) ||
     (await fileExists(path.join(root, '.foundry', 'host', 'claude-code'))) ||
-    (await fileExists(path.join(root, '.cursor', 'rules', 'foundry.mdc'))) ||
-    (await fileExists(path.join(root, '.claude', 'foundry.md'))) ||
+    (await present('.cursor/rules/foundry.mdc')) ||
+    (await present('.claude/foundry.md')) ||
     /foundry host integrate|harness-foundry/i.test(loopMdContent);
 
   const harness = {
@@ -555,13 +671,13 @@ export async function auditProject(target: string): Promise<AuditResult> {
   };
 
   // Memory Engineering (memory-tiers.md, memory-budget.md)
-  const memoryTiers = await fileExists(path.join(root, 'memory-tiers.md'));
-  const memoryBudget = await fileExists(path.join(root, 'memory-budget.md'));
+  const memoryTiers = await present('memory-tiers.md');
+  const memoryBudget = await present('memory-budget.md');
   const memory = { tiers: memoryTiers, budget: memoryBudget };
 
   // Fleet Engineering (fleet-registry.md, fleet-inbox.md)
-  const fleetRegistry = await fileExists(path.join(root, 'fleet-registry.md'));
-  const fleetInbox = await fileExists(path.join(root, 'fleet-inbox.md'));
+  const fleetRegistry = await present('fleet-registry.md');
+  const fleetInbox = await present('fleet-inbox.md');
   const fleet = { registry: fleetRegistry, inbox: fleetInbox };
 
   const signals: LoopSignals = {
@@ -585,9 +701,19 @@ export async function auditProject(target: string): Promise<AuditResult> {
     harness,
     memory,
     fleet,
+    proof,
   };
 
-  const thinLoopWorkflow = await fileExists(path.join(root, '.github', 'workflows', 'thin-loop.yml'));
+  const thinLoopWorkflow = await present('.github/workflows/thin-loop.yml');
+
+  if (placeholders.length > 0 || skillScan.hollow.length > 0) {
+    const hollow = [...new Set([...placeholders, ...skillScan.hollow])];
+    findings.push({
+      level: 'warn',
+      message: `Not counted — empty, or a skill/agent without name + description frontmatter: ${hollow.join(', ')}.`,
+    });
+    recommendations.push('Fill in or delete placeholder files; a skill needs a SKILL.md with name and description frontmatter to load');
+  }
 
   if (!signals.stateFile.present) {
     if (thinLoopWorkflow) {
@@ -623,7 +749,13 @@ export async function auditProject(target: string): Promise<AuditResult> {
     findings.push({ level: 'ok', message: 'Triage skill present.' });
   }
 
-  if (!signals.verifier.present) {
+  if (verifierFound && !verifier) {
+    findings.push({
+      level: 'fail',
+      message: `Verifier present but loop-drill's canary caught it approving seeded defects (Verifier Theater) — not counted: ${proof.failures.filter((id) => id.startsWith('verifier')).join(', ')}.`,
+    });
+    recommendations.push('Make the verifier reject the seeded defects, then rerun: npx @cobusgreyling/loop-drill . --only verifier --verifier-cmd "<cmd>" --record');
+  } else if (!signals.verifier.present) {
     findings.push({ level: 'warn', message: 'No loop-verifier skill — maker/checker split incomplete.' });
     recommendations.push('Add verifier: .grok/skills/loop-verifier, .claude/agents/loop-verifier.md, .codex/agents/verifier.toml, or a verifier agent in opencode.json');
   } else {
@@ -722,7 +854,27 @@ export async function auditProject(target: string): Promise<AuditResult> {
     findings.push({ level: 'ok', message: 'Tool/MCP scope constrained (least-privilege signal present).' });
   }
 
-  if (!signals.governance.gateYaml) {
+  // An empty gate.yaml is already listed as a placeholder; only judge one with content.
+  const gateHasContent = (await fileExists(path.join(root, 'gate.yaml'))) && !placeholders.includes('gate.yaml');
+  if (gatePolicy && proof.failed.includes('gate')) {
+    findings.push({
+      level: 'fail',
+      message: `gate.yaml present but loop-drill shows it does not hold — not counted: ${proof.failures.filter((id) => id.startsWith('gate')).join(', ')}.`,
+    });
+    recommendations.push('Fix gate.yaml so the failing drills pass, then rerun: npx @cobusgreyling/loop-drill . --record');
+  } else if (gatePolicy && proof.untested.includes('gate')) {
+    findings.push({
+      level: 'fail',
+      message: `gate.yaml present but loop-drill could not drill it — not counted${proof.skipReasons.gate ? `: ${proof.skipReasons.gate}` : '.'}`,
+    });
+    recommendations.push('Give gate.yaml a non-empty denylist that loop-gate accepts (see templates/gate.yaml.template), then rerun loop-drill --record');
+  } else if (gateHasContent && !gatePolicy) {
+    findings.push({
+      level: 'fail',
+      message: 'gate.yaml is not a gate policy (needs `version: 1` and a `denylist:`) — loop-gate would refuse to load it. Not counted.',
+    });
+    recommendations.push('Replace gate.yaml with templates/gate.yaml.template and customize the denylist');
+  } else if (!signals.governance.gateYaml) {
     findings.push({
       level: 'warn',
       message: 'No gate.yaml — explicit human approval gates are not defined for loop-sync.',
@@ -730,6 +882,37 @@ export async function auditProject(target: string): Promise<AuditResult> {
     recommendations.push('Add gate.yaml to define explicit human approval gates.');
   } else {
     findings.push({ level: 'ok', message: 'gate.yaml present (human gates defined).' });
+  }
+
+  // Proof that guardrails fire, from loop-drill --record.
+  if (proof.error) {
+    findings.push({ level: 'warn', message: `${PROOF_FILE} is unreadable (${proof.error}) — no guardrail counts as proven.` });
+    recommendations.push(`Regenerate it: npx @cobusgreyling/loop-drill . --record`);
+  } else if (!proof.present) {
+    findings.push({
+      level: 'warn',
+      message: `No ${PROOF_FILE} — guardrails are present but unproven. Nothing shows the gate blocks a sensitive path or the verifier rejects a bad change.`,
+    });
+    recommendations.push(`Prove the guardrails fire, then commit the record: npx @cobusgreyling/loop-drill . --record`);
+  } else {
+    if (proof.proven.length > 0) {
+      findings.push({ level: 'ok', message: `Guardrails proven by loop-drill: ${proof.proven.join(', ')}.` });
+    }
+    const failedElsewhere = proof.failed.filter((g) => g !== 'gate' && g !== 'verifier');
+    if (failedElsewhere.length > 0) {
+      findings.push({
+        level: 'fail',
+        message: `loop-drill shows guardrails failing to fire: ${failedElsewhere.join(', ')} (${proof.failures.filter((id) => failedElsewhere.some((g) => id.startsWith(g))).join(', ')}).`,
+      });
+      recommendations.push('Fix the failing guardrails, then rerun: npx @cobusgreyling/loop-drill . --record');
+    }
+    if (proof.stale.length > 0) {
+      findings.push({
+        level: 'warn',
+        message: `${PROOF_FILE} is out of date for: ${proof.stale.join(', ')} (gate.yaml changed since it was drilled, or a canary is over 30 days old) — not counted.`,
+      });
+      recommendations.push(`Re-record: npx @cobusgreyling/loop-drill . --record (add --only for canaries you ran before)`);
+    }
   }
 
   if (!signals.governance.stallDetection) {
@@ -844,6 +1027,20 @@ export async function auditProject(target: string): Promise<AuditResult> {
     findings.push({
       level: 'warn',
       message: 'Score qualifies for L3 but no proven loop activity yet — capped at L2 until you run and commit at least one loop cycle.',
+    });
+  }
+
+  if (
+    score >= 78 &&
+    signals.verifier.present &&
+    signals.stateFile.present &&
+    costReady &&
+    signals.loopActivity.present &&
+    !guardrailsProven(proof)
+  ) {
+    findings.push({
+      level: 'warn',
+      message: `Score qualifies for L3 but the guardrails are unproven — capped at L2 until ${PROOF_FILE} shows the current gate.yaml passing its drills and no guardrail failing.`,
     });
   }
 

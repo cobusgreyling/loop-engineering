@@ -160,6 +160,40 @@ ${models}
             anthropic_base_url: ${ORCAROUTER_BASE_URL}/v1
             docs_root: https://www.orcarouter.ai`;
 }
+const CHEAPERINFERENCE_DEFAULT_MODEL = 'gpt-5.4-mini';
+const CHEAPERINFERENCE_BASE_URL = 'https://api.cheaperinference.com';
+const CHEAPERINFERENCE_MODELS = [
+    { id: 'gpt-5.4-mini', contextWindow: 400_000, notes: 'OpenAI' },
+    { id: 'gpt-5.4', contextWindow: 1_000_000, notes: 'OpenAI' },
+    { id: 'claude-sonnet-5', contextWindow: 1_000_000, notes: 'Anthropic' },
+    { id: 'gemini-3.1-pro', contextWindow: 1_048_576, notes: 'Google' },
+    { id: 'deepseek-v4-flash', contextWindow: 1_000_000, notes: 'DeepSeek' },
+    { id: 'glm-5.3', contextWindow: 1_000_000, notes: 'Z.ai' },
+];
+const CHEAPERINFERENCE_MODEL_IDS = CHEAPERINFERENCE_MODELS.map((m) => m.id);
+/**
+ * Render the `model/cheaperinference` interface primitive for the implementer
+ * stack. Cheaper Inference is an OpenAI-compatible LLM gateway with bare model
+ * ids from several labs. It also serves the Anthropic Messages API; Anthropic
+ * clients append `/v1/messages` to the base URL.
+ */
+function cheaperinferenceInterfaceYaml(model) {
+    const models = CHEAPERINFERENCE_MODELS.map((m) => [
+        `          - id: ${m.id}`,
+        `            context_window: ${m.contextWindow}`,
+        `            notes: "${m.notes}"`,
+    ].join('\n')).join('\n');
+    return `    - primitive: model/cheaperinference
+      config:
+        model: ${model}
+        models:
+${models}
+        endpoints:
+          global:
+            openai_base_url: ${CHEAPERINFERENCE_BASE_URL}/v1
+            anthropic_base_url: ${CHEAPERINFERENCE_BASE_URL}
+            docs_root: https://cheaperinference.com/docs`;
+}
 /** Render the `model/minimax` interface primitive for the implementer stack. */
 function minimaxInterfaceYaml(model, region) {
     const models = MINIMAX_MODELS.map((m) => [
@@ -232,7 +266,9 @@ function foundryStackYaml(stackName, pattern, preset, provider = 'anthropic', re
             ? minimaxInterfaceYaml(model, region)
             : provider === 'orcarouter'
                 ? orcarouterInterfaceYaml(model)
-                : `    - primitive: model/anthropic
+                : provider === 'cheaperinference'
+                    ? cheaperinferenceInterfaceYaml(model)
+                    : `    - primitive: model/anthropic
       config:
         model: claude-sonnet-4-6`;
         return `name: ${stackName}
@@ -716,9 +752,9 @@ Options:
   --with-foundry    Also scaffold .foundry/ stack (harness-foundry runtime)
   --with-memory     Also scaffold memory-engineering tiers and budget
   --with-fleet      Also scaffold fleet-engineering registry and inbox
-  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter)
+  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference)
   --region          MiniMax region when --model-provider minimax (global_en, cn_zh)
-  --model           Provider model when --model-provider minimax/orcarouter (default: MiniMax-M3 / orcarouter/fusion)
+  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini)
   --dry-run         Print actions without copying
   -h, --help        This help
 
@@ -734,6 +770,7 @@ Examples:
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference --model claude-sonnet-5
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
   npx @cobusgreyling/loop-init . --with-memory
   npx @cobusgreyling/loop-init . --with-fleet
@@ -751,7 +788,7 @@ Examples:
         console.error(`Unknown tool: ${tool}. Valid: ${validTools.join(', ')}`);
         process.exit(1);
     }
-    const validProviders = ['anthropic', 'minimax', 'orcarouter'];
+    const validProviders = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference'];
     if (!validProviders.includes(modelProvider)) {
         console.error(`Unknown model provider: ${modelProvider}. Valid: ${validProviders.join(', ')}`);
         process.exit(1);
@@ -775,6 +812,19 @@ Examples:
             }
             else {
                 console.error(`Unknown model: ${model}. Valid: ${ORCAROUTER_MODEL_IDS.join(', ')}`);
+                process.exit(1);
+            }
+        }
+    }
+    if (modelProvider === 'cheaperinference') {
+        // `model` defaults to the MiniMax default; if the user did not pass
+        // `--model` explicitly, fall back to the Cheaper Inference default instead.
+        if (!CHEAPERINFERENCE_MODEL_IDS.includes(model)) {
+            if (model === MINIMAX_DEFAULT_MODEL) {
+                model = CHEAPERINFERENCE_DEFAULT_MODEL;
+            }
+            else {
+                console.error(`Unknown model: ${model}. Valid: ${CHEAPERINFERENCE_MODEL_IDS.join(', ')}`);
                 process.exit(1);
             }
         }
