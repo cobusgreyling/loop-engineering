@@ -31,12 +31,16 @@ The local clone/dev path still works if you want to inspect or change the server
 | Slack (read) | Ingest threads / alerts the loop should triage | Read-only on specific channels | Daily Triage |
 | Safe propose flow | Any write action | Loop opens PR / draft / comment. Human merges or approves. | All L2+ patterns |
 | Knos (shared state) | Give parallel loops one state record instead of one STATE.md each | Local only; no network, no account | Anti-pattern 5, PR Babysitter, Daily Triage |
+| Parallel Search | Find public release notes and fetch migration guidance | Anonymous search + fetch; report-only, public inputs | Dependency Sweeper, Daily Triage |
 
 ## Example Configurations
 
 See the files in this directory:
 
 - `loop-engineering.mcp.json` — starter config for the published MCP server.
+- [`parallel-search.mcp.json`](./parallel-search.mcp.json) — optional free, keyless
+  web search and page fetching through a pinned stdio-to-HTTP bridge; see the
+  [setup and manual dependency-research walkthrough](./parallel-search.md).
 - `github-readonly.mcp.json` (existing) — safe starting point for discovery.
 - `github-propose.json` — read + limited write for comments and draft PRs (sign comments as the loop).
 - `linear.json` — example for creating/updating issues from loop state.
