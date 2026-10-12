@@ -32,12 +32,15 @@ The local clone/dev path still works if you want to inspect or change the server
 | Safe propose flow | Any write action | Loop opens PR / draft / comment. Human merges or approves. | All L2+ patterns |
 | Knos (shared state) | Give parallel loops one state record instead of one STATE.md each | Local only; no network, no account | Anti-pattern 5, PR Babysitter, Daily Triage |
 | Parallel Search | Find public release notes and fetch migration guidance | Anonymous search + fetch; report-only, public inputs | Dependency Sweeper, Daily Triage |
+| Sem | Locate code entities and inspect related source before a proposal | Trusted local checkout; report-only `sem_find` calls | Daily Triage, CI Sweeper |
 
 ## Example Configurations
 
 See the files in this directory:
 
 - `loop-engineering.mcp.json` — starter config for the published MCP server.
+- [`sem.mcp.json`](./sem.mcp.json) — optional local structural code navigation;
+  see the [setup, manual calls and permission boundaries](./sem.md).
 - [`parallel-search.mcp.json`](./parallel-search.mcp.json) — optional free, keyless
   web search and page fetching through a pinned stdio-to-HTTP bridge; see the
   [setup and manual dependency-research walkthrough](./parallel-search.md).
