@@ -209,12 +209,12 @@ export async function cleanupWorktrees(input) {
 /** Paths (repo-relative, posix) of every worktree git currently knows about. */
 async function gitWorktreePaths(root) {
     const rootReal = await realpath(root);
-    const out = await git(['worktree', 'list', '--porcelain'], root);
+    const out = await git(['worktree', 'list', '--porcelain', '-z'], root);
     const paths = [];
-    for (const line of out.split('\n')) {
+    for (const line of out.split('\0')) {
         if (!line.startsWith('worktree '))
             continue;
-        const abs = line.slice('worktree '.length).trim();
+        const abs = line.slice('worktree '.length);
         let absReal;
         try {
             absReal = await realpath(abs);

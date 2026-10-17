@@ -22,8 +22,8 @@ async function git(args, cwd) {
   await run('git', args, { cwd });
 }
 
-async function initRepo() {
-  const dir = await mkdtemp(path.join(tmpdir(), 'loop-worktree-'));
+async function initRepo(prefix = 'loop-worktree-') {
+  const dir = await mkdtemp(path.join(tmpdir(), prefix));
   await git(['init', '-b', 'main'], dir);
   await git(['config', 'user.email', 'test@example.com'], dir);
   await git(['config', 'user.name', 'Test'], dir);
@@ -146,6 +146,21 @@ test('cleanup skips a dirty worktree without --force, removes it with --force', 
     const forced = await cleanupWorktrees({ root: dir, force: true });
     assert.deepEqual(forced.removed.map((e) => e.id), ['dirty']);
     assert.equal(await exists(path.join(dir, '.loop-worktrees', 'dirty')), false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('gc preserves a live worktree beneath a newline in its path', {
+  skip: process.platform === 'win32' ? 'Windows paths cannot contain newlines' : false,
+}, async () => {
+  const dir = await initRepo('loop-worktree-\n');
+  try {
+    const entry = await createWorktree({ root: dir, runId: 'keep', pattern: 'ci-sweeper' });
+    const result = await gc({ root: dir });
+    assert.deepEqual(result, { orphans: [], dropped: [], removedOrphans: [] });
+    assert.deepEqual((await readManifest(dir)).worktrees, [entry]);
+    assert.ok(await exists(path.join(dir, entry.path)));
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
