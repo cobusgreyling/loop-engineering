@@ -554,6 +554,45 @@ test('loop-init --help documents --model-provider cheaperinference', async () =>
   assert.match(stdout, /cheaperinference/);
 });
 
+test('loop-init emits the API Route endpoint and default model', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-api-route-'));
+  try {
+    await exec('node', [CLI, dir, '-p', 'ci-sweeper', '-t', 'grok', '--with-foundry', '--model-provider', 'api-route']);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /primitive: model\/api-route/);
+    assert.match(stack, /model: "gpt-6\.1-sol"/);
+    assert.match(stack, /openai_base_url: https:\/\/global\.api-route\.com\/v1/);
+    assert.match(stack, /docs_root: https:\/\/www\.api-route\.com/);
+    assert.doesNotMatch(stack, /primitive: model\/anthropic/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init preserves an explicit API Route model as a quoted YAML value', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-api-route-model-'));
+  try {
+    await exec('node', [CLI, dir, '-p', 'ci-sweeper', '-t', 'grok', '--with-foundry', '--model-provider', 'api-route', '--model', 'custom: model #1']);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /model: "custom: model #1"/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init rejects an empty API Route model', async () => {
+  await assert.rejects(
+    () => exec('node', [CLI, '.', '-p', 'ci-sweeper', '-t', 'grok', '--with-foundry', '--model-provider', 'api-route', '--model', '', '--dry-run']),
+    (err) => err.stderr?.includes('non-empty --model'),
+  );
+});
+
+test('loop-init --help documents API Route and its default model', async () => {
+  const { stdout } = await exec('node', [CLI, '--help']);
+  assert.match(stdout, /api-route/);
+  assert.match(stdout, /gpt-6\.1-sol/);
+});
+
 test('loop-init rejects unknown model provider', async () => {
   await assert.rejects(
     () =>
