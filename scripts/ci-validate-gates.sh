@@ -40,6 +40,7 @@ echo "Smoke-testing scripts…"
 node scripts/append-run-log.test.mjs
 node scripts/github-triage.test.mjs
 node scripts/sync-untrusted-input.test.mjs
+node scripts/workflow-health.test.mjs
 
 echo "Building and testing readiness-core…"
 (
