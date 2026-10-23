@@ -6,7 +6,6 @@ Last run: 2026-10-16T08:00:44Z (automated daily-triage workflow)
 
 ## High Priority (loop is acting or waiting on human)
 
-- **2** dogfood workflow(s) failing — investigate `validate-patterns` / `audit`.
 - [#691](https://github.com/cobusgreyling/loop-engineering/pull/691) **blocked** (missing required checks or review) — `fix(loop-worktree): preserve newline paths during gc`
 - [#622](https://github.com/cobusgreyling/loop-engineering/pull/622) **conflicts** — `Add loop-jev (TypeSafe System One) for cheaper loop decisions`
 - [#659](https://github.com/cobusgreyling/loop-engineering/issues/659) **unanswered** 11d — `[bug] loop-mcp-server@1.1.0 not installable: published manifest ships "file:../loop-gate"`

@@ -52,7 +52,7 @@ jobs:
         run: |
           FAILING=0
           for wf in validate-patterns audit; do
-            STATUS=$(gh run list --workflow="${wf}.yml" --limit 1 --json conclusion -q '.[0].conclusion' 2>/dev/null || echo "unknown")
+            STATUS=$(gh run list --workflow="${wf}.yml" --branch main --limit 1 --json conclusion -q '.[0].conclusion' 2>/dev/null || echo "unknown")
             echo "${wf}: ${STATUS}"
             if [ "$STATUS" = "failure" ]; then FAILING=$((FAILING + 1)); fi
           done
