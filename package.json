@@ -24,7 +24,8 @@
     "build:tools": "cd tools/readiness-core && npm run build && cd ../loop-audit && npm run build && cd ../loop-init && npm run build && cd ../loop-cost && npm run build && cd ../loop-sync && npm run build && cd ../loop-context && npm run build && cd ../loop-gate && npm run build && cd ../mcp-server && npm run build && cd ../loop-worktree && npm run build && cd ../loop-sandbox && npm run build && cd ../loop-swarm && npm run build && cd ../loop && npm run build && cd ../loop-metrics && npm run build && cd ../loop-drill && npm run build && cd ../goal-audit && npm run build && cd ../goal-init && npm run build",
     "contributors:generate": "node scripts/generate-contributors.mjs",
     "contributors:check": "node scripts/generate-contributors.mjs --check",
-    "test:loop-drill": "cd tools/loop-drill && npm test"
+    "test:loop-drill": "cd tools/loop-drill && npm test",
+    "test:scripts": "node --test scripts/append-run-log.test.mjs scripts/github-triage.test.mjs scripts/sync-untrusted-input.test.mjs scripts/workflow-health.test.mjs"
   },
   "devDependencies": {
     "ajv": "^8.17.1",
