@@ -554,6 +554,94 @@ test('loop-init --help documents --model-provider cheaperinference', async () =>
   assert.match(stdout, /cheaperinference/);
 });
 
+test('loop-init --with-foundry --model-provider opper emits Opper provider primitive', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-opper-'));
+  try {
+    const { stdout } = await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'grok',
+      '--with-foundry',
+      '--model-provider',
+      'opper',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /primitive: model\/opper/);
+    // default model
+    assert.match(stack, /model: claude-sonnet-4-6/);
+    // model options table
+    assert.match(stack, /- id: claude-sonnet-4-6/);
+    assert.match(stack, /- id: gpt-5\.5/);
+    assert.match(stack, /- id: gemini-3\.8-flash/);
+    assert.match(stack, /- id: kimi-k3/);
+    // OpenAI- and Anthropic-compatible endpoints on the same base URL
+    assert.match(stack, /openai_base_url: https:\/\/api\.opper\.ai\/v3\/compat$/m);
+    assert.match(stack, /anthropic_base_url: https:\/\/api\.opper\.ai\/v3\/compat$/m);
+    assert.doesNotMatch(stack, /model\/anthropic/);
+    assert.doesNotMatch(stack, /model\/minimax/);
+    assert.doesNotMatch(stack, /model\/cheaperinference/);
+    assert.match(stdout, /preset: implementer/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init --with-foundry opper --model selects a different model', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-opper-model-'));
+  try {
+    await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'grok',
+      '--with-foundry',
+      '--model-provider',
+      'opper',
+      '--model',
+      'gpt-5.5',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /model: gpt-5\.5/);
+    // all model options remain available in config
+    assert.match(stack, /- id: claude-sonnet-4-6/);
+    assert.match(stack, /- id: deepseek-v4-pro/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init rejects unknown opper model', async () => {
+  await assert.rejects(
+    () =>
+      exec('node', [
+        CLI,
+        '.',
+        '--pattern',
+        'ci-sweeper',
+        '--tool',
+        'grok',
+        '--with-foundry',
+        '--model-provider',
+        'opper',
+        '--model',
+        'not-a-model',
+        '--dry-run',
+      ]),
+    (err) => err.stderr?.includes('Unknown model') || err.message?.includes('Unknown model'),
+  );
+});
+
+test('loop-init --help documents --model-provider opper', async () => {
+  const { stdout } = await exec('node', [CLI, '--help']);
+  assert.match(stdout, /--model-provider/);
+  assert.match(stdout, /opper/);
+});
+
 test('loop-init rejects unknown model provider', async () => {
   await assert.rejects(
     () =>
