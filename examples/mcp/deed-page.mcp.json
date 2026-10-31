@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "deed-page": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.14.3",
+        "https://deed.page/mcp",
+        "--transport",
+        "http-only",
+        "--header",
+        "User-Agent:loop-engineering/deed-page-example"
+      ]
+    }
+  }
+}
