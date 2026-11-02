@@ -21,8 +21,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-10-01T08:00:41Z","pattern":"daily-triage","duration_s":8,"items_found":17,"actions_taken":1,"escalations":3,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"36833681714"}
-{"run_id":"2026-10-02T08:00:41Z","pattern":"daily-triage","duration_s":10,"items_found":18,"actions_taken":1,"escalations":3,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"36981595435"}
 {"run_id":"2026-10-05T08:08:47Z","pattern":"daily-triage","duration_s":16,"items_found":18,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37281774197"}
 {"run_id":"2026-10-06T08:00:53Z","pattern":"daily-triage","duration_s":10,"items_found":18,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37433271611"}
 {"run_id":"2026-10-07T08:01:14Z","pattern":"daily-triage","duration_s":11,"items_found":21,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37590971710"}
@@ -43,3 +41,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-10-28T08:01:09Z","pattern":"daily-triage","duration_s":8,"items_found":17,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"40653799566"}
 {"run_id":"2026-10-29T08:00:51Z","pattern":"daily-triage","duration_s":10,"items_found":16,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"40839101676"}
 {"run_id":"2026-10-30T08:00:58Z","pattern":"daily-triage","duration_s":9,"items_found":16,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"41023601709"}
+{"run_id":"2026-11-02T08:01:11Z","pattern":"daily-triage","duration_s":11,"items_found":16,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"41409998283"}
