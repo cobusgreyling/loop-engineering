@@ -21,8 +21,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-10-05T08:08:47Z","pattern":"daily-triage","duration_s":16,"items_found":18,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37281774197"}
-{"run_id":"2026-10-06T08:00:53Z","pattern":"daily-triage","duration_s":10,"items_found":18,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37433271611"}
 {"run_id":"2026-10-07T08:01:14Z","pattern":"daily-triage","duration_s":11,"items_found":21,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37590971710"}
 {"run_id":"2026-10-08T08:02:45Z","pattern":"daily-triage","duration_s":11,"items_found":21,"actions_taken":1,"escalations":4,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37747216147"}
 {"run_id":"2026-10-09T08:02:44Z","pattern":"daily-triage","duration_s":10,"items_found":21,"actions_taken":1,"escalations":5,"tokens_estimate":52000,"readiness_score":100,"outcome":"escalated","workflow_run":"37902524751"}
@@ -44,3 +42,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-02T08:01:11Z","pattern":"daily-triage","duration_s":11,"items_found":16,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"41409998283"}
 {"run_id":"2026-11-03T08:01:04Z","pattern":"daily-triage","duration_s":9,"items_found":16,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"41600152793"}
 {"run_id":"2026-11-04T08:01:02Z","pattern":"daily-triage","duration_s":12,"items_found":18,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"41796241741"}
+{"run_id":"2026-11-05T08:01:07Z","pattern":"daily-triage","duration_s":10,"items_found":18,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"41991270385"}
