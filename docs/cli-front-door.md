@@ -33,7 +33,7 @@ npx @cobusgreyling/loop doctor .
 | `loop doctor .` | **new** (audit + sync + files) |
 | `loop status .` | **new** (run-log dashboard) |
 
-`loop init` with `--with-foundry` supports custom provider flags such as `--model-provider minimax --region (global_en|cn_zh) --model MiniMax-M3`. See [QUICKSTART](./QUICKSTART.md#4-audit-readiness-30-seconds) for examples.
+`loop init` with `--with-foundry` supports custom provider flags such as `--model-provider minimax --region (global_en|cn_zh) --model MiniMax-M3.1-Flash`. See [QUICKSTART](./QUICKSTART.md#4-audit-readiness-30-seconds) for examples.
 
 ## Doctor exit codes
 

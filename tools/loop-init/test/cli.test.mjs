@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, access, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, access, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
@@ -315,9 +315,22 @@ test('loop-init --with-foundry --model-provider minimax emits MiniMax provider p
     ]);
     const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
     assert.match(stack, /primitive: model\/minimax/);
-    assert.match(stack, /model: MiniMax-M3/);
-    assert.match(stack, /- id: MiniMax-M3/);
-    assert.match(stack, /- id: MiniMax-M2\.7/);
+    assert.match(stack, /model: MiniMax-M3\.1-Flash\n/);
+    assert.deepEqual([...stack.matchAll(/- id: (MiniMax-\S+)/g)].map((match) => match[1]), [
+      'MiniMax-M3.1-Flash', 'MiniMax-M3',
+    ]);
+    const flash = stack.split('- id: MiniMax-M3.1-Flash\n')[1].split('- id: MiniMax-M3\n')[0];
+    assert.match(flash, /context_window: 1000000/);
+    assert.match(flash, /max_output_tokens: 524288/);
+    assert.match(flash, /input_modalities: \[text, image, video\]/);
+    assert.match(flash, /thinking: \[adaptive\]/);
+    assert.match(flash, /reasoning_effort: \[low, medium, high, xhigh, max\]/);
+    assert.match(flash, /default_reasoning_effort: max/);
+    assert.match(flash, /input: 0\.15\n/);
+    assert.match(flash, /output: 0\.6\n/);
+    assert.match(flash, /cache_read: 0\.015\n/);
+    assert.match(flash, /cache_write: null/);
+    assert.doesNotMatch(flash, /disabled|none|service_tier|reasoning_split/);
     assert.match(stack, /region: global_en/);
     // global endpoint
     assert.match(stack, /https:\/\/api\.minimax\.io\/v1/);
@@ -358,6 +371,53 @@ test('loop-init --with-foundry minimax --region cn_zh selects CN region and mode
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+for (const region of ['global_en', 'cn_zh']) {
+  for (const model of [undefined, 'MiniMax-M3.1-Flash', 'MiniMax-M3']) {
+    test(`loop-init serializes MiniMax ${model ?? 'default'} in ${region}`, async () => {
+      const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-minimax-current-'));
+      try {
+        await exec('node', [CLI, dir, '-p', 'ci-sweeper', '--with-foundry',
+          '--model-provider', 'minimax', '--region', region,
+          ...(model ? ['--model', model] : [])]);
+        const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+        assert.ok(stack.includes(`        model: ${model ?? 'MiniMax-M3.1-Flash'}\n`));
+        assert.ok(stack.includes(`        region: ${region}\n`));
+        assert.deepEqual([...stack.matchAll(/- id: (MiniMax-\S+)/g)].map((match) => match[1]), [
+          'MiniMax-M3.1-Flash', 'MiniMax-M3',
+        ]);
+        for (const domain of ['api.minimax.io', 'api.minimaxi.com']) {
+          assert.ok(stack.includes(`openai_base_url: https://${domain}/v1`));
+          assert.ok(stack.includes(`anthropic_base_url: https://${domain}/anthropic`));
+        }
+        const m3 = stack.split('- id: MiniMax-M3\n')[1].split('        endpoints:')[0];
+        assert.match(m3, /input_modalities: \[text, image, video\]/);
+        assert.match(m3, /thinking: \[adaptive, disabled\]/);
+        assert.match(m3, /pricing_usd_per_million_tokens:\n\s+input: 0\.3\n\s+output: 1\.2\n\s+cache_read: 0\.06/);
+        assert.match(m3, /pricing_above_512k_usd_per_million_tokens:\n\s+input: 0\.6\n\s+output: 2\.4\n\s+cache_read: 0\.12/);
+        assert.doesNotMatch(m3, /reasoning_effort/);
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
+  }
+}
+
+for (const model of ['MiniMax-M2.7', 'custom-saved-model']) {
+  test(`loop-init preserves an existing stack with ${model}`, async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-minimax-saved-'));
+    try {
+      const stackFile = path.join(dir, '.foundry', 'stack.yaml');
+      await mkdir(path.dirname(stackFile));
+      const saved = `layers:\n  interface:\n    - primitive: model/minimax\n      config:\n        model: ${model}\n        custom_setting: keep\n`;
+      await writeFile(stackFile, saved);
+      await exec('node', [CLI, dir, '-p', 'ci-sweeper', '--with-foundry', '--model-provider', 'minimax']);
+      assert.equal(await readFile(stackFile, 'utf8'), saved);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+}
 
 test('loop-init --with-foundry anthropic provider is unchanged (default)', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-default-'));

@@ -4,6 +4,10 @@ All notable changes to `@cobusgreyling/loop-init` are documented here.
 
 ## [Unreleased]
 
+### Changed
+- New MiniMax implementer stacks default to `MiniMax-M3.1-Flash` and list Flash followed by `MiniMax-M3`, with current thinking capabilities and standard pricing.
+- Explicit `--model MiniMax-M2.7` remains supported for compatibility; existing stack files are preserved.
+
 ## [1.7.0] - 2026-08-28
 
 ### Added
