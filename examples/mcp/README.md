@@ -32,6 +32,7 @@ The local clone/dev path still works if you want to inspect or change the server
 | Safe propose flow | Any write action | Loop opens PR / draft / comment. Human merges or approves. | All L2+ patterns |
 | Knos (shared state) | Give parallel loops one state record instead of one STATE.md each | Local only; no network, no account | Anti-pattern 5, PR Babysitter, Daily Triage |
 | Parallel Search | Find public release notes and fetch migration guidance | Anonymous search + fetch; report-only, public inputs | Dependency Sweeper, Daily Triage |
+| deed.page | Publish a short-lived preview link of drafted release notes for human review | Anonymous publish with `ttl_seconds`; public content only; human publishes the final notes | Changelog Drafter |
 
 ## Example Configurations
 
@@ -41,6 +42,9 @@ See the files in this directory:
 - [`parallel-search.mcp.json`](./parallel-search.mcp.json) — optional free, keyless
   web search and page fetching through a pinned stdio-to-HTTP bridge; see the
   [setup and manual dependency-research walkthrough](./parallel-search.md).
+- [`deed-page.mcp.json`](./deed-page.mcp.json) — optional keyless publishing of
+  short-lived preview pages through the same pinned bridge; see the
+  [setup and release-notes preview walkthrough](./deed-page.md).
 - `github-readonly.mcp.json` (existing) — safe starting point for discovery.
 - `github-propose.json` — read + limited write for comments and draft PRs (sign comments as the loop).
 - `linear.json` — example for creating/updating issues from loop state.
