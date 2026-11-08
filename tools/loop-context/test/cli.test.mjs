@@ -11,6 +11,7 @@ const testDir = path.dirname(fileURLToPath(import.meta.url));
 const cli = path.join(testDir, '../dist/cli.js');
 const onExceedCaptureScript = path.join(testDir, 'fixtures/on-exceed-capture.mjs');
 const onExceedIgnoreStdinScript = path.join(testDir, 'fixtures/on-exceed-ignore-stdin.mjs');
+const onExceedLoggingScript = path.join(testDir, 'fixtures/on-exceed-logging.mjs');
 
 async function freshDir() {
   return mkdtemp(path.join(tmpdir(), 'loop-context-cli-daily-'));
@@ -192,6 +193,32 @@ test('cli --on-exceed is not invoked when the run continues', async () => {
   );
   assert.equal(r.status, 0);
   await assert.rejects(() => readFile(outFile, 'utf8'));
+});
+
+for (const hookExit of [0, 7]) {
+  test(`cli --json isolates hook output when the hook exits ${hookExit}`, () => {
+    const r = runCli([
+      '--check', '--json', '--on-exceed',
+      `"${process.execPath}" "${onExceedLoggingScript}" ${hookExit}`,
+    ]);
+    assert.equal(r.status, 2);
+    const decision = JSON.parse(r.stdout);
+    assert.equal(decision.trigger, 'stagnation');
+    assert.equal(decision.escalate, true);
+    assert.match(r.stderr, /Hook notified after stagnation/);
+    assert.match(r.stderr, /Hook stderr diagnostic/);
+  });
+}
+
+test('cli preserves human-readable hook output without --json', () => {
+  const r = runCli([
+    '--check', '--on-exceed', `"${process.execPath}" "${onExceedLoggingScript}"`,
+  ]);
+  assert.equal(r.status, 2);
+  assert.match(r.stdout, /Hook notified after stagnation/);
+  assert.match(r.stdout, /ESCALATE \[stagnation\]/);
+  assert.match(r.stderr, /Hook stderr diagnostic/);
+  assert.doesNotMatch(r.stderr, /Hook notified after stagnation/);
 });
 
 test('cli --on-exceed does not crash when the hook script exits without reading stdin', async () => {

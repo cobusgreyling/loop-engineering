@@ -133,6 +133,9 @@ shape the daily-cap lookup too.
 generic hook for automating `loop-budget.md`'s "On budget exceed" checklist (pause
 schedulers, log the event, notify a human) instead of doing those steps by hand. The
 script's exit code is not checked and does not change `--check`'s own exit code.
+With `--json`, hook stdout is sent to stderr alongside its diagnostics, so
+stdout remains a single decision JSON object. Without `--json`, hook stdout
+keeps its existing human-readable output behavior.
 
 ## Populating the ledger
 
