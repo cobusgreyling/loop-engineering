@@ -60,3 +60,31 @@ test('filterEntries keeps non-ISO run IDs and filters ISO dates within a timefra
   ]);
   assert.strictEqual(filterEntries(entries), entries, 'no filters preserve every entry');
 });
+
+for (const [transition, now] of [
+  ['spring-forward', '2026-03-08T12:00:00Z'],
+  ['fall-back', '2026-11-01T12:00:00Z'],
+]) {
+  test(`filterEntries uses elapsed days across ${transition}`, (t) => {
+    const previousTZ = process.env.TZ;
+    process.env.TZ = 'America/New_York';
+    t.after(() => {
+      if (previousTZ === undefined) delete process.env.TZ;
+      else process.env.TZ = previousTZ;
+    });
+    const RealDate = Date;
+    const nowMs = RealDate.parse(now);
+    t.mock.method(globalThis, 'Date', class extends RealDate {
+      constructor(...args) {
+        super(...(args.length ? args : [nowMs]));
+      }
+    });
+    const entries = [23.5, 24, 24.5].map(hoursAgo => ({
+      run_id: new RealDate(nowMs - hoursAgo * 60 * 60 * 1000).toISOString(),
+      pattern: 'daily-triage', duration_s: 1, items_found: 0, actions_taken: 0,
+      escalations: 0, tokens_estimate: 1000, outcome: 'report-only',
+    }));
+
+    assert.deepStrictEqual(filterEntries(entries, undefined, 1), entries.slice(0, 2));
+  });
+}
