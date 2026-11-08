@@ -8,8 +8,13 @@ function parseFlags(argv) {
             flags.help = true;
         else if (a === '--action')
             flags.action = argv[++i];
-        else if (a === '--paths')
-            flags.paths = argv[++i];
+        else if (a === '--paths') {
+            const value = argv[++i];
+            if (value === undefined || value.startsWith('--') || value === '-h') {
+                throw new Error('--paths requires a comma-separated list of file paths.');
+            }
+            flags.paths = value;
+        }
         else if (a === '--gate-file')
             flags.gateFile = argv[++i];
         else if (a === '--json')
