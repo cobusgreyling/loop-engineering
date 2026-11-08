@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import {
   assertValidLevel,
   cadenceToRunsPerDay,
@@ -30,6 +32,12 @@ test('runsPerDayForInterval: 1d = 1', () => {
   assert.equal(runsPerDayForInterval('1d'), 1);
 });
 
+for (const [interval, expected] of [['17m', 1440 / 17], ['7h', 24 / 7], ['2d', 0.5], ['7d', 1 / 7]]) {
+  test(`runsPerDayForInterval: ${interval} preserves the average daily rate`, () => {
+    assert.equal(runsPerDayForInterval(interval), expected);
+  });
+}
+
 test('runsPerDayForInterval rejects a zero cadence', () => {
   assert.throws(() => runsPerDayForInterval('0m'), /greater than zero/);
 });
@@ -40,6 +48,54 @@ test('cadenceToRunsPerDay: range uses fastest by default', () => {
 
 test('cadenceToRunsPerDay: conservative uses slowest', () => {
   assert.equal(cadenceToRunsPerDay('5m-15m', true), 96);
+});
+
+test('cadenceToRunsPerDay: multi-day ranges retain fractional rates', () => {
+  assert.equal(cadenceToRunsPerDay('2d-7d'), 0.5);
+  assert.equal(cadenceToRunsPerDay('2d-7d', true), 1 / 7);
+  assert.equal(cadenceToRunsPerDay('7d-2d', true), 1 / 7);
+});
+
+test('estimateCost: multi-day cadence amortizes every daily scenario without changing per-run cost', () => {
+  const r = estimateCost({
+    pattern: { ...CI_SWEEPER, cost: { ...CI_SWEEPER.cost, stable_fraction: 0.5 } },
+    cadence: '2d',
+    level: 'L2',
+    withCaching: true,
+  });
+  assert.equal(r.runsPerDay, 0.5);
+  for (const [scenario, perRun, perDay] of [
+    ['noop', 5000, 2500],
+    ['report', 50000, 25000],
+    ['action', 200000, 100000],
+    ['realistic', 19250, 9625],
+    ['caching', 10588, 5294],
+  ]) {
+    assert.equal(r.scenarios[scenario].tokensPerRun, perRun, scenario);
+    assert.equal(r.scenarios[scenario].tokensPerDay, perDay, scenario);
+  }
+});
+
+test('estimateCost: non-divisor cadence does not hide a daily-cap warning', () => {
+  const r = estimateCost({
+    pattern: { ...CI_SWEEPER, cost: { ...CI_SWEEPER.cost, suggested_daily_cap: 650000 } },
+    cadence: '7h',
+    level: 'L2',
+  });
+  assert.ok(r.scenarios.action.tokensPerDay > 650000);
+  assert.ok(r.warnings.some((w) => /Worst case/.test(w)));
+});
+
+test('CLI: JSON reports nonzero average daily spend for a two-day cadence', () => {
+  const stdout = execFileSync(process.execPath, [
+    fileURLToPath(new URL('../dist/cli.js', import.meta.url)),
+    '--pattern', 'ci-sweeper', '--cadence', '2d', '--level', 'L2', '--json',
+  ], { encoding: 'utf8' });
+  const r = JSON.parse(stdout);
+  assert.equal(r.runsPerDay, 0.5);
+  assert.equal(r.scenarios.report.tokensPerRun, 50000);
+  assert.equal(r.scenarios.report.tokensPerDay, 25000);
+  assert.equal(r.scenarios.realistic.tokensPerDay, 9625);
 });
 
 test('estimateCost: ci-sweeper 15m L2 warns on high spend', () => {
