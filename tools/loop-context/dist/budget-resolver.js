@@ -36,7 +36,7 @@ export async function resolveCostCli() {
 }
 function runCostCli(cli, args) {
     return new Promise((resolve, reject) => {
-        const child = spawn('node', [cli, ...args, '--json'], { stdio: ['ignore', 'pipe', 'pipe'] });
+        const child = spawn(process.execPath, [cli, ...args, '--json'], { stdio: ['ignore', 'pipe', 'pipe'] });
         let stdout = '';
         let stderr = '';
         child.stdout.on('data', (chunk) => (stdout += chunk.toString()));
