@@ -46,7 +46,12 @@ npx @cobusgreyling/loop status .
 |------|---------|
 | `0` | Healthy |
 | `1` | Warnings (gaps, mild drift, incomplete budget/run-log) |
-| `2` | Blocked (score &lt; 40, critical drift, or not scaffolded) |
+| `2` | Blocked (failed/incomplete checks, score &lt; 40, critical drift, or not scaffolded) |
+
+If audit or sync cannot run, returns an invalid report, or exits unexpectedly,
+doctor reports `blocked` and identifies the failed check in its notes and next
+actions. Valid low-score audit and warning/critical sync reports retain their
+normal severity, including the sibling tools' expected nonzero exit codes.
 
 ```bash
 npx @cobusgreyling/loop doctor . --json

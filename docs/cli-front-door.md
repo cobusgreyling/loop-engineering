@@ -41,7 +41,12 @@ npx @cobusgreyling/loop doctor .
 |------|---------|--------|
 | 0 | Healthy | green |
 | 1 | Warnings | soft-fail or comment |
-| 2 | Blocked | hard-fail if you require scaffold |
+| 2 | Blocked (including failed/incomplete checks) | hard-fail if you require scaffold and completed checks |
+
+Doctor only reports healthy after both audit and sync return valid reports with
+their expected exit codes. A failed or incomplete check blocks the result;
+notes and next actions identify which check needs attention. Valid low-score
+audit and warning/critical sync results keep their existing severity.
 
 ```bash
 npx @cobusgreyling/loop doctor . --json
