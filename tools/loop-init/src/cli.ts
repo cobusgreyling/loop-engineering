@@ -4,6 +4,11 @@ import { cp, mkdir, readFile, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { printContributorCta } from './contributor-cta.js';
+import { loadHarness, resolveHarnessId, HarnessLoadError } from './harness/loader.js';
+import { loadPatternManifest } from './pattern/loader.js';
+import { checkCapabilities, CapabilityError } from './capability/checker.js';
+import { mapContentToLayout } from './mapper/file-mapper.js';
+import type { Harness } from './harness/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
@@ -309,7 +314,7 @@ ${endpoints}`;
 
 function parseArgs(argv: string[]) {
   let pattern: Pattern = 'daily-triage';
-  let tool: Tool = 'claude';
+  let tool: string = 'claude';
   let target = '.';
   let dryRun = false;
   let withFoundry = false;
@@ -322,7 +327,7 @@ function parseArgs(argv: string[]) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--pattern' || a === '-p') pattern = argv[++i] as Pattern;
-    else if (a === '--tool' || a === '-t') tool = argv[++i] as Tool;
+    else if (a === '--tool' || a === '-t') tool = argv[++i];
     else if (a === '--dry-run') dryRun = true;
     else if (a === '--with-foundry') withFoundry = true;
     else if (a === '--with-memory') withMemory = true;
@@ -914,6 +919,145 @@ function auditTargetArg(target: string, targetDir: string): string {
   return target === '.' ? '.' : targetDir;
 }
 
+/** Map of legacy tool enum values to their canonical harness IDs. */
+const LEGACY_TOOL_TO_HARNESS: Record<string, string> = {
+  grok: 'grok',
+  claude: 'claude',
+  codex: 'codex',
+  opencode: 'opencode',
+};
+
+/**
+ * Scaffold using the manifest-driven pipeline.
+ *
+ * Loads harness + pattern manifests, runs capability check, maps content
+ * files per layout, and writes them to the target directory.
+ */
+async function scaffoldManifestDriven(
+  harness: Harness,
+  pattern: Pattern,
+  baseStarter: string,
+  startersRoot: string,
+  targetDir: string,
+  dryRun: boolean,
+): Promise<void> {
+  // Load pattern manifest
+  const patternManifestPath = path.join(startersRoot, baseStarter, 'manifest.yaml');
+  let patternManifest;
+  try {
+    patternManifest = await loadPatternManifest(patternManifestPath);
+  } catch (err) {
+    console.error(`Failed to load pattern manifest: ${(err as Error).message}`);
+    process.exit(1);
+  }
+
+  // Capability check — fail-fast before any writes
+  try {
+    checkCapabilities(harness, patternManifest);
+  } catch (err) {
+    if (err instanceof CapabilityError) {
+      console.error(`Capability check failed: ${err.message}`);
+      process.exit(1);
+    }
+    throw err;
+  }
+
+  // Discover content files in starters/<pattern>/content/
+  const contentBase = path.join(startersRoot, baseStarter, 'content');
+  const skills: string[] = [];
+  const agents: string[] = [];
+  let configFile: string | null = null;
+
+  // Scan skills directory
+  const skillsContentDir = path.join(contentBase, 'skills');
+  if (await exists(skillsContentDir)) {
+    const entries = await readDirNames(skillsContentDir);
+    for (const entry of entries) {
+      const skillMd = path.join(skillsContentDir, entry, 'SKILL.md');
+      if (await exists(skillMd)) {
+        skills.push(entry);
+      }
+    }
+  }
+
+  // Scan agents directory
+  const agentsContentDir = path.join(contentBase, 'agents');
+  if (await exists(agentsContentDir)) {
+    const entries = await readDirNames(agentsContentDir);
+    for (const entry of entries) {
+      if (entry.endsWith('.md')) {
+        agents.push(entry.replace(/\.md$/, ''));
+      }
+    }
+  }
+
+  // Check for config file
+  if (harness.layout.config_file !== null) {
+    const configCandidate = path.join(contentBase, path.basename(harness.layout.config_file));
+    if (await exists(configCandidate)) {
+      configFile = path.basename(harness.layout.config_file);
+    }
+  }
+
+  // Map content to layout
+  const mappings = mapContentToLayout(harness.layout, {
+    basePath: contentBase,
+    skills,
+    agents,
+    configFile,
+  });
+
+  // Write mapped files
+  for (const mapping of mappings) {
+    const sourcePath = mapping.source;
+    const targetPath = path.join(targetDir, mapping.target);
+
+    if (!(await exists(sourcePath))) {
+      continue; // Skip missing source files silently
+    }
+
+    if (dryRun) {
+      console.log(`  would write: ${path.relative(targetDir, targetPath)}`);
+      continue;
+    }
+
+    await mkdir(path.dirname(targetPath), { recursive: true });
+    const content = await readFile(sourcePath, 'utf-8');
+    await writeFile(targetPath, content);
+    console.log(`  created: ${path.relative(targetDir, targetPath)}`);
+  }
+
+  // Copy non-content files from starter root (LOOP.md, STATE.md.example, etc.)
+  const stateExample = path.join(startersRoot, baseStarter, `${STATE_FILES[pattern]}.example`);
+  if (await exists(stateExample)) {
+    await copyFile(stateExample, path.join(targetDir, STATE_FILES[pattern]), dryRun);
+  } else {
+    const altState = path.join(startersRoot, baseStarter, 'STATE.md.example');
+    if (await exists(altState)) {
+      await copyFile(altState, path.join(targetDir, STATE_FILES[pattern]), dryRun);
+    }
+  }
+
+  const loopMd = path.join(startersRoot, baseStarter, 'LOOP.md');
+  if (await exists(loopMd)) {
+    await copyFile(loopMd, path.join(targetDir, 'LOOP.md'), dryRun);
+  }
+
+  // Copy workflow files
+  const wfSrc = path.join(startersRoot, baseStarter, '.github', 'workflows');
+  if (await exists(wfSrc)) {
+    const wfEntries = await readDirNames(wfSrc);
+    for (const entry of wfEntries) {
+      if (!entry.endsWith('.yml') && !entry.endsWith('.yaml')) continue;
+      await copyFile(
+        path.join(wfSrc, entry),
+        path.join(targetDir, '.github', 'workflows', entry),
+        dryRun,
+      );
+    }
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
@@ -965,17 +1109,42 @@ Examples:
     process.exit(0);
   }
 
-  let { pattern, tool, target, dryRun, withFoundry, withMemory, withFleet, modelProvider, region, model } = args;
+  let { pattern, tool: rawTool, target, dryRun, withFoundry, withMemory, withFleet, modelProvider, region, model } = args;
 
   const validPatterns = Object.keys(PATTERN_STARTERS) as Pattern[];
-  const validTools = Object.keys(TOOL_SUFFIX) as Tool[];
   if (!validPatterns.includes(pattern)) {
     console.error(`Unknown pattern: ${pattern}. Valid: ${validPatterns.join(', ')}`);
     process.exit(1);
   }
-  if (!validTools.includes(tool)) {
-    console.error(`Unknown tool: ${tool}. Valid: ${validTools.join(', ')}`);
-    process.exit(1);
+
+  // Resolve --tool value: try legacy enum first, then harness alias lookup.
+  const validTools = Object.keys(TOOL_SUFFIX) as Tool[];
+  let tool: Tool | null = null;
+  let resolvedHarness: Harness | null = null;
+
+  if (validTools.includes(rawTool as Tool)) {
+    // Legacy path: exact match against known tool enum
+    tool = rawTool as Tool;
+  } else {
+    // New path: resolve through harness alias system
+    try {
+      const harnessId = await resolveHarnessId(rawTool);
+      resolvedHarness = await loadHarness(harnessId);
+
+      // Check if this harness maps back to a legacy tool for backward compat
+      if (LEGACY_TOOL_TO_HARNESS[resolvedHarness.id] && validTools.includes(resolvedHarness.id as Tool)) {
+        // Alias resolved to a legacy tool — use the old path for identical output
+        tool = resolvedHarness.id as Tool;
+        resolvedHarness = null;
+      }
+      // Otherwise, keep resolvedHarness for the manifest-driven path
+    } catch (err) {
+      if (err instanceof HarnessLoadError) {
+        console.error(`Unknown tool: ${rawTool}. Valid: ${validTools.join(', ')} (or a harness ID/alias)`);
+        process.exit(1);
+      }
+      throw err;
+    }
   }
   const validProviders: ModelProvider[] = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference'];
   if (!validProviders.includes(modelProvider)) {
@@ -1019,10 +1188,101 @@ Examples:
 
   const targetDir = path.resolve(target);
   const baseStarter = PATTERN_STARTERS[pattern];
-  const suffix = TOOL_AGNOSTIC.has(pattern) ? '' : TOOL_SUFFIX[tool];
-  const starterName = `${baseStarter}${suffix}`;
   const startersRoot = await resolveBundledOrMonorepo('starters');
   const templatesRoot = await resolveBundledOrMonorepo('templates');
+
+  // ─── Manifest-driven scaffold path (new) ────────────────────────────────
+  if (resolvedHarness !== null) {
+    const displayTool = resolvedHarness.display_name || resolvedHarness.id;
+    console.log(`\nloop-init: ${pattern} → ${targetDir} (${displayTool})${dryRun ? ' [dry-run]' : ''}\n`);
+
+    await scaffoldManifestDriven(
+      resolvedHarness,
+      pattern,
+      baseStarter,
+      startersRoot,
+      targetDir,
+      dryRun,
+    );
+
+    // Post-scaffold: observability, circuit breaker, etc. (reuse existing helpers with a synthetic tool)
+    // For the manifest path, we use 'claude' as default for template placement since these are
+    // tool-agnostic templates that get placed via the harness layout.
+    const syntheticTool: Tool = 'claude';
+    if (pattern !== 'thin-loop') {
+      await copyL2Templates(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
+      await scaffoldCircuitBreaker(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
+      await scaffoldObservability(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
+      await scaffoldIntake(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
+      await scaffoldConstraints(targetDir, templatesRoot, syntheticTool, dryRun);
+    }
+
+    // Foundry, memory, fleet (orthogonal passes)
+    let foundryPreset: FoundryPreset | undefined;
+    if (withFoundry) {
+      console.log('');
+      console.log('Harness foundry:');
+      const foundry = await scaffoldFoundry(pattern, targetDir, dryRun, { provider: modelProvider, region, model });
+      foundryPreset = foundry?.preset;
+    }
+    if (withMemory) {
+      console.log('');
+      console.log('Memory engineering:');
+      await scaffoldMemory(targetDir, templatesRoot, dryRun);
+    }
+    if (withFleet) {
+      console.log('');
+      console.log('Fleet engineering:');
+      await scaffoldFleet(targetDir, templatesRoot, dryRun);
+    }
+
+    // Audit
+    const auditArg = auditTargetArg(target, targetDir);
+    let auditScore: number | null = null;
+    if (!dryRun) {
+      const audit = await runAuditSummary(targetDir);
+      if (audit) {
+        auditScore = audit.score;
+        console.log('');
+        console.log(`✓ Loop Ready: ${audit.score}/100 (${audit.level})`);
+        console.log(`  ${formatScoreBar(audit.score)}`);
+        console.log(`  ${audit.assessment}`);
+        console.log('');
+        console.log('Paste badge in README:');
+        console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --badge`);
+      } else {
+        console.log('\n=== Loop Ready score ===');
+        console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --suggest`);
+      }
+    }
+
+    // CTAs
+    if (PATTERNS_NEEDING_FIX.has(pattern)) {
+      console.log('');
+      console.log('Circuit breaker wired (loop-guard skill + loop-ledger.json):');
+      console.log('  npx @cobusgreyling/loop-context --check --ledger loop-ledger.json');
+    }
+    if (PATTERNS_NEEDING_INTAKE.has(pattern)) {
+      console.log('');
+      console.log('Intake wired (loop-intake skill): clarify a vague item or escalate before acting.');
+    }
+    console.log('');
+    console.log(`First loop (${displayTool}):`);
+    console.log(`  ${firstLoopCommand(pattern, 'claude')}`);
+    console.log('');
+    console.log(`Estimate cost: npx @cobusgreyling/loop-cost --pattern ${pattern} --level L1`);
+    printFoundryCta({ pattern, tool: 'claude', withFoundry, score: auditScore, preset: foundryPreset });
+    printMemoryCta({ pattern, tool: 'claude', withMemory, score: auditScore });
+    printFleetCta({ pattern, tool: 'claude', withFleet, score: auditScore });
+    printContributorCta();
+    return;
+  }
+
+  // ─── Legacy tool-enum scaffold path (unchanged) ─────────────────────────
+  // At this point tool is guaranteed non-null: manifest-driven path returns early above.
+  const legacyTool = tool!;
+  const suffix = TOOL_AGNOSTIC.has(pattern) ? '' : TOOL_SUFFIX[legacyTool];
+  const starterName = `${baseStarter}${suffix}`;
   const starterRoot = path.join(startersRoot, starterName);
 
   if (!(await exists(starterRoot))) {
@@ -1031,16 +1291,16 @@ Examples:
       console.error(`Starter not found: ${starterRoot}`);
       process.exit(1);
     }
-    console.log(`Note: no ${tool} variant for ${pattern} — using ${baseStarter} (Grok paths)`);
+    console.log(`Note: no ${legacyTool} variant for ${pattern} — using ${baseStarter} (Grok paths)`);
   }
 
   const effectiveStarter = (await exists(starterRoot))
     ? starterRoot
     : path.join(startersRoot, baseStarter);
 
-  console.log(`\nloop-init: ${pattern} → ${targetDir} (${tool})${dryRun ? ' [dry-run]' : ''}\n`);
+  console.log(`\nloop-init: ${pattern} → ${targetDir} (${legacyTool})${dryRun ? ' [dry-run]' : ''}\n`);
 
-  if (tool === 'opencode') {
+  if (legacyTool === 'opencode') {
     const skillsDir = path.join(effectiveStarter, 'skills');
     if (await exists(skillsDir)) {
       const entries = await readDirNames(skillsDir);
@@ -1130,13 +1390,13 @@ Examples:
   }
 
   if (pattern !== 'thin-loop') {
-    await copyL2Templates(pattern, tool, targetDir, templatesRoot, dryRun);
-    await scaffoldCircuitBreaker(pattern, tool, targetDir, templatesRoot, dryRun);
-    await scaffoldObservability(pattern, tool, targetDir, templatesRoot, dryRun);
-    await scaffoldIntake(pattern, tool, targetDir, templatesRoot, dryRun);
-    await scaffoldConstraints(targetDir, templatesRoot, tool, dryRun);
+    await copyL2Templates(pattern, legacyTool, targetDir, templatesRoot, dryRun);
+    await scaffoldCircuitBreaker(pattern, legacyTool, targetDir, templatesRoot, dryRun);
+    await scaffoldObservability(pattern, legacyTool, targetDir, templatesRoot, dryRun);
+    await scaffoldIntake(pattern, legacyTool, targetDir, templatesRoot, dryRun);
+    await scaffoldConstraints(targetDir, templatesRoot, legacyTool, dryRun);
   }
-  if (tool !== 'opencode' && pattern !== 'thin-loop' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
+  if (legacyTool !== 'opencode' && pattern !== 'thin-loop' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
     const agentsTemplate = `# AGENTS.md
 
 ## Test commands
@@ -1207,26 +1467,26 @@ npm run lint
   }
 
   console.log('');
-  console.log(`First loop (${tool}):`);
-  console.log(`  ${firstLoopCommand(pattern, tool)}`);
+  console.log(`First loop (${legacyTool}):`);
+  console.log(`  ${firstLoopCommand(pattern, legacyTool)}`);
   console.log('');
   console.log(`Estimate cost: npx @cobusgreyling/loop-cost --pattern ${pattern} --level L1`);
   printFoundryCta({
     pattern,
-    tool,
+    tool: legacyTool,
     withFoundry,
     score: auditScore,
     preset: foundryPreset,
   });
   printMemoryCta({
     pattern,
-    tool,
+    tool: legacyTool,
     withMemory,
     score: auditScore,
   });
   printFleetCta({
     pattern,
-    tool,
+    tool: legacyTool,
     withFleet,
     score: auditScore,
   });
