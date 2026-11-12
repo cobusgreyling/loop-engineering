@@ -25,8 +25,6 @@ type Pattern =
   | 'issue-triage'
   | 'thin-loop';
 
-type Tool = 'grok' | 'claude' | 'codex' | 'opencode';
-
 const PATTERN_STARTERS: Record<Pattern, string> = {
   'daily-triage': 'minimal-loop',
   'pr-babysitter': 'pr-babysitter',
@@ -37,16 +35,6 @@ const PATTERN_STARTERS: Record<Pattern, string> = {
   'issue-triage': 'issue-triage',
   'thin-loop': 'thin-loop',
 };
-
-const TOOL_SUFFIX: Record<Tool, string> = {
-  grok: '',
-  claude: '-claude',
-  codex: '-codex',
-  opencode: '-opencode',
-};
-
-/** Patterns with a single tool-agnostic starter (no -claude / -codex suffix). */
-const TOOL_AGNOSTIC = new Set<Pattern>(['thin-loop']);
 
 const L2_PATTERNS = new Set<Pattern>(['ci-sweeper', 'dependency-sweeper']);
 
@@ -508,7 +496,6 @@ async function scaffoldMemory(
 
 function printFoundryCta(opts: {
   pattern: Pattern;
-  tool: Tool;
   withFoundry: boolean;
   score: number | null;
   preset?: FoundryPreset;
@@ -525,7 +512,6 @@ function printFoundryCta(opts: {
 
 function printFleetCta(opts: {
   pattern: Pattern;
-  tool: Tool;
   withFleet: boolean;
   score: number | null;
 }) {
@@ -536,7 +522,6 @@ function printFleetCta(opts: {
 
 function printMemoryCta(opts: {
   pattern: Pattern;
-  tool: Tool;
   withMemory: boolean;
   score: number | null;
 }) {
@@ -576,18 +561,13 @@ async function copyTemplateSkill(
   templatesRoot: string,
   templateFile: string,
   targetDir: string,
-  tool: Tool,
+  skillsDir: string,
+  skillFilename: string,
   skillName: string,
   dryRun: boolean,
 ) {
   const src = path.join(templatesRoot, templateFile);
-  const destByTool: Record<Tool, string> = {
-    grok: path.join(targetDir, '.grok', 'skills', skillName, 'SKILL.md'),
-    claude: path.join(targetDir, '.claude', 'skills', skillName, 'SKILL.md'),
-    codex: path.join(targetDir, '.codex', 'skills', skillName, 'SKILL.md'),
-    opencode: path.join(targetDir, 'skills', skillName, 'SKILL.md'),
-  };
-  const dest = destByTool[tool];
+  const dest = path.join(targetDir, skillsDir, skillName, skillFilename);
   if (await exists(dest)) return;
   await copyFile(src, dest, dryRun);
 }
@@ -595,19 +575,19 @@ async function copyTemplateSkill(
 async function copyTemplateVerifier(
   templatesRoot: string,
   targetDir: string,
-  tool: Tool,
+  skillsDir: string,
+  skillFilename: string,
+  agentsDir: string | null,
+  harnessId: string,
   dryRun: boolean,
 ) {
-  const verifierPaths: Record<Tool, string> = {
-    grok: path.join(targetDir, '.grok', 'skills', 'loop-verifier', 'SKILL.md'),
-    claude: path.join(targetDir, '.claude', 'agents', 'loop-verifier.md'),
-    codex: path.join(targetDir, '.codex', 'agents', 'verifier.toml'),
-    opencode: path.join(targetDir, 'skills', 'loop-verifier', 'SKILL.md'),
-  };
-  const dest = verifierPaths[tool];
-  if (await exists(dest)) return;
-
-  if (tool === 'codex') {
+  // For codex, use TOML format in agents dir; otherwise use SKILL.md in skills dir
+  const isCodex = harnessId === 'codex';
+  
+  if (isCodex && agentsDir !== null) {
+    const dest = path.join(targetDir, agentsDir, 'verifier.toml');
+    if (await exists(dest)) return;
+    
     const src = path.join(templatesRoot, 'SKILL.md.verifier');
     const body = await readFile(src, 'utf8');
     const toml = `name = "loop-verifier"\ndescription = "Independent verification agent for loop-produced changes."\n\n[system_prompt]\ncontent = """\n${body}\n"""\n`;
@@ -621,23 +601,29 @@ async function copyTemplateVerifier(
     return;
   }
 
+  // Default: place as SKILL.md in skills dir
+  const dest = path.join(targetDir, skillsDir, 'loop-verifier', skillFilename);
+  if (await exists(dest)) return;
   const src = path.join(templatesRoot, 'SKILL.md.verifier');
   await copyFile(src, dest, dryRun);
 }
 
 async function copyL2Templates(
   pattern: Pattern,
-  tool: Tool,
   targetDir: string,
   templatesRoot: string,
+  skillsDir: string,
+  skillFilename: string,
+  agentsDir: string | null,
+  harnessId: string,
   dryRun: boolean,
 ) {
   if (!PATTERNS_NEEDING_FIX.has(pattern) && !L2_PATTERNS.has(pattern)) return;
 
-  await copyTemplateSkill(templatesRoot, 'SKILL.md.minimal-fix', targetDir, tool, 'minimal-fix', dryRun);
+  await copyTemplateSkill(templatesRoot, 'SKILL.md.minimal-fix', targetDir, skillsDir, skillFilename, 'minimal-fix', dryRun);
 
   if (L2_PATTERNS.has(pattern) || pattern === 'dependency-sweeper') {
-    await copyTemplateVerifier(templatesRoot, targetDir, tool, dryRun);
+    await copyTemplateVerifier(templatesRoot, targetDir, skillsDir, skillFilename, agentsDir, harnessId, dryRun);
   }
 }
 
@@ -679,14 +665,15 @@ const LEDGER_LEVEL: Record<Pattern, string> = {
  */
 async function scaffoldCircuitBreaker(
   pattern: Pattern,
-  tool: Tool,
   targetDir: string,
   templatesRoot: string,
+  skillsDir: string,
+  skillFilename: string,
   dryRun: boolean,
 ) {
   if (!PATTERNS_NEEDING_FIX.has(pattern)) return;
 
-  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-guard', targetDir, tool, 'loop-guard', dryRun);
+  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-guard', targetDir, skillsDir, skillFilename, 'loop-guard', dryRun);
 
   const ledgerPath = path.join(targetDir, 'loop-ledger.json');
   if (await exists(ledgerPath)) return;
@@ -709,13 +696,14 @@ async function scaffoldCircuitBreaker(
  */
 async function scaffoldIntake(
   pattern: Pattern,
-  tool: Tool,
   targetDir: string,
   templatesRoot: string,
+  skillsDir: string,
+  skillFilename: string,
   dryRun: boolean,
 ) {
   if (!PATTERNS_NEEDING_INTAKE.has(pattern)) return;
-  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-intake', targetDir, tool, 'loop-intake', dryRun);
+  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-intake', targetDir, skillsDir, skillFilename, 'loop-intake', dryRun);
 }
 
 function formatTokenCap(n: number): string {
@@ -757,9 +745,10 @@ npx @cobusgreyling/loop-cost --pattern ${pattern}
 
 async function scaffoldObservability(
   pattern: Pattern,
-  tool: Tool,
   targetDir: string,
   templatesRoot: string,
+  skillsDir: string,
+  skillFilename: string,
   dryRun: boolean,
 ) {
   const budgetPath = path.join(targetDir, 'loop-budget.md');
@@ -780,13 +769,14 @@ async function scaffoldObservability(
     await copyFile(runLogTemplate, runLogPath, dryRun);
   }
 
-  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-budget', targetDir, tool, 'loop-budget', dryRun);
+  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-budget', targetDir, skillsDir, skillFilename, 'loop-budget', dryRun);
 }
 
 async function scaffoldConstraints(
   targetDir: string,
   templatesRoot: string,
-  tool: Tool,
+  skillsDir: string,
+  skillFilename: string,
   dryRun: boolean,
 ) {
   const constraintsPath = path.join(targetDir, 'loop-constraints.md');
@@ -796,7 +786,7 @@ async function scaffoldConstraints(
     await copyFile(constraintsTemplate, constraintsPath, dryRun);
   }
 
-  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-constraints', targetDir, tool, 'loop-constraints', dryRun);
+  await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-constraints', targetDir, skillsDir, skillFilename, 'loop-constraints', dryRun);
 }
 
 async function copyFile(src: string, dest: string, dryRun: boolean) {
@@ -813,8 +803,8 @@ async function copyFile(src: string, dest: string, dryRun: boolean) {
 
 const OPENCODE_RUN = 'opencode run';
 
-function firstLoopCommand(pattern: Pattern, tool: Tool): string {
-  const cmds: Record<Pattern, Record<Tool, string>> = {
+function firstLoopCommand(pattern: Pattern, harnessId: string): string {
+  const cmds: Record<Pattern, Record<string, string>> = {
     'daily-triage': {
       grok: '/loop 1d Run loop-triage. Update STATE.md. No auto-fix in week one.',
       claude: '/loop 1d $loop-triage — update STATE.md. Report-only week one.',
@@ -864,7 +854,8 @@ function firstLoopCommand(pattern: Pattern, tool: Tool): string {
       opencode: 'Commit .github/workflows/thin-loop.yml. The Action is the loop — no STATE.md required.',
     },
   };
-  return cmds[pattern][tool];
+  // Fall back to claude command for unknown harness IDs
+  return cmds[pattern][harnessId] ?? cmds[pattern]['claude'];
 }
 
 async function resolveAuditCli(): Promise<string | null> {
@@ -918,14 +909,6 @@ function formatScoreBar(score: number, width = 20): string {
 function auditTargetArg(target: string, targetDir: string): string {
   return target === '.' ? '.' : targetDir;
 }
-
-/** Map of legacy tool enum values to their canonical harness IDs. */
-const LEGACY_TOOL_TO_HARNESS: Record<string, string> = {
-  grok: 'grok',
-  claude: 'claude',
-  codex: 'codex',
-  opencode: 'opencode',
-};
 
 /**
  * Scaffold using the manifest-driven pipeline.
@@ -996,6 +979,18 @@ async function scaffoldManifestDriven(
     const configCandidate = path.join(contentBase, path.basename(harness.layout.config_file));
     if (await exists(configCandidate)) {
       configFile = path.basename(harness.layout.config_file);
+    }
+  }
+
+  // Copy AGENTS.md from content/ if present (tool-specific AGENTS.md)
+  const agentsMdContent = path.join(contentBase, 'AGENTS.md');
+  if (await exists(agentsMdContent)) {
+    if (dryRun) {
+      console.log(`  would write: AGENTS.md`);
+    } else {
+      const content = await readFile(agentsMdContent, 'utf-8');
+      await writeFile(path.join(targetDir, 'AGENTS.md'), content);
+      console.log(`  created: AGENTS.md`);
     }
   }
 
@@ -1117,34 +1112,18 @@ Examples:
     process.exit(1);
   }
 
-  // Resolve --tool value: try legacy enum first, then harness alias lookup.
-  const validTools = Object.keys(TOOL_SUFFIX) as Tool[];
-  let tool: Tool | null = null;
-  let resolvedHarness: Harness | null = null;
-
-  if (validTools.includes(rawTool as Tool)) {
-    // Legacy path: exact match against known tool enum
-    tool = rawTool as Tool;
-  } else {
-    // New path: resolve through harness alias system
-    try {
-      const harnessId = await resolveHarnessId(rawTool);
-      resolvedHarness = await loadHarness(harnessId);
-
-      // Check if this harness maps back to a legacy tool for backward compat
-      if (LEGACY_TOOL_TO_HARNESS[resolvedHarness.id] && validTools.includes(resolvedHarness.id as Tool)) {
-        // Alias resolved to a legacy tool — use the old path for identical output
-        tool = resolvedHarness.id as Tool;
-        resolvedHarness = null;
-      }
-      // Otherwise, keep resolvedHarness for the manifest-driven path
-    } catch (err) {
-      if (err instanceof HarnessLoadError) {
-        console.error(`Unknown tool: ${rawTool}. Valid: ${validTools.join(', ')} (or a harness ID/alias)`);
-        process.exit(1);
-      }
-      throw err;
+  // Resolve --tool value through harness manifest system.
+  // All tool values (including legacy names like 'claude', 'grok') resolve via aliases.
+  let resolvedHarness: Harness;
+  try {
+    const harnessId = await resolveHarnessId(rawTool);
+    resolvedHarness = await loadHarness(harnessId);
+  } catch (err) {
+    if (err instanceof HarnessLoadError) {
+      console.error(`Unknown tool: ${rawTool}. Use a harness ID or alias (e.g., claude, grok, codex, opencode).`);
+      process.exit(1);
     }
+    throw err;
   }
   const validProviders: ModelProvider[] = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference'];
   if (!validProviders.includes(modelProvider)) {
@@ -1191,219 +1170,32 @@ Examples:
   const startersRoot = await resolveBundledOrMonorepo('starters');
   const templatesRoot = await resolveBundledOrMonorepo('templates');
 
-  // ─── Manifest-driven scaffold path (new) ────────────────────────────────
-  if (resolvedHarness !== null) {
-    const displayTool = resolvedHarness.display_name || resolvedHarness.id;
-    console.log(`\nloop-init: ${pattern} → ${targetDir} (${displayTool})${dryRun ? ' [dry-run]' : ''}\n`);
+  // ─── Manifest-driven scaffold path ──────────────────────────────────────
+  const displayTool = resolvedHarness.display_name || resolvedHarness.id;
+  console.log(`\nloop-init: ${pattern} → ${targetDir} (${displayTool})${dryRun ? ' [dry-run]' : ''}\n`);
 
-    await scaffoldManifestDriven(
-      resolvedHarness,
-      pattern,
-      baseStarter,
-      startersRoot,
-      targetDir,
-      dryRun,
-    );
-
-    // Post-scaffold: observability, circuit breaker, etc. (reuse existing helpers with a synthetic tool)
-    // For the manifest path, we use 'claude' as default for template placement since these are
-    // tool-agnostic templates that get placed via the harness layout.
-    const syntheticTool: Tool = 'claude';
-    if (pattern !== 'thin-loop') {
-      await copyL2Templates(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
-      await scaffoldCircuitBreaker(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
-      await scaffoldObservability(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
-      await scaffoldIntake(pattern, syntheticTool, targetDir, templatesRoot, dryRun);
-      await scaffoldConstraints(targetDir, templatesRoot, syntheticTool, dryRun);
-    }
-
-    // Foundry, memory, fleet (orthogonal passes)
-    let foundryPreset: FoundryPreset | undefined;
-    if (withFoundry) {
-      console.log('');
-      console.log('Harness foundry:');
-      const foundry = await scaffoldFoundry(pattern, targetDir, dryRun, { provider: modelProvider, region, model });
-      foundryPreset = foundry?.preset;
-    }
-    if (withMemory) {
-      console.log('');
-      console.log('Memory engineering:');
-      await scaffoldMemory(targetDir, templatesRoot, dryRun);
-    }
-    if (withFleet) {
-      console.log('');
-      console.log('Fleet engineering:');
-      await scaffoldFleet(targetDir, templatesRoot, dryRun);
-    }
-
-    // Audit
-    const auditArg = auditTargetArg(target, targetDir);
-    let auditScore: number | null = null;
-    if (!dryRun) {
-      const audit = await runAuditSummary(targetDir);
-      if (audit) {
-        auditScore = audit.score;
-        console.log('');
-        console.log(`✓ Loop Ready: ${audit.score}/100 (${audit.level})`);
-        console.log(`  ${formatScoreBar(audit.score)}`);
-        console.log(`  ${audit.assessment}`);
-        console.log('');
-        console.log('Paste badge in README:');
-        console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --badge`);
-      } else {
-        console.log('\n=== Loop Ready score ===');
-        console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --suggest`);
-      }
-    }
-
-    // CTAs
-    if (PATTERNS_NEEDING_FIX.has(pattern)) {
-      console.log('');
-      console.log('Circuit breaker wired (loop-guard skill + loop-ledger.json):');
-      console.log('  npx @cobusgreyling/loop-context --check --ledger loop-ledger.json');
-    }
-    if (PATTERNS_NEEDING_INTAKE.has(pattern)) {
-      console.log('');
-      console.log('Intake wired (loop-intake skill): clarify a vague item or escalate before acting.');
-    }
-    console.log('');
-    console.log(`First loop (${displayTool}):`);
-    console.log(`  ${firstLoopCommand(pattern, 'claude')}`);
-    console.log('');
-    console.log(`Estimate cost: npx @cobusgreyling/loop-cost --pattern ${pattern} --level L1`);
-    printFoundryCta({ pattern, tool: 'claude', withFoundry, score: auditScore, preset: foundryPreset });
-    printMemoryCta({ pattern, tool: 'claude', withMemory, score: auditScore });
-    printFleetCta({ pattern, tool: 'claude', withFleet, score: auditScore });
-    printContributorCta();
-    return;
-  }
-
-  // ─── Legacy tool-enum scaffold path (deprecated) ────────────────────────
-  // At this point tool is guaranteed non-null: manifest-driven path returns early above.
-  const legacyTool = tool!;
-  const suffix = TOOL_AGNOSTIC.has(pattern) ? '' : TOOL_SUFFIX[legacyTool];
-  const starterName = `${baseStarter}${suffix}`;
-  const starterRoot = path.join(startersRoot, starterName);
-
-  // Emit deprecation warning for legacy tool-enum path
-  console.warn(
-    `⚠️  DEPRECATED: The starters/${starterName}/ directory is deprecated and will be removed in a future release.\n` +
-    `   Please migrate to the manifest-based approach: use a harness ID or alias with --tool instead.\n` +
-    `   See docs/adr/0001-generic-agent-harness.md for details.`,
+  await scaffoldManifestDriven(
+    resolvedHarness,
+    pattern,
+    baseStarter,
+    startersRoot,
+    targetDir,
+    dryRun,
   );
 
-  if (!(await exists(starterRoot))) {
-    const fallback = path.join(startersRoot, baseStarter);
-    if (!(await exists(fallback))) {
-      console.error(`Starter not found: ${starterRoot}`);
-      process.exit(1);
-    }
-    console.log(`Note: no ${legacyTool} variant for ${pattern} — using ${baseStarter} (Grok paths)`);
-  }
-
-  const effectiveStarter = (await exists(starterRoot))
-    ? starterRoot
-    : path.join(startersRoot, baseStarter);
-
-  console.log(`\nloop-init: ${pattern} → ${targetDir} (${legacyTool})${dryRun ? ' [dry-run]' : ''}\n`);
-
-  if (legacyTool === 'opencode') {
-    const skillsDir = path.join(effectiveStarter, 'skills');
-    if (await exists(skillsDir)) {
-      const entries = await readDirNames(skillsDir);
-      for (const entry of entries) {
-        await copyDir(
-          path.join(skillsDir, entry),
-          path.join(targetDir, 'skills', entry),
-          dryRun,
-        );
-      }
-    }
-
-    const agentsMd = path.join(effectiveStarter, 'AGENTS.md');
-    if (await exists(agentsMd)) {
-      await copyFile(agentsMd, path.join(targetDir, 'AGENTS.md'), dryRun);
-    }
-
-    const opencodeJson = path.join(effectiveStarter, 'opencode.json.example');
-    if (await exists(opencodeJson)) {
-      await copyFile(opencodeJson, path.join(targetDir, 'opencode.json'), dryRun);
-    }
-  } else {
-    const skillRoots = [
-      path.join(effectiveStarter, '.grok', 'skills'),
-      path.join(effectiveStarter, '.claude', 'skills'),
-      path.join(effectiveStarter, '.codex', 'skills'),
-    ];
-
-    for (const skillsDir of skillRoots) {
-      if (!(await exists(skillsDir))) continue;
-      const toolPrefix = skillsDir.includes('.grok')
-        ? '.grok/skills'
-        : skillsDir.includes('.claude')
-          ? '.claude/skills'
-          : '.codex/skills';
-      const entries = await readDirNames(skillsDir);
-      for (const entry of entries) {
-        await copyDir(
-          path.join(skillsDir, entry),
-          path.join(targetDir, toolPrefix, entry),
-          dryRun,
-        );
-      }
-    }
-
-    const agentFiles = [
-      { src: path.join(effectiveStarter, '.claude', 'agents'), dest: path.join(targetDir, '.claude', 'agents') },
-      { src: path.join(effectiveStarter, '.codex', 'agents'), dest: path.join(targetDir, '.codex', 'agents') },
-    ];
-    for (const { src, dest } of agentFiles) {
-      if (await exists(src)) {
-        const entries = await readDirNames(src);
-        for (const entry of entries) {
-          await copyFile(path.join(src, entry), path.join(dest, entry), dryRun);
-        }
-      }
-    }
-  }
-
-  const stateFile = STATE_FILES[pattern];
-  const stateExample = path.join(effectiveStarter, `${stateFile}.example`);
-  if (await exists(stateExample)) {
-    await copyFile(stateExample, path.join(targetDir, stateFile), dryRun);
-  } else {
-    const alt = path.join(effectiveStarter, 'STATE.md.example');
-    if (await exists(alt)) {
-      await copyFile(alt, path.join(targetDir, stateFile), dryRun);
-    }
-  }
-
-  const loopMd = path.join(effectiveStarter, 'LOOP.md');
-  if (await exists(loopMd)) {
-    await copyFile(loopMd, path.join(targetDir, 'LOOP.md'), dryRun);
-  }
-
-  const wfSrc = path.join(effectiveStarter, '.github', 'workflows');
-  if (await exists(wfSrc)) {
-    const wfEntries = await readDirNames(wfSrc);
-    for (const entry of wfEntries) {
-      if (!entry.endsWith('.yml') && !entry.endsWith('.yaml')) continue;
-      await copyFile(
-        path.join(wfSrc, entry),
-        path.join(targetDir, '.github', 'workflows', entry),
-        dryRun,
-      );
-    }
-  }
-
+  // Post-scaffold: observability, circuit breaker, etc.
+  // Use harness layout for template placement.
+  const { skills_dir: skillsDir, skill_filename: skillFilename, agents_dir: agentsDir } = resolvedHarness.layout;
   if (pattern !== 'thin-loop') {
-    await copyL2Templates(pattern, legacyTool, targetDir, templatesRoot, dryRun);
-    await scaffoldCircuitBreaker(pattern, legacyTool, targetDir, templatesRoot, dryRun);
-    await scaffoldObservability(pattern, legacyTool, targetDir, templatesRoot, dryRun);
-    await scaffoldIntake(pattern, legacyTool, targetDir, templatesRoot, dryRun);
-    await scaffoldConstraints(targetDir, templatesRoot, legacyTool, dryRun);
+    await copyL2Templates(pattern, targetDir, templatesRoot, skillsDir, skillFilename, agentsDir, resolvedHarness.id, dryRun);
+    await scaffoldCircuitBreaker(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
+    await scaffoldObservability(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
+    await scaffoldIntake(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
+    await scaffoldConstraints(targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
   }
-  if (legacyTool !== 'opencode' && pattern !== 'thin-loop' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
+
+  // Create AGENTS.md template if not present (for non-thin-loop patterns)
+  if (pattern !== 'thin-loop' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
     const agentsTemplate = `# AGENTS.md
 
 ## Test commands
@@ -1418,33 +1210,28 @@ npm run lint
     console.log('  created: AGENTS.md (template)');
   }
 
+  // Foundry, memory, fleet (orthogonal passes)
   let foundryPreset: FoundryPreset | undefined;
   if (withFoundry) {
     console.log('');
     console.log('Harness foundry:');
-    const foundry = await scaffoldFoundry(pattern, targetDir, dryRun, {
-      provider: modelProvider,
-      region,
-      model,
-    });
+    const foundry = await scaffoldFoundry(pattern, targetDir, dryRun, { provider: modelProvider, region, model });
     foundryPreset = foundry?.preset;
   }
-
   if (withMemory) {
     console.log('');
     console.log('Memory engineering:');
     await scaffoldMemory(targetDir, templatesRoot, dryRun);
   }
-
   if (withFleet) {
     console.log('');
     console.log('Fleet engineering:');
     await scaffoldFleet(targetDir, templatesRoot, dryRun);
   }
 
+  // Audit
   const auditArg = auditTargetArg(target, targetDir);
   let auditScore: number | null = null;
-
   if (!dryRun) {
     const audit = await runAuditSummary(targetDir);
     if (audit) {
@@ -1462,41 +1249,24 @@ npm run lint
     }
   }
 
+  // CTAs
   if (PATTERNS_NEEDING_FIX.has(pattern)) {
     console.log('');
     console.log('Circuit breaker wired (loop-guard skill + loop-ledger.json):');
     console.log('  npx @cobusgreyling/loop-context --check --ledger loop-ledger.json');
   }
-
   if (PATTERNS_NEEDING_INTAKE.has(pattern)) {
     console.log('');
     console.log('Intake wired (loop-intake skill): clarify a vague item or escalate before acting.');
   }
-
   console.log('');
-  console.log(`First loop (${legacyTool}):`);
-  console.log(`  ${firstLoopCommand(pattern, legacyTool)}`);
+  console.log(`First loop (${displayTool}):`);
+  console.log(`  ${firstLoopCommand(pattern, resolvedHarness.id)}`);
   console.log('');
   console.log(`Estimate cost: npx @cobusgreyling/loop-cost --pattern ${pattern} --level L1`);
-  printFoundryCta({
-    pattern,
-    tool: legacyTool,
-    withFoundry,
-    score: auditScore,
-    preset: foundryPreset,
-  });
-  printMemoryCta({
-    pattern,
-    tool: legacyTool,
-    withMemory,
-    score: auditScore,
-  });
-  printFleetCta({
-    pattern,
-    tool: legacyTool,
-    withFleet,
-    score: auditScore,
-  });
+  printFoundryCta({ pattern, withFoundry, score: auditScore, preset: foundryPreset });
+  printMemoryCta({ pattern, withMemory, score: auditScore });
+  printFleetCta({ pattern, withFleet, score: auditScore });
   printContributorCta();
 }
 
