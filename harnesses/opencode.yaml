@@ -1,0 +1,21 @@
+id: opencode
+display_name: OpenCode
+version: "1.0"
+
+layout:
+  skills_dir: skills
+  skill_filename: SKILL.md
+  agents_dir: null
+  config_file: opencode.json
+
+capabilities:
+  shell: true
+  file_write: true
+  skill_read: true
+  worktree: false
+  sub_agent: false
+  scheduling: none
+  mcp: true
+
+aliases:
+  - opencode

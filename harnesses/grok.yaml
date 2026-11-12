@@ -1,0 +1,21 @@
+id: grok
+display_name: Grok
+version: "1.0"
+
+layout:
+  skills_dir: .grok/skills
+  skill_filename: SKILL.md
+  agents_dir: null
+  config_file: null
+
+capabilities:
+  shell: true
+  file_write: true
+  skill_read: true
+  worktree: false
+  sub_agent: false
+  scheduling: none
+  mcp: false
+
+aliases:
+  - grok

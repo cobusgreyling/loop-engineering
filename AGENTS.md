@@ -45,3 +45,13 @@ cd tools/loop && npm test && node dist/cli.js doctor ../..
 cd tools/loop-audit && npm run build && node dist/cli.js ../../
 bash scripts/before-after-demo.sh
 ```
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context layout: one root `GLOSSARY.md` plus `docs/adr/`. See `docs/agents/domain.md`.

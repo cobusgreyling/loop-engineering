@@ -1,0 +1,5 @@
+id: ci-sweeper
+required_capabilities:
+  - shell
+  - file_write
+  - skill_read

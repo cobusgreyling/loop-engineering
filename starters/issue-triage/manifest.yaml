@@ -1,0 +1,5 @@
+id: issue-triage
+required_capabilities:
+  - shell
+  - file_write
+  - skill_read

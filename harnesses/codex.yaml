@@ -1,0 +1,22 @@
+id: codex
+display_name: OpenAI Codex
+version: "1.0"
+
+layout:
+  skills_dir: .codex/skills
+  skill_filename: SKILL.md
+  agents_dir: .codex/agents
+  config_file: null
+
+capabilities:
+  shell: true
+  file_write: true
+  skill_read: true
+  worktree: false
+  sub_agent: true
+  scheduling: none
+  mcp: false
+
+aliases:
+  - codex
+  - openai-codex

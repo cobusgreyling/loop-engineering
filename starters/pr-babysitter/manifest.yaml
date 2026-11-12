@@ -1,0 +1,6 @@
+id: pr-babysitter
+required_capabilities:
+  - shell
+  - file_write
+  - skill_read
+  - worktree

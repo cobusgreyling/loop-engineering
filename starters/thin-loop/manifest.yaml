@@ -1,0 +1,5 @@
+id: thin-loop
+required_capabilities:
+  - shell
+  - file_write
+  - skill_read

@@ -50,7 +50,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@cobusgreyling/loop-audit": "^1.7.0"
+    "@cobusgreyling/loop-audit": "^1.7.0",
+    "@types/js-yaml": "^4.0.9",
+    "js-yaml": "^5.5.0",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@types/node": "^26.0.0",

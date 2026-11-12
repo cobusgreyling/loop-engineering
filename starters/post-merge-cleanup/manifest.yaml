@@ -1,0 +1,5 @@
+id: post-merge-cleanup
+required_capabilities:
+  - shell
+  - file_write
+  - skill_read

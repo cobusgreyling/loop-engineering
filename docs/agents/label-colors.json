@@ -1,0 +1,13 @@
+{
+  "bug": "d73a4a",
+  "needs-triage": "fbca04",
+  "needs-info": "5319e7",
+  "ready-for-agent": "0e8a16",
+  "ready-for-human": "b60205",
+  "wontfix": "ffffff",
+  "wayfinder:map": "8b5cf6",
+  "wayfinder:research": "0ea5e9",
+  "wayfinder:prototype": "f59e0b",
+  "wayfinder:grilling": "9d7cd8",
+  "wayfinder:task": "10b981"
+}

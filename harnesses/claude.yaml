@@ -1,0 +1,22 @@
+id: claude
+display_name: Claude Code
+version: "1.0"
+
+layout:
+  skills_dir: .claude/skills
+  skill_filename: SKILL.md
+  agents_dir: .claude/agents
+  config_file: null
+
+capabilities:
+  shell: true
+  file_write: true
+  skill_read: true
+  worktree: true
+  sub_agent: true
+  scheduling: none
+  mcp: true
+
+aliases:
+  - claude
+  - claude-code
