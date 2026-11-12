@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Harness manifest schema and loader)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Mapper function accepts Harness layout + content base path, returns array of {source, target} mappings
 - [ ] Skills mapped to harness.layout.skills_dir with harness.layout.skill_filename convention

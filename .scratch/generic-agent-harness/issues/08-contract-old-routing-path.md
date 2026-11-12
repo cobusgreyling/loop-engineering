@@ -4,7 +4,7 @@
 
 **Blocked by:** 06 (Dynamic test matrix generation), 07 (Legacy starter deprecation notices)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Old tool-enum switch/case logic removed from cli.ts
 - [ ] Legacy starters/*-claude, *-codex, *-opencode directories deleted

@@ -4,7 +4,7 @@
 
 **Blocked by:** 05 (Scaffold pipeline integration)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Deprecation warning printed to stderr when legacy starter directory is used
 - [ ] Warning message names the deprecated path and points to the new manifest-based approach

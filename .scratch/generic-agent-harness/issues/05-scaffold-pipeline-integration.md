@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 (Capability checker with fail-fast), 04 (Content-to-layout file mapper)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] CLI resolves --tool value through alias lookup to harness manifest
 - [ ] New manifest-driven scaffold path integrated alongside existing tool-enum path

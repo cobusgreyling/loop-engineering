@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Harness manifest schema and loader), 02 (Pattern manifest schema and loader)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Checker function accepts Harness + PatternManifest, returns success or structured error
 - [ ] Error message names each missing capability and the requiring pattern

@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Harness manifest YAML schema defined with fields: id, display_name, version, layout (skills_dir, skill_filename, agents_dir, config_file), capabilities (shell, file_write, skill_read, worktree, sub_agent, scheduling, mcp), aliases
 - [ ] Loader function parses YAML into typed Harness object with validation

@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Pattern manifest YAML schema defined with fields: id, required_capabilities (list of capability names), optional metadata
 - [ ] Loader function parses YAML into typed PatternManifest object with validation

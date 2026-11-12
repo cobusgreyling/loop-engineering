@@ -4,7 +4,7 @@
 
 **Blocked by:** 05 (Scaffold pipeline integration)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Test runner discovers all harness manifests and pattern manifests at runtime
 - [ ] Positive test generated for each satisfied capability pair
