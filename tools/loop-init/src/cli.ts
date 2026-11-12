@@ -1278,12 +1278,19 @@ Examples:
     return;
   }
 
-  // ─── Legacy tool-enum scaffold path (unchanged) ─────────────────────────
+  // ─── Legacy tool-enum scaffold path (deprecated) ────────────────────────
   // At this point tool is guaranteed non-null: manifest-driven path returns early above.
   const legacyTool = tool!;
   const suffix = TOOL_AGNOSTIC.has(pattern) ? '' : TOOL_SUFFIX[legacyTool];
   const starterName = `${baseStarter}${suffix}`;
   const starterRoot = path.join(startersRoot, starterName);
+
+  // Emit deprecation warning for legacy tool-enum path
+  console.warn(
+    `⚠️  DEPRECATED: The starters/${starterName}/ directory is deprecated and will be removed in a future release.\n` +
+    `   Please migrate to the manifest-based approach: use a harness ID or alias with --tool instead.\n` +
+    `   See docs/adr/0001-generic-agent-harness.md for details.`,
+  );
 
   if (!(await exists(starterRoot))) {
     const fallback = path.join(startersRoot, baseStarter);

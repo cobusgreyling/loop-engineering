@@ -15,7 +15,7 @@
   "scripts": {
     "bundle": "node scripts/bundle-assets.mjs",
     "build": "npm run bundle && tsc",
-    "test": "npm run build && node --test test/cli.test.mjs",
+    "test": "npm run build && node --test test/cli.test.mjs test/matrix/dynamic-matrix.test.mjs",
     "prepublishOnly": "npm test",
     "start": "node dist/cli.js"
   },
