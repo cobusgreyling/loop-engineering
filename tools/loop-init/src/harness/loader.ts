@@ -56,12 +56,19 @@ function validateLayout(raw: unknown, harnessId: string): HarnessLayout {
       throw new HarnessLoadError(harnessId, `layout missing required field "${field}"`);
     }
   }
-  return {
+  const result: HarnessLayout = {
     skills_dir: String(obj.skills_dir),
     skill_filename: String(obj.skill_filename),
     agents_dir: obj.agents_dir === null ? null : String(obj.agents_dir),
     config_file: obj.config_file === null ? null : String(obj.config_file),
   };
+
+  // Pass through optional custom extension point (Spec §36)
+  if ('custom' in obj && obj.custom !== null && typeof obj.custom === 'object') {
+    result.custom = obj.custom as Record<string, unknown>;
+  }
+
+  return result;
 }
 
 function validateCapabilities(raw: unknown, harnessId: string): HarnessCapabilities {

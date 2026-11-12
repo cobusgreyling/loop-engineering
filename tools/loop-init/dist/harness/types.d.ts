@@ -19,6 +19,8 @@ export interface HarnessLayout {
     agents_dir: string | null;
     /** Harness main config file path, or null if none. */
     config_file: string | null;
+    /** Optional extension point for non-standard conventions (Spec §36). */
+    custom?: Record<string, unknown>;
 }
 /** Capability declarations for a harness. */
 export interface HarnessCapabilities {

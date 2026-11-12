@@ -438,18 +438,18 @@ async function resolveBundledOrMonorepo(name) {
         return bundled;
     return name === 'starters' ? MONOREPO_STARTERS : MONOREPO_TEMPLATES;
 }
-async function copyTemplateSkill(templatesRoot, templateFile, targetDir, skillsDir, skillFilename, skillName, dryRun) {
+async function copyTemplateSkill(templatesRoot, templateFile, targetDir, paths, skillName, dryRun) {
     const src = path.join(templatesRoot, templateFile);
-    const dest = path.join(targetDir, skillsDir, skillName, skillFilename);
+    const dest = path.join(targetDir, paths.skillsDir, skillName, paths.skillFilename);
     if (await exists(dest))
         return;
     await copyFile(src, dest, dryRun);
 }
-async function copyTemplateVerifier(templatesRoot, targetDir, skillsDir, skillFilename, agentsDir, harnessId, dryRun) {
+async function copyTemplateVerifier(templatesRoot, targetDir, paths, dryRun) {
     // For codex, use TOML format in agents dir; otherwise use SKILL.md in skills dir
-    const isCodex = harnessId === 'codex';
-    if (isCodex && agentsDir !== null) {
-        const dest = path.join(targetDir, agentsDir, 'verifier.toml');
+    const isCodex = paths.harnessId === 'codex';
+    if (isCodex && paths.agentsDir !== null) {
+        const dest = path.join(targetDir, paths.agentsDir, 'verifier.toml');
         if (await exists(dest))
             return;
         const src = path.join(templatesRoot, 'SKILL.md.verifier');
@@ -465,18 +465,18 @@ async function copyTemplateVerifier(templatesRoot, targetDir, skillsDir, skillFi
         return;
     }
     // Default: place as SKILL.md in skills dir
-    const dest = path.join(targetDir, skillsDir, 'loop-verifier', skillFilename);
+    const dest = path.join(targetDir, paths.skillsDir, 'loop-verifier', paths.skillFilename);
     if (await exists(dest))
         return;
     const src = path.join(templatesRoot, 'SKILL.md.verifier');
     await copyFile(src, dest, dryRun);
 }
-async function copyL2Templates(pattern, targetDir, templatesRoot, skillsDir, skillFilename, agentsDir, harnessId, dryRun) {
+async function copyL2Templates(pattern, targetDir, templatesRoot, paths, dryRun) {
     if (!PATTERNS_NEEDING_FIX.has(pattern) && !L2_PATTERNS.has(pattern))
         return;
-    await copyTemplateSkill(templatesRoot, 'SKILL.md.minimal-fix', targetDir, skillsDir, skillFilename, 'minimal-fix', dryRun);
+    await copyTemplateSkill(templatesRoot, 'SKILL.md.minimal-fix', targetDir, paths, 'minimal-fix', dryRun);
     if (L2_PATTERNS.has(pattern) || pattern === 'dependency-sweeper') {
-        await copyTemplateVerifier(templatesRoot, targetDir, skillsDir, skillFilename, agentsDir, harnessId, dryRun);
+        await copyTemplateVerifier(templatesRoot, targetDir, paths, dryRun);
     }
 }
 /** Per-pattern goal seeded into loop-ledger.json for the circuit breaker. */
@@ -513,10 +513,10 @@ const LEDGER_LEVEL = {
  * Report-only patterns (daily-triage, issue-triage, changelog-drafter) don't
  * retry fixes, so they skip this to keep the scaffold minimal.
  */
-async function scaffoldCircuitBreaker(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun) {
+async function scaffoldCircuitBreaker(pattern, targetDir, templatesRoot, paths, dryRun) {
     if (!PATTERNS_NEEDING_FIX.has(pattern))
         return;
-    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-guard', targetDir, skillsDir, skillFilename, 'loop-guard', dryRun);
+    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-guard', targetDir, paths, 'loop-guard', dryRun);
     const ledgerPath = path.join(targetDir, 'loop-ledger.json');
     if (await exists(ledgerPath))
         return;
@@ -532,10 +532,10 @@ async function scaffoldCircuitBreaker(pattern, targetDir, templatesRoot, skillsD
  * Scaffold the loop-intake skill for patterns that receive ambiguous human
  * input, so the loop sharpens the goal (or escalates) before acting on it.
  */
-async function scaffoldIntake(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun) {
+async function scaffoldIntake(pattern, targetDir, templatesRoot, paths, dryRun) {
     if (!PATTERNS_NEEDING_INTAKE.has(pattern))
         return;
-    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-intake', targetDir, skillsDir, skillFilename, 'loop-intake', dryRun);
+    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-intake', targetDir, paths, 'loop-intake', dryRun);
 }
 function formatTokenCap(n) {
     if (n >= 1_000_000)
@@ -574,7 +574,7 @@ npx @cobusgreyling/loop-cost --pattern ${pattern}
 \`\`\`
 `;
 }
-async function scaffoldObservability(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun) {
+async function scaffoldObservability(pattern, targetDir, templatesRoot, paths, dryRun) {
     const budgetPath = path.join(targetDir, 'loop-budget.md');
     const runLogTemplate = path.join(templatesRoot, 'loop-run-log.md.template');
     const runLogPath = path.join(targetDir, 'loop-run-log.md');
@@ -591,15 +591,15 @@ async function scaffoldObservability(pattern, targetDir, templatesRoot, skillsDi
     if (!(await exists(runLogPath))) {
         await copyFile(runLogTemplate, runLogPath, dryRun);
     }
-    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-budget', targetDir, skillsDir, skillFilename, 'loop-budget', dryRun);
+    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-budget', targetDir, paths, 'loop-budget', dryRun);
 }
-async function scaffoldConstraints(targetDir, templatesRoot, skillsDir, skillFilename, dryRun) {
+async function scaffoldConstraints(targetDir, templatesRoot, paths, dryRun) {
     const constraintsPath = path.join(targetDir, 'loop-constraints.md');
     const constraintsTemplate = path.join(templatesRoot, 'loop-constraints.md');
     if (!(await exists(constraintsPath)) && (await exists(constraintsTemplate))) {
         await copyFile(constraintsTemplate, constraintsPath, dryRun);
     }
-    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-constraints', targetDir, skillsDir, skillFilename, 'loop-constraints', dryRun);
+    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-constraints', targetDir, paths, 'loop-constraints', dryRun);
 }
 async function copyFile(src, dest, dryRun) {
     if (!(await exists(src)))
@@ -901,6 +901,12 @@ Examples:
     let resolvedHarness;
     try {
         const harnessId = await resolveHarnessId(rawTool);
+        // Emit deprecation warning for legacy tool names (ticket 07 restoration).
+        // Legacy names are the original short --tool values that predate the harness system.
+        const LEGACY_TOOL_NAMES = new Set(['claude', 'grok', 'codex', 'opencode']);
+        if (LEGACY_TOOL_NAMES.has(rawTool)) {
+            console.warn(`⚠️  Note: '--tool ${rawTool}' is a legacy alias. Prefer '--tool ${harnessId}' or the harness ID directly.`);
+        }
         resolvedHarness = await loadHarness(harnessId);
     }
     catch (err) {
@@ -961,13 +967,18 @@ Examples:
     await scaffoldManifestDriven(resolvedHarness, pattern, baseStarter, startersRoot, targetDir, dryRun);
     // Post-scaffold: observability, circuit breaker, etc.
     // Use harness layout for template placement.
-    const { skills_dir: skillsDir, skill_filename: skillFilename, agents_dir: agentsDir } = resolvedHarness.layout;
+    const resolvedPaths = {
+        skillsDir: resolvedHarness.layout.skills_dir,
+        skillFilename: resolvedHarness.layout.skill_filename,
+        agentsDir: resolvedHarness.layout.agents_dir,
+        harnessId: resolvedHarness.id,
+    };
     if (pattern !== 'thin-loop') {
-        await copyL2Templates(pattern, targetDir, templatesRoot, skillsDir, skillFilename, agentsDir, resolvedHarness.id, dryRun);
-        await scaffoldCircuitBreaker(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
-        await scaffoldObservability(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
-        await scaffoldIntake(pattern, targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
-        await scaffoldConstraints(targetDir, templatesRoot, skillsDir, skillFilename, dryRun);
+        await copyL2Templates(pattern, targetDir, templatesRoot, resolvedPaths, dryRun);
+        await scaffoldCircuitBreaker(pattern, targetDir, templatesRoot, resolvedPaths, dryRun);
+        await scaffoldObservability(pattern, targetDir, templatesRoot, resolvedPaths, dryRun);
+        await scaffoldIntake(pattern, targetDir, templatesRoot, resolvedPaths, dryRun);
+        await scaffoldConstraints(targetDir, templatesRoot, resolvedPaths, dryRun);
     }
     // Create AGENTS.md template if not present (for non-thin-loop patterns)
     if (pattern !== 'thin-loop' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
