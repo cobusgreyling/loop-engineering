@@ -23,6 +23,29 @@ async function gitRaw(args, cwd) {
     });
 }
 /**
+ * Ask the sandboxed command to stop and wait until it is actually gone.
+ *
+ * `kill()` only sends the signal. On Windows a live child keeps its working
+ * directory open, so `git worktree remove --force` fails and leaves the
+ * `sandbox-*` directory behind. Resolves after the child closes, or after
+ * `graceMs` once SIGKILL has been sent.
+ */
+async function stopChild(child, graceMs = 5000) {
+    if (child.exitCode !== null || child.signalCode !== null)
+        return;
+    await new Promise((resolve) => {
+        const timer = setTimeout(() => {
+            child.kill('SIGKILL');
+            resolve();
+        }, graceMs);
+        child.once('close', () => {
+            clearTimeout(timer);
+            resolve();
+        });
+        child.kill();
+    });
+}
+/**
  * Wraps an agent command in a temporary git worktree sandbox.
  * Returns the patch file path if changes were made.
  */
@@ -46,6 +69,7 @@ export async function runInSandbox(root, command, args, options = {}) {
     const lockRequested = Boolean(options.lockPaths && options.lockPaths.length > 0);
     let worktreeAbsPath = null;
     let extractionFailed = false;
+    let interrupted = false;
     let activeChild = null;
     // Cleanup must run on every exit path, including Ctrl+C mid-run, and
     // exactly once even if a signal lands twice: the previous shape re-invoked
@@ -61,8 +85,11 @@ export async function runInSandbox(root, command, args, options = {}) {
             cleanupPromise = (async () => {
                 // Stop the sandboxed command first so it can't keep writing into the
                 // worktree (or racing the lock's protected paths) after cleanup has
-                // started tearing things down around it.
-                activeChild?.kill();
+                // started tearing things down around it. Wait for it to exit: on
+                // Windows the live child holds its cwd open and blocks worktree removal.
+                if (activeChild) {
+                    await stopChild(activeChild);
+                }
                 // Release the lock before worktree teardown: it's the resource other
                 // loops are blocked on, and a slow worktree removal shouldn't delay
                 // it. Logged only once we know a lock (or stray wait file) actually
@@ -103,6 +130,12 @@ export async function runInSandbox(root, command, args, options = {}) {
         return cleanupPromise;
     };
     const sigHandler = () => {
+        // Cleanup runs concurrently with the normal path once the killed command
+        // closes. Mark the run as interrupted so the normal path stops before it
+        // touches git again -- otherwise `git add -A` races the worktree removal
+        // and leaves both a broken patch extraction and, on Windows, a worktree
+        // that can't be deleted.
+        interrupted = true;
         cleanup().finally(() => process.exit(1));
     };
     process.on('SIGINT', sigHandler);
@@ -171,6 +204,11 @@ export async function runInSandbox(root, command, args, options = {}) {
         catch (err) {
             console.error(`❌ Execution failed inside sandbox:`, err);
             exitCode = 1;
+        }
+        if (interrupted) {
+            // A signal took over: cleanup() owns the worktree and the lock now, so
+            // do not scan, extract, or emit a patch from a worktree being removed.
+            return { runId, patchFile: null, exitCode, hasChanges: false };
         }
         console.log(`\n🔍 Scanning sandbox for changes...`);
         // 4. Extract diff as a patch
