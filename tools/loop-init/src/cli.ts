@@ -105,10 +105,10 @@ const FOUNDRY_SHOWCASE =
 /**
  * Model providers selectable for the implementer preset's `interface` layer.
  * The implementer stack defaults to the existing primitive; `minimax`,
- * `orcarouter` and `cheaperinference` emit their own provider primitive with
+ * `orcarouter`, `cheaperinference` and `api-route` emit their own provider primitive with
  * endpoints and model options instead.
  */
-type ModelProvider = 'anthropic' | 'minimax' | 'orcarouter' | 'cheaperinference';
+type ModelProvider = 'anthropic' | 'minimax' | 'orcarouter' | 'cheaperinference' | 'api-route';
 
 type MiniMaxRegion = 'global_en' | 'cn_zh';
 
@@ -272,6 +272,19 @@ ${models}
             docs_root: https://cheaperinference.com/docs`;
 }
 
+const API_ROUTE_DEFAULT_MODEL = 'gpt-6.1-sol';
+
+/** Render API Route's OpenAI-compatible interface without a static model catalog. */
+function apiRouteInterfaceYaml(model: string): string {
+  return `    - primitive: model/api-route
+      config:
+        model: ${JSON.stringify(model)}
+        endpoints:
+          global:
+            openai_base_url: https://global.api-route.com/v1
+            docs_root: https://www.api-route.com`;
+}
+
 /** Render the `model/minimax` interface primitive for the implementer stack. */
 function minimaxInterfaceYaml(model: string, region: MiniMaxRegion): string {
   const models = MINIMAX_MODELS.map((m) =>
@@ -354,7 +367,9 @@ function foundryStackYaml(
           ? orcarouterInterfaceYaml(model)
           : provider === 'cheaperinference'
             ? cheaperinferenceInterfaceYaml(model)
-            : `    - primitive: model/anthropic
+            : provider === 'api-route'
+              ? apiRouteInterfaceYaml(model)
+              : `    - primitive: model/anthropic
       config:
         model: claude-sonnet-4-6`;
     return `name: ${stackName}
@@ -939,9 +954,9 @@ Options:
   --with-foundry    Also scaffold .foundry/ stack (harness-foundry runtime)
   --with-memory     Also scaffold memory-engineering tiers and budget
   --with-fleet      Also scaffold fleet-engineering registry and inbox
-  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference)
+  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference, api-route)
   --region          MiniMax region when --model-provider minimax (global_en, cn_zh)
-  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini)
+  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference/api-route (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini / gpt-6.1-sol)
   --dry-run         Print actions without copying
   -h, --help        This help
 
@@ -958,6 +973,7 @@ Examples:
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference --model claude-sonnet-5
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t codex --with-foundry --model-provider api-route
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
   npx @cobusgreyling/loop-init . --with-memory
   npx @cobusgreyling/loop-init . --with-fleet
@@ -977,7 +993,7 @@ Examples:
     console.error(`Unknown tool: ${tool}. Valid: ${validTools.join(', ')}`);
     process.exit(1);
   }
-  const validProviders: ModelProvider[] = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference'];
+  const validProviders: ModelProvider[] = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference', 'api-route'];
   if (!validProviders.includes(modelProvider)) {
     console.error(`Unknown model provider: ${modelProvider}. Valid: ${validProviders.join(', ')}`);
     process.exit(1);
@@ -1014,6 +1030,14 @@ Examples:
         console.error(`Unknown model: ${model}. Valid: ${CHEAPERINFERENCE_MODEL_IDS.join(', ')}`);
         process.exit(1);
       }
+    }
+  }
+
+  if (modelProvider === 'api-route') {
+    if (!process.argv.slice(2).includes('--model')) model = API_ROUTE_DEFAULT_MODEL;
+    if (!model?.trim()) {
+      console.error('API Route requires a non-empty --model value.');
+      process.exit(1);
     }
   }
 
