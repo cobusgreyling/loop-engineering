@@ -40,7 +40,7 @@ Every `loop-init` run prints a Foundry CTA; when Loop Ready is **≥ 80**, the C
 
 ### Interface provider (implementer preset)
 
-The `implementer` preset defaults to the built-in interface primitive. Pass `--model-provider minimax` to emit a `model/minimax` provider primitive instead, `--model-provider orcarouter` to emit a `model/orcarouter` provider primitive, or `--model-provider cheaperinference` to emit a `model/cheaperinference` provider primitive. The generated stack always carries the provider endpoints and model options, so you can switch provider/model without regenerating:
+The `implementer` preset defaults to the built-in interface primitive. Pass `--model-provider minimax` to emit a `model/minimax` provider primitive instead, `--model-provider orcarouter` to emit a `model/orcarouter` provider primitive, `--model-provider cheaperinference` to emit a `model/cheaperinference` provider primitive, or `--model-provider opper` to emit a `model/opper` provider primitive. The generated stack always carries the provider endpoints and model options, so you can switch provider/model without regenerating:
 
 ```bash
 npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
@@ -49,15 +49,17 @@ npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-pr
 npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
 npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference
 npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference --model claude-sonnet-5
+npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider opper
+npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider opper --model gpt-5.5
 ```
 
 | Flag | Values | Default |
 |------|--------|---------|
-| `--model-provider` | `anthropic`, `minimax`, `orcarouter`, `cheaperinference` | `anthropic` |
+| `--model-provider` | `anthropic`, `minimax`, `orcarouter`, `cheaperinference`, `opper` | `anthropic` |
 | `--region` | `global_en`, `cn_zh` | `global_en` |
-| `--model` | `MiniMax-M3`, `MiniMax-M2.7`, `orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`, `gpt-5.4-mini`, `gpt-5.4`, `claude-sonnet-5`, `gemini-3.1-pro`, `deepseek-v4-flash`, `glm-5.3` | `MiniMax-M3` / `orcarouter/fusion` / `gpt-5.4-mini` |
+| `--model` | `MiniMax-M3`, `MiniMax-M2.7`, `orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`, `gpt-5.4-mini`, `gpt-5.4`, `claude-sonnet-5`, `gemini-3.1-pro`, `deepseek-v4-flash`, `glm-5.3`, `claude-sonnet-4-6`, `claude-opus-5`, `gpt-5.5`, `gemini-3.8-flash`, `deepseek-v4-pro`, `kimi-k3` | `MiniMax-M3` / `orcarouter/fusion` / `gpt-5.4-mini` / `claude-sonnet-4-6` |
 
-MiniMax model options and both endpoints (`global_en` → `https://api.minimax.io`, `cn_zh` → `https://api.minimaxi.com`) are written into `.foundry/stack.yaml`. The OrcaRouter provider writes the gateway's OpenAI- and Anthropic-compatible endpoints (`https://api.orcarouter.ai`) plus its routing model options (`orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`). The Cheaper Inference provider writes the gateway's OpenAI-compatible (`https://api.cheaperinference.com/v1`) and Anthropic-compatible (`https://api.cheaperinference.com`) endpoints plus its model options. Set `CHEAPER_INFERENCE_API_KEY` to a key from [cheaperinference.com/signup](https://cheaperinference.com/signup).
+MiniMax model options and both endpoints (`global_en` → `https://api.minimax.io`, `cn_zh` → `https://api.minimaxi.com`) are written into `.foundry/stack.yaml`. The OrcaRouter provider writes the gateway's OpenAI- and Anthropic-compatible endpoints (`https://api.orcarouter.ai`) plus its routing model options (`orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`). The Cheaper Inference provider writes the gateway's OpenAI-compatible (`https://api.cheaperinference.com/v1`) and Anthropic-compatible (`https://api.cheaperinference.com`) endpoints plus its model options. Set `CHEAPER_INFERENCE_API_KEY` to a key from [cheaperinference.com/signup](https://cheaperinference.com/signup). The Opper provider writes Opper's base URL (`https://api.opper.ai/v3/compat`), which serves both the OpenAI- and Anthropic-compatible APIs, plus pool model options such as `claude-sonnet-4-6` and `gpt-5.5` that Opper routes across providers. Set `OPPER_API_KEY` to a key from [platform.opper.ai](https://platform.opper.ai).
 
 ## Patterns
 

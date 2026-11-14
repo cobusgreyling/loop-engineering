@@ -105,10 +105,10 @@ const FOUNDRY_SHOWCASE =
 /**
  * Model providers selectable for the implementer preset's `interface` layer.
  * The implementer stack defaults to the existing primitive; `minimax`,
- * `orcarouter` and `cheaperinference` emit their own provider primitive with
- * endpoints and model options instead.
+ * `orcarouter`, `cheaperinference` and `opper` emit their own provider
+ * primitive with endpoints and model options instead.
  */
-type ModelProvider = 'anthropic' | 'minimax' | 'orcarouter' | 'cheaperinference';
+type ModelProvider = 'anthropic' | 'minimax' | 'orcarouter' | 'cheaperinference' | 'opper';
 
 type MiniMaxRegion = 'global_en' | 'cn_zh';
 
@@ -272,6 +272,48 @@ ${models}
             docs_root: https://cheaperinference.com/docs`;
 }
 
+const OPPER_DEFAULT_MODEL = 'claude-sonnet-4-6';
+const OPPER_BASE_URL = 'https://api.opper.ai/v3/compat';
+
+const OPPER_MODELS = [
+  { id: 'claude-sonnet-4-6', contextWindow: 1_000_000, notes: 'Anthropic' },
+  { id: 'claude-opus-5', contextWindow: 1_000_000, notes: 'Anthropic' },
+  { id: 'gpt-5.5', contextWindow: 1_050_000, notes: 'OpenAI' },
+  { id: 'gpt-5.4-mini', contextWindow: 400_000, notes: 'OpenAI' },
+  { id: 'gemini-3.8-flash', contextWindow: 1_048_576, notes: 'Google' },
+  { id: 'deepseek-v4-pro', contextWindow: 1_048_576, notes: 'DeepSeek' },
+  { id: 'kimi-k3', contextWindow: 1_048_576, notes: 'Moonshot AI' },
+];
+
+const OPPER_MODEL_IDS = OPPER_MODELS.map((m) => m.id);
+
+/**
+ * Render the `model/opper` interface primitive for the implementer stack.
+ * Opper is an OpenAI-compatible AI gateway; bare model ids are pools that
+ * Opper routes across providers. The same base URL serves the Anthropic
+ * Messages API; Anthropic clients append `/v1/messages` to it.
+ */
+function opperInterfaceYaml(model: string): string {
+  const models = OPPER_MODELS.map((m) =>
+    [
+      `          - id: ${m.id}`,
+      `            context_window: ${m.contextWindow}`,
+      `            notes: "${m.notes}"`,
+    ].join('\n'),
+  ).join('\n');
+
+  return `    - primitive: model/opper
+      config:
+        model: ${model}
+        models:
+${models}
+        endpoints:
+          global:
+            openai_base_url: ${OPPER_BASE_URL}
+            anthropic_base_url: ${OPPER_BASE_URL}
+            docs_root: https://docs.opper.ai`;
+}
+
 /** Render the `model/minimax` interface primitive for the implementer stack. */
 function minimaxInterfaceYaml(model: string, region: MiniMaxRegion): string {
   const models = MINIMAX_MODELS.map((m) =>
@@ -354,7 +396,9 @@ function foundryStackYaml(
           ? orcarouterInterfaceYaml(model)
           : provider === 'cheaperinference'
             ? cheaperinferenceInterfaceYaml(model)
-            : `    - primitive: model/anthropic
+            : provider === 'opper'
+              ? opperInterfaceYaml(model)
+              : `    - primitive: model/anthropic
       config:
         model: claude-sonnet-4-6`;
     return `name: ${stackName}
@@ -939,9 +983,9 @@ Options:
   --with-foundry    Also scaffold .foundry/ stack (harness-foundry runtime)
   --with-memory     Also scaffold memory-engineering tiers and budget
   --with-fleet      Also scaffold fleet-engineering registry and inbox
-  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference)
+  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference, opper)
   --region          MiniMax region when --model-provider minimax (global_en, cn_zh)
-  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini)
+  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference/opper (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini / claude-sonnet-4-6)
   --dry-run         Print actions without copying
   -h, --help        This help
 
@@ -958,6 +1002,7 @@ Examples:
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference --model claude-sonnet-5
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider opper --model gpt-5.5
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
   npx @cobusgreyling/loop-init . --with-memory
   npx @cobusgreyling/loop-init . --with-fleet
@@ -977,7 +1022,7 @@ Examples:
     console.error(`Unknown tool: ${tool}. Valid: ${validTools.join(', ')}`);
     process.exit(1);
   }
-  const validProviders: ModelProvider[] = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference'];
+  const validProviders: ModelProvider[] = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference', 'opper'];
   if (!validProviders.includes(modelProvider)) {
     console.error(`Unknown model provider: ${modelProvider}. Valid: ${validProviders.join(', ')}`);
     process.exit(1);
@@ -1012,6 +1057,18 @@ Examples:
         model = CHEAPERINFERENCE_DEFAULT_MODEL;
       } else {
         console.error(`Unknown model: ${model}. Valid: ${CHEAPERINFERENCE_MODEL_IDS.join(', ')}`);
+        process.exit(1);
+      }
+    }
+  }
+  if (modelProvider === 'opper') {
+    // `model` defaults to the MiniMax default; if the user did not pass
+    // `--model` explicitly, fall back to the Opper default instead.
+    if (!OPPER_MODEL_IDS.includes(model)) {
+      if (model === MINIMAX_DEFAULT_MODEL) {
+        model = OPPER_DEFAULT_MODEL;
+      } else {
+        console.error(`Unknown model: ${model}. Valid: ${OPPER_MODEL_IDS.join(', ')}`);
         process.exit(1);
       }
     }
