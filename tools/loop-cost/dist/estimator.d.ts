@@ -85,7 +85,7 @@ export interface EstimateResult {
     warnings: string[];
 }
 export declare function parseInterval(token: string): number;
-/** Runs per day for a single interval like 15m or 1d. */
+/** Average runs per day for a single interval; multi-day intervals return fractions. */
 export declare function runsPerDayForInterval(interval: string): number;
 /**
  * Parse pattern cadence (e.g. 5m-15m, 1d-2h) into runs/day.

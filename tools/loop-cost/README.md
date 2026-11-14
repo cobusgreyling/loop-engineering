@@ -35,6 +35,11 @@ npm test
 
 ## Scenarios
 
+Runs/day and daily token estimates are averages over repeated intervals, not
+maximum spend on a particular calendar day. Fractional rates are preserved:
+`2d` means `0.5` runs/day, `7d` means `1/7` runs/day, and `7h` means `24/7`
+runs/day. Per-run token estimates are unchanged by cadence.
+
 Each estimate includes:
 
 - **Early-exit / no-op** — empty watchlist, minimal tokens
