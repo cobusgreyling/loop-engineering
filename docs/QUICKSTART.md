@@ -109,14 +109,14 @@ npx @cobusgreyling/harness-foundry run --goal "Verify harness wiring"
 To configure provider-specific stacks like **MiniMax** during scaffolding:
 
 ```bash
-npx @cobusgreyling/loop init . --pattern daily-triage --tool claude \
-  --with-foundry --model-provider minimax --region global_en --model MiniMax-M3
+npx @cobusgreyling/loop init . --pattern ci-sweeper --tool claude \
+  --with-foundry --model-provider minimax --region global_en --model MiniMax-M3.1-Flash
 ```
 
 > **MiniMax Foundry flags:**
 > - `--model-provider minimax`
 > - `--region`: `global_en` (default) | `cn_zh`
-> - `--model`: e.g. `MiniMax-M3`
+> - `--model`: `MiniMax-M3.1-Flash` (default) | `MiniMax-M3`
 >
 > See [harness-foundry](https://github.com/cobusgreyling/harness-foundry) for full provider and stack runtime documentation.
 
