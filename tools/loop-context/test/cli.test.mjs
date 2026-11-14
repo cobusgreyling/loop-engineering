@@ -221,3 +221,52 @@ test('cli --on-exceed does not crash when the hook script exits without reading 
   assert.doesNotMatch(r.stderr, /Uncaught|EPIPE|EOF/);
   assert.equal(await readFile(outFile, 'utf8'), 'ran');
 });
+
+// Two failures whose normalized errors are ~0.73 similar: they belong in one
+// group at an explicit loose threshold and in two groups at the 0.85 default.
+// --summary and --status must apply the same threshold as the breaker they
+// report, exactly like --inject already does.
+const similarFailureLedger = JSON.stringify({
+  goal: 'stabilize the importer',
+  attempts: [
+    {
+      iteration: 1,
+      action: 'run import with verbose logs',
+      outcome: 'failure',
+      error: 'connection timeout in worker alpha',
+    },
+    {
+      iteration: 2,
+      action: 'retry import after backoff',
+      outcome: 'failure',
+      error: 'connection timeout in worker beta',
+    },
+  ],
+});
+
+test('cli --summary groups errors with the explicit --similarity-threshold', () => {
+  const loose = JSON.parse(
+    runCli(['--summary', '--json', '--similarity-threshold', '0.5'], similarFailureLedger).stdout,
+  );
+  assert.equal(loose.distinctErrors.length, 1);
+  assert.equal(loose.distinctErrors[0].count, 2);
+
+  const defaults = JSON.parse(runCli(['--summary', '--json'], similarFailureLedger).stdout);
+  assert.equal(defaults.distinctErrors.length, 2);
+
+  const strict = JSON.parse(
+    runCli(['--summary', '--json', '--similarity-threshold', '1'], similarFailureLedger).stdout,
+  );
+  assert.equal(strict.distinctErrors.length, 2);
+});
+
+test('cli --status groups errors with the explicit --similarity-threshold', () => {
+  const loose = runCli(['--status', '--similarity-threshold', '0.5'], similarFailureLedger);
+  assert.equal(loose.status, 0, `unexpected exit. stderr: ${loose.stderr}`);
+  assert.equal(loose.stdout.match(/\(\d+×\)/g)?.length, 1);
+  assert.match(loose.stdout, /\(2×\) connection timeout in worker/);
+
+  const defaults = runCli(['--status'], similarFailureLedger);
+  assert.equal(defaults.status, 0, `unexpected exit. stderr: ${defaults.stderr}`);
+  assert.equal(defaults.stdout.match(/\(\d+×\)/g)?.length, 2);
+});
