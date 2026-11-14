@@ -125,9 +125,22 @@ state file (`daily-spend.<pattern-id>.json`, `{ "date": "...", "tokensUsedToday"
 rolling over to zero when the stored date isn't today (UTC). Once the running total
 reaches the pattern's suggested daily cap, `--check` escalates with trigger
 `daily-budget` — but only if no per-run trigger (stagnation, no-progress, token-budget,
-max-iterations) already fired; per-run reasons always take priority. `--budget-level`,
+max-iterations) already fired; per-run reasons take priority when the daily state
+is usable. `--budget-level`,
 `--budget-cadence`, and `--budget-conservative` (shared with `--budget-from-pattern`)
 shape the daily-cap lookup too.
+
+Only a missing state file starts a fresh total. An existing file must contain a
+valid `YYYY-MM-DD` UTC calendar date and a finite, non-negative `tokensUsedToday`.
+Read failures, malformed JSON, or invalid fields make `--check` exit **1** with a
+diagnostic and no continue/escalate decision; read/validation errors leave the
+existing file untouched. Inspect or restore the correct recorded total before
+retrying. A valid state with a different UTC date still rolls over normally.
+
+The newest attempt's token delta must also be finite and non-negative, and an
+overflowing daily total is rejected before writing. Zero and fractional finite
+values remain accepted. These errors exit 1 even if a per-run trigger also fired,
+and do not invoke `--on-exceed`, which only handles escalation decisions.
 
 `--on-exceed <script>` fires on **any** escalate, not just `daily-budget` — it's a
 generic hook for automating `loop-budget.md`'s "On budget exceed" checklist (pause
