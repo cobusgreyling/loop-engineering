@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { mkdir, rm, writeFile, stat, readFile, readdir } from 'node:fs/promises';
-import { execSync, spawn } from 'node:child_process';
+import { execSync, execFileSync, spawn } from 'node:child_process';
 import { createWorktree } from '@cobusgreyling/loop-worktree';
 import { lockPaths, listLocks } from '@cobusgreyling/loop-worktree/lock';
 
@@ -61,6 +61,68 @@ test('sandbox run captures patch and cleans up', async () => {
     await rm(root, { recursive: true, force: true }).catch(() => {});
   }
 });
+
+for (const mixed of [false, true]) {
+  test(`sandbox captures agent commits${mixed ? ' plus pending edits through the CLI' : ''} in an applicable patch`, async () => {
+    const root = await setupTestRepo();
+    const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+    try {
+      // Only synthetic repository commits; never run user hooks or sign them.
+      git(['config', 'core.hooksPath', path.join(root, '.git', 'disabled-hooks')]);
+      git(['config', 'commit.gpgSign', 'false']);
+      git(['config', 'core.autocrlf', 'false']);
+      const originalHead = git(['rev-parse', 'HEAD']);
+      const script = [
+        'const fs = require("node:fs");',
+        'const { execFileSync } = require("node:child_process");',
+        'fs.writeFileSync("README.md", "agent committed content");',
+        'fs.writeFileSync("committed.bin", Buffer.from([0, 255, 254, 253]));',
+        'execFileSync("git", ["add", "README.md", "committed.bin"]);',
+        'execFileSync("git", ["commit", "-m", "synthetic agent commit"]);',
+        ...(mixed ? [
+          'fs.writeFileSync("README.md", "agent committed content plus pending edit");',
+          'fs.writeFileSync("staged.txt", "staged content");',
+          'execFileSync("git", ["add", "staged.txt"]);',
+          'fs.writeFileSync("untracked.txt", "untracked content");',
+        ] : []),
+      ].join('\n');
+
+      let patchFile;
+      if (mixed) {
+        execFileSync(process.execPath, [
+          path.join(testDir, '../dist/cli.js'), 'run', '--', process.execPath, '-e', script,
+        ], { cwd: root, encoding: 'utf8' });
+        const patches = await listPatches(root);
+        assert.equal(patches.length, 1);
+        patchFile = patches[0].patchPath;
+      } else {
+        const result = await runInSandbox(root, process.execPath, ['-e', script]);
+        assert.equal(result.exitCode, 0);
+        assert.ok(result.hasChanges, 'committed edits must not be reported as no changes');
+        assert.ok(result.patchFile);
+        patchFile = result.patchFile;
+      }
+
+      assert.equal(git(['rev-parse', 'HEAD']), originalHead, 'original branch must not move');
+      assert.equal(await readFile(path.join(root, 'README.md'), 'utf8'), '# Test repo');
+      await assert.rejects(stat(path.join(root, 'committed.bin')));
+      assert.equal(git(['worktree', 'list', '--porcelain']).match(/^worktree /gm)?.length, 1);
+      assert.equal(git(['branch', '--list', 'loop/sandbox-*']), '');
+
+      git(['apply', '--check', patchFile]);
+      git(['apply', patchFile]);
+      assert.equal(await readFile(path.join(root, 'README.md'), 'utf8'),
+        mixed ? 'agent committed content plus pending edit' : 'agent committed content');
+      assert.deepEqual(await readFile(path.join(root, 'committed.bin')), Buffer.from([0, 255, 254, 253]));
+      if (mixed) {
+        assert.equal(await readFile(path.join(root, 'staged.txt'), 'utf8'), 'staged content');
+        assert.equal(await readFile(path.join(root, 'untracked.txt'), 'utf8'), 'untracked content');
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+}
 
 test('cleanup is scoped and leaves other active worktrees alone', async () => {
   const root = await setupTestRepo();

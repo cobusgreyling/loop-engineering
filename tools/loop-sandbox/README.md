@@ -89,6 +89,11 @@ npx @cobusgreyling/loop-sandbox review
 
 Under the hood, `loop-sandbox` leverages `@cobusgreyling/loop-worktree` and native `git worktree` primitives. It creates a temporary branch from your current HEAD, spawns your process with its `cwd` set to the isolated tree, runs `git diff --cached` to generate the patch, and uses `git worktree remove --force` to clean up.
 
+The patch compares the final staged tree against the sandbox's initial commit,
+so it includes committed changes as well as staged, unstaged, and new untracked
+files. Commits made by the agent are captured as net file changes, not preserved
+as commit history. With `--base`, the initial commit is taken from that base.
+
 ## Multi-loop safety
 
 A sandbox run is not, by itself, protected against a scheduled loop editing

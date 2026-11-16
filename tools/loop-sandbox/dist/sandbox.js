@@ -121,6 +121,8 @@ export async function runInSandbox(root, command, args, options = {}) {
             base: baseBranch
         });
         worktreeAbsPath = path.resolve(root, entry.path);
+        // Pin the baseline before the agent can commit or otherwise move HEAD.
+        const initialHead = await git(['rev-parse', 'HEAD'], worktreeAbsPath);
         console.log(`🚀 Executing inside sandbox: ${command} ${args.join(' ')}`);
         let exitCode = null;
         let hasChanges = false;
@@ -176,11 +178,11 @@ export async function runInSandbox(root, command, args, options = {}) {
         // 4. Extract diff as a patch
         try {
             await git(['add', '-A'], worktreeAbsPath);
-            const diffStat = await git(['diff', '--cached', '--stat'], worktreeAbsPath);
+            const diffStat = await git(['diff', '--cached', '--stat', initialHead], worktreeAbsPath);
             if (diffStat) {
                 hasChanges = true;
                 patchFilePath = path.join(patchesDir, `${runId}.patch`);
-                const diffOutput = await gitRaw(['diff', '--cached', '--binary'], worktreeAbsPath);
+                const diffOutput = await gitRaw(['diff', '--cached', '--binary', initialHead], worktreeAbsPath);
                 await writeFile(patchFilePath, diffOutput);
                 console.log(`✅ Sandbox changes captured to patch: ${patchFilePath}`);
             }
