@@ -67,12 +67,41 @@ async function withLock<T>(dir: string, pattern: string, fn: () => Promise<T>): 
 }
 
 async function readState(dir: string, pattern: string): Promise<DailySpendState | null> {
+  const file = statePath(dir, pattern);
+  let raw: string;
   try {
-    const raw = await readFile(statePath(dir, pattern), 'utf8');
-    return JSON.parse(raw) as DailySpendState;
-  } catch {
-    return null;
+    raw = await readFile(file, 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw new Error(
+      `Cannot read daily spend state at ${file}: ${(err as Error).message}. Refusing to reset accumulated spend.`,
+    );
   }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Invalid daily spend state at ${file}: not valid JSON. Inspect or restore the file before retrying.`);
+  }
+
+  const state = parsed as Partial<DailySpendState> | null;
+  if (!state || Array.isArray(state) || !isUTCDate(state.date) || !isTokenCount(state.tokensUsedToday)) {
+    throw new Error(
+      `Invalid daily spend state at ${file}: expected a YYYY-MM-DD UTC date and a finite, non-negative tokensUsedToday. Inspect or restore the file before retrying.`,
+    );
+  }
+  return state as DailySpendState;
+}
+
+function isTokenCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+function isUTCDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
 /**
@@ -85,11 +114,18 @@ export async function recordDailySpend(
   pattern: string,
   tokensDelta: number,
 ): Promise<DailySpendState> {
+  if (!isTokenCount(tokensDelta)) {
+    throw new Error('Token increment (tokensUsed) must be a finite, non-negative number.');
+  }
   return withLock(dir, pattern, async () => {
     const today = todayUTC();
     const existing = await readState(dir, pattern);
     const carryOver = existing && existing.date === today ? existing.tokensUsedToday : 0;
-    const state: DailySpendState = { date: today, tokensUsedToday: carryOver + tokensDelta };
+    const tokensUsedToday = carryOver + tokensDelta;
+    if (!isTokenCount(tokensUsedToday)) {
+      throw new Error('Daily token total must be finite; accumulated spend was not changed.');
+    }
+    const state: DailySpendState = { date: today, tokensUsedToday };
 
     await mkdir(dir, { recursive: true });
     await writeFile(statePath(dir, pattern), JSON.stringify(state, null, 2));
