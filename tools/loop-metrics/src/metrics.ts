@@ -57,7 +57,7 @@ export function filterEntries(entries: RunEntry[], pattern?: string, days?: numb
 
   if (days && days > 0) {
     const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
+    cutoffDate.setTime(cutoffDate.getTime() - days * 24 * 60 * 60 * 1000);
     
     filtered = filtered.filter(e => {
       // Match the run-log pruner: Date also accepts IDs such as "run-1"
