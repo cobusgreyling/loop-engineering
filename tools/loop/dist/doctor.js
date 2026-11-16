@@ -28,6 +28,18 @@ function parseJsonLoose(stdout) {
         }
     }
 }
+function validScore(value) {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
+}
+async function captureCheck(tool, root, notes) {
+    try {
+        return await runToolCapture(tool, [root, '--json']);
+    }
+    catch (err) {
+        notes.push(`loop-${tool} failed: ${err instanceof Error ? err.message : String(err)}`);
+        return null;
+    }
+}
 export async function runDoctor(target) {
     const root = path.resolve(target);
     const notes = [];
@@ -44,43 +56,56 @@ export async function runDoctor(target) {
     let readyLevel = null;
     let assessment = null;
     let auditRecs = [];
-    const auditRun = await runToolCapture('audit', [root, '--json']);
-    if (auditRun.code !== 0 && !auditRun.stdout.trim()) {
+    const auditRun = await captureCheck('audit', root, notes);
+    if (auditRun && auditRun.code !== 0 && !auditRun.stdout.trim()) {
         notes.push(`loop-audit failed: ${auditRun.stderr.trim() || `exit ${auditRun.code}`}`);
     }
-    else {
+    else if (auditRun) {
         const j = parseJsonLoose(auditRun.stdout);
-        if (j && typeof j.score === 'number') {
-            readyScore = j.score;
-            readyLevel = j.level ?? null;
-            assessment = j.assessment ?? null;
-            auditRecs = Array.isArray(j.recommendations) ? j.recommendations : [];
+        if (!j || !validScore(j.score) || !['L0', 'L1', 'L2', 'L3'].includes(j.level ?? '')) {
+            notes.push('Could not read a valid loop-audit report: expected score 0–100 and level L0–L3');
+        }
+        else if (auditRun.code !== (j.score < 40 ? 2 : 0)) {
+            notes.push(`loop-audit exited ${auditRun.code} (expected ${j.score < 40 ? 2 : 0})${auditRun.stderr.trim() ? `: ${auditRun.stderr.trim()}` : ''}`);
         }
         else {
-            notes.push('Could not parse loop-audit JSON output');
+            readyScore = j.score;
+            readyLevel = j.level ?? null;
+            assessment = typeof j.assessment === 'string' ? j.assessment : null;
+            auditRecs = Array.isArray(j.recommendations)
+                ? j.recommendations.filter((rec) => typeof rec === 'string')
+                : [];
         }
     }
     let syncScore = null;
     let syncLevel = null;
     let issueCount = 0;
-    const syncRun = await runToolCapture('sync', [root, '--json']);
-    if (syncRun.code !== 0 && !syncRun.stdout.trim()) {
+    const syncRun = await captureCheck('sync', root, notes);
+    if (syncRun && syncRun.code !== 0 && !syncRun.stdout.trim()) {
         notes.push(`loop-sync failed: ${syncRun.stderr.trim() || `exit ${syncRun.code}`}`);
     }
-    else {
+    else if (syncRun) {
         const j = parseJsonLoose(syncRun.stdout);
-        if (j && typeof j.score === 'number') {
+        if (!j || !validScore(j.score) || !['healthy', 'warning', 'critical'].includes(j.level ?? '') || !Array.isArray(j.issues)) {
+            notes.push('Could not read a valid loop-sync report: expected score 0–100, level healthy/warning/critical, and issues array');
+        }
+        else if (syncRun.code !== (j.level === 'critical' ? 1 : j.level === 'warning' ? 2 : 0)) {
+            notes.push(`loop-sync exited ${syncRun.code} (expected ${j.level === 'critical' ? 1 : j.level === 'warning' ? 2 : 0})${syncRun.stderr.trim() ? `: ${syncRun.stderr.trim()}` : ''}`);
+        }
+        else {
             syncScore = j.score;
             syncLevel = j.level ?? null;
-            issueCount = Array.isArray(j.issues) ? j.issues.length : 0;
+            issueCount = j.issues.length;
             if (Array.isArray(j.suggestions)) {
-                for (const s of j.suggestions.slice(0, 2)) {
+                for (const s of j.suggestions.filter((s) => typeof s === 'string').slice(0, 2)) {
                     actions.push({ priority: 40, text: s });
                 }
             }
         }
-        else {
-            notes.push('Could not parse loop-sync JSON output');
+    }
+    for (const [tool, score] of [['audit', readyScore], ['sync', syncScore]]) {
+        if (score === null) {
+            actions.push({ priority: 0, text: `Restore the loop-${tool} check and rerun doctor` });
         }
     }
     // Structural actions (highest priority for empty repos)
@@ -157,7 +182,9 @@ export async function runDoctor(target) {
     // Severity / exit code
     let severity = 'healthy';
     let exitCode = 0;
-    const blocked = (readyScore !== null && readyScore < 40) ||
+    const blocked = readyScore === null ||
+        syncScore === null ||
+        readyScore < 40 ||
         syncLevel === 'critical' ||
         (!stateName && !loopMd);
     const warning = (readyScore !== null && readyScore < 58) ||

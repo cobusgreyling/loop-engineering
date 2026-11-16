@@ -52,7 +52,7 @@ Week-one (recommended):
 Doctor exit codes:
   0  healthy
   1  warnings (score/sync/budget gaps)
-  2  blocked (score < 40, critical drift, or unscaffolded)
+  2  blocked (failed/incomplete checks, score < 40, critical drift, or unscaffolded)
 
 Compatibility (old doors stay open):
   npx @cobusgreyling/loop-init .
@@ -72,7 +72,7 @@ async function cmdDoctor(args: string[]): Promise<number> {
 Combines loop-audit + loop-sync + structural file checks.
 Prints severity and the top 3 next actions.
 
-Exit: 0 healthy · 1 warning · 2 blocked
+Exit: 0 healthy · 1 warning · 2 blocked (including failed/incomplete checks)
 `);
     return 0;
   }
