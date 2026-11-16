@@ -53,10 +53,10 @@ export function parseInterval(token) {
     }
     return value * INTERVAL_MS[unit];
 }
-/** Runs per day for a single interval like 15m or 1d. */
+/** Average runs per day for a single interval; multi-day intervals return fractions. */
 export function runsPerDayForInterval(interval) {
     const ms = parseInterval(interval);
-    return Math.floor(86_400_000 / ms);
+    return 86_400_000 / ms;
 }
 /**
  * Parse pattern cadence (e.g. 5m-15m, 1d-2h) into runs/day.
