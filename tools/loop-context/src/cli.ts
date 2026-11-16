@@ -233,7 +233,7 @@ async function main() {
         decision = await applyDailyBudget(decision, ledger, args);
       }
       if (decision.escalate && args.onExceed) {
-        await runOnExceedHook(args.onExceed, decision);
+        await runOnExceedHook(args.onExceed, decision, args.json);
       }
       if (args.json) console.log(JSON.stringify(decision, null, 2));
       else console.log(`${decision.escalate ? 'ESCALATE' : 'CONTINUE'} [${decision.trigger}] — ${decision.reason}`);
@@ -300,9 +300,10 @@ async function applyDailyBudget(decision: BreakerDecision, ledger: Ledger, args:
 }
 
 /** Pipe the escalation decision as JSON to an operator-provided script's stdin. Fire-and-forget. */
-function runOnExceedHook(script: string, decision: BreakerDecision): Promise<void> {
+function runOnExceedHook(script: string, decision: BreakerDecision, jsonOutput: boolean): Promise<void> {
   return new Promise((resolve) => {
-    const child = spawn(script, [], { stdio: ['pipe', 'inherit', 'inherit'], shell: true });
+    // Keep stdout machine-readable without hiding the operator's hook logs.
+    const child = spawn(script, [], { stdio: ['pipe', jsonOutput ? process.stderr : 'inherit', 'inherit'], shell: true });
     child.on('error', (err) => {
       console.error(`loop-context: --on-exceed hook failed to start: ${err.message}`);
       resolve();
