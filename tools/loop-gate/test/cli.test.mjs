@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -102,4 +102,32 @@ test('cli unknown command exits 1', () => {
   const r = runCli(['bogus']);
   assert.equal(r.status, 1);
   assert.match(r.stderr, /Unknown command/);
+});
+
+for (const nextFlag of ['--json', '--gate-file', '--help', '-h']) {
+  test(`cli check rejects ${nextFlag} as a missing --paths value`, async (t) => {
+    const dir = await freshGateDir();
+    t.after(() => rm(dir, { recursive: true, force: true }));
+    const r = runCli(['check', '--action', 'commit', '--paths', nextFlag], dir);
+    assert.equal(r.status, 1, r.stdout);
+    assert.equal(r.stdout, '', 'an incomplete invocation must not emit an allowed decision');
+    assert.match(r.stderr, /--paths requires/);
+  });
+}
+
+test('cli check rejects a terminal bare --paths with no value', async (t) => {
+  const dir = await freshGateDir();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = runCli(['check', '--action', 'commit', '--paths'], dir);
+  assert.equal(r.status, 1, r.stdout);
+  assert.equal(r.stdout, '', 'an incomplete invocation must not emit an allowed decision');
+  assert.match(r.stderr, /--paths requires/);
+});
+
+test('cli check accepts an option-like filename with a ./ prefix', async (t) => {
+  const dir = await freshGateDir();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = runCli(['check', '--action', 'commit', '--paths', './--json', '--json'], dir);
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(JSON.parse(r.stdout).allowed, true);
 });

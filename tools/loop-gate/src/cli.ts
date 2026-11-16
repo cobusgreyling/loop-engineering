@@ -20,7 +20,13 @@ function parseFlags(argv: string[]): Flags {
     const a = argv[i];
     if (a === '--help' || a === '-h') flags.help = true;
     else if (a === '--action') flags.action = argv[++i];
-    else if (a === '--paths') flags.paths = argv[++i];
+    else if (a === '--paths') {
+      const value = argv[++i];
+      if (value === undefined || value.startsWith('--') || value === '-h') {
+        throw new Error('--paths requires a comma-separated list of file paths.');
+      }
+      flags.paths = value;
+    }
     else if (a === '--gate-file') flags.gateFile = argv[++i];
     else if (a === '--json') flags.json = true;
   }
