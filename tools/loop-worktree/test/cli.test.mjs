@@ -3,10 +3,17 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { mkdtemp } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const cli = path.join(path.dirname(fileURLToPath(import.meta.url)), '../dist/cli.js');
+
+function git(cwd, ...args) {
+  const r = spawnSync('git', ['-C', cwd, ...args], { encoding: 'utf8' });
+  if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
+  return r.stdout;
+}
 
 async function freshDir() {
   return mkdtemp(path.join(tmpdir(), 'loop-worktree-cli-'));
@@ -82,4 +89,34 @@ test('cli locks --sweep reports expired locks report-only, removes with --force'
   const swept = runCli(['locks', '--sweep', '--force', '--json'], dir);
   const sweptResult = JSON.parse(swept.stdout);
   assert.deepEqual(sweptResult.removed, ['ci-sweeper']);
+});
+
+test('cli rejects a flag whose value is missing or is the next flag', async () => {
+  const dir = await freshDir();
+
+  // "--paths" followed by another flag: the flag used to be read as the value.
+  const nibbled = runCli(['lock', '--paths', '--owner', 'ci-sweeper'], dir);
+  assert.equal(nibbled.status, 1);
+  assert.match(nibbled.stderr, /--paths needs a value/);
+  assert.equal(existsSync(path.join(dir, '.loop-worktrees', 'locks', 'ci-sweeper.json')), false);
+
+  // A value flag with nothing after it at all.
+  const missing = runCli(['lock', '--paths'], dir);
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /--paths needs a value/);
+});
+
+test('cli create does not build a worktree named after a flag', async () => {
+  const dir = await freshDir();
+  git(dir, 'init', '-q', '-b', 'main', '.');
+  git(dir, '-c', 'user.email=loop@example.com', '-c', 'user.name=loop', 'commit', '-q', '--allow-empty', '-m', 'init');
+
+  // The run id was left out: "--pattern" used to become the id, so the guard
+  // ("create requires --run-id and --pattern") passed and a `loop/--pattern`
+  // branch plus .loop-worktrees/--pattern were created for real.
+  const r = runCli(['create', '--run-id', '--pattern', 'daily-triage'], dir);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /--run-id needs a value/);
+  assert.equal(git(dir, 'branch', '--list', 'loop/*').trim(), '');
+  assert.equal(existsSync(path.join(dir, '.loop-worktrees', '--pattern')), false);
 });
