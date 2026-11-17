@@ -79,7 +79,9 @@ export function extractFrontmatter(content: string): { frontmatter: Record<strin
     if (endIndex !== -1 && (endIndex + 4 === content.length || content[endIndex + 4] === '\n' || content[endIndex + 4] === '\r')) {
       const fmContent = content.slice(3, endIndex);
       const closingEnd = content.indexOf('\n', endIndex + 4);
-      body = closingEnd === -1 ? content.slice(endIndex + 1) : content.slice(closingEnd + 1);
+      // No newline after the closing fence means the body is empty, not the fence itself:
+      // endIndex points at the '\n' before it, so the fence occupies endIndex+1..endIndex+3.
+      body = closingEnd === -1 ? content.slice(endIndex + 4) : content.slice(closingEnd + 1);
       
       for (const line of fmContent.split(/\r?\n/)) {
         const colonIndex = line.indexOf(':');

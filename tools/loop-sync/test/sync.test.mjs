@@ -223,6 +223,24 @@ describe('extractFrontmatter', () => {
     const { frontmatter } = extractFrontmatter('---\nkey: value\n---oops\n');
     assert.deepEqual(frontmatter, {});
   });
+
+  test('a close fence at end of file leaves an empty body', () => {
+    const { frontmatter, body } = extractFrontmatter('---\nkey: value\n---');
+    assert.deepEqual(frontmatter, { key: 'value' });
+    assert.equal(body, '');
+  });
+
+  test('a CRLF close fence at end of file leaves an empty body', () => {
+    const { frontmatter, body } = extractFrontmatter('---\r\nkey: value\r\n---');
+    assert.deepEqual(frontmatter, { key: 'value' });
+    assert.equal(body, '');
+  });
+
+  test('an empty block at end of file leaves an empty body', () => {
+    const { frontmatter, body } = extractFrontmatter('---\n---');
+    assert.deepEqual(frontmatter, {});
+    assert.equal(body, '');
+  });
 });
 
 describe('cli', () => {
