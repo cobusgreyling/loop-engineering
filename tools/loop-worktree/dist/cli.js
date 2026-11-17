@@ -1,34 +1,50 @@
 #!/usr/bin/env node
 import { createWorktree, markWorktree, cleanupWorktrees, gc, listWorktrees, VALID_STATUSES, } from './worktree.js';
 import { lockPaths, unlockOwner, listLocks, sweepExpiredLocks, isExpired, listWaits, isWaitExpired } from './lock.js';
+/**
+ * A value flag's value has to be there, and has to be a value rather than the
+ * next flag. `create --run-id --pattern daily-triage` (the id left out) used to
+ * read "--pattern" as the run id and pass the "requires --run-id and
+ * --pattern" guard, because --pattern was still set: it then created a
+ * worktree and a `loop/--pattern` branch named after a flag. A flag is never a
+ * legitimate value for any of these: paths, run ids, statuses and durations
+ * cannot start with "--".
+ */
+function takeValue(argv, flag, index) {
+    const value = argv[index];
+    if (value === undefined || value.startsWith('--')) {
+        throw new Error(`${flag} needs a value.`);
+    }
+    return value;
+}
 function parseFlags(argv) {
     const flags = { root: process.cwd(), force: false, json: false, sweep: false };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--run-id')
-            flags.runId = argv[++i];
+            flags.runId = takeValue(argv, a, ++i);
         else if (a === '--pattern')
-            flags.pattern = argv[++i];
+            flags.pattern = takeValue(argv, a, ++i);
         else if (a === '--base')
-            flags.base = argv[++i];
+            flags.base = takeValue(argv, a, ++i);
         else if (a === '--status')
-            flags.status = argv[++i];
+            flags.status = takeValue(argv, a, ++i);
         else if (a === '--older-than')
-            flags.olderThan = argv[++i];
+            flags.olderThan = takeValue(argv, a, ++i);
         else if (a === '--root')
-            flags.root = argv[++i];
+            flags.root = takeValue(argv, a, ++i);
         else if (a === '--force')
             flags.force = true;
         else if (a === '--json')
             flags.json = true;
         else if (a === '--paths')
-            flags.paths = argv[++i];
+            flags.paths = takeValue(argv, a, ++i);
         else if (a === '--owner')
-            flags.owner = argv[++i];
+            flags.owner = takeValue(argv, a, ++i);
         else if (a === '--ttl')
-            flags.ttl = argv[++i];
+            flags.ttl = takeValue(argv, a, ++i);
         else if (a === '--wait')
-            flags.wait = argv[++i];
+            flags.wait = takeValue(argv, a, ++i);
         else if (a === '--sweep')
             flags.sweep = true;
     }
