@@ -105,7 +105,11 @@ export async function auditProject(target: string): Promise<AuditResult> {
     recommendations.push('cp templates/GOAL.md.template GOAL.md');
   }
 
-  const goalConfigPresent = await fileExists(path.join(root, 'GOAL.md'));
+  // GOAL_FILES is this tool's statement of where a goal file may live, so where it lives
+  // must not change the score: `goal.md` or `docs/GOAL.md` used to score 5 less than the
+  // same file at the root, and `signals.goalConfig.present` contradicted
+  // `signals.goalFile.present`. Both fields read the same answer now.
+  const goalConfigPresent = goalFilePresent;
   if (goalConfigPresent) score += 5;
 
   const allSkills = await findSkills(root);
