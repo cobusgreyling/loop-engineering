@@ -131,3 +131,19 @@ test('cli check accepts an option-like filename with a ./ prefix', async (t) => 
   assert.equal(r.status, 0, r.stderr);
   assert.equal(JSON.parse(r.stdout).allowed, true);
 });
+
+test('cli check rejects an unknown flag instead of falling back to gate.yaml', async () => {
+  // "--gatefile" is one letter off. Silently ignoring it means the strict policy the
+  // caller named is never read and the default gate.yaml decides — a gate that stops
+  // gating because of a typo.
+  const dir = await freshGateDir();
+  await writeFile(path.join(dir, 'strict.yaml'), 'version: 1\ndenylist:\n  - "**/*"\n');
+  const r = runCli(['check', '--action', 'commit', '--paths', 'src/index.ts', '--gatefile', 'strict.yaml'], dir);
+  assert.equal(r.status, 1, `stdout: ${r.stdout}`);
+  assert.match(r.stderr, /Unknown flag "--gatefile"/);
+  assert.doesNotMatch(r.stdout, /ALLOWED/);
+
+  // The same command with the right spelling does read the named policy.
+  const strict = runCli(['check', '--action', 'commit', '--paths', 'src/index.ts', '--gate-file', 'strict.yaml'], dir);
+  assert.equal(strict.status, 2);
+})
