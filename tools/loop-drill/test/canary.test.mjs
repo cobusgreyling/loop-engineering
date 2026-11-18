@@ -157,6 +157,34 @@ describe('runCanary', () => {
     await rm(path.join(repo, 'untracked-marker.txt'), { force: true });
   });
 
+  test('a setup that fails in one worktree is skipped, not scored as a catch', async () => {
+    // The control run prepares worktree #1 and succeeds; the mutant run gets
+    // worktree #2, where setup fails. Nothing verified that mutant, so it must
+    // not be credited to the verifier.
+    const counter = path.join(repo, '.setup-count');
+    await writeFile(counter, '0');
+    // Single quotes inside the command: the whole thing goes through a shell
+    // that is already using double quotes.
+    const counterPath = counter.split(path.sep).join('/');
+    const setup =
+      `node -e "const fs=require('fs');const p='${counterPath}';` +
+      `const n=Number(fs.readFileSync(p,'utf8'))+1;fs.writeFileSync(p,String(n));if(n>1){console.error('setup broke');process.exit(7)}"`;
+    const report = await runCanary({
+      root: repo,
+      command: 'node verify.mjs',
+      count: 1,
+      timeoutMs: 60_000,
+      scope: 'src',
+      setup,
+    });
+    assert.equal(report.caught, 0, 'a failed setup is not a rejection');
+    assert.equal(report.mutationScore, null);
+    const mutant = report.results.find((r) => r.id.startsWith('verifier.mutant['));
+    assert.equal(mutant.outcome, 'skipped');
+    assert.match(mutant.detail, /setup failed/i);
+    await rm(counter, { force: true });
+  });
+
   test('leaves no worktree behind', async () => {
     const entries = await readdir(repo);
     assert.deepEqual(entries.filter((e) => e.startsWith('.loop-drill-')), []);
