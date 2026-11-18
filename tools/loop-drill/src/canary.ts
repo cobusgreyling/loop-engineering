@@ -60,6 +60,13 @@ export interface VerifierRun {
   exitCode: number | null;
   timedOut: boolean;
   output: string;
+  /**
+   * The run never happened: `--setup` failed in the worktree first, so the exit
+   * code belongs to the setup command, not to the verifier. Without this the
+   * non-zero exit reads as "rejected the mutant" and a broken setup is scored
+   * as a catch.
+   */
+  setupFailed?: boolean;
 }
 
 /**
@@ -172,7 +179,7 @@ async function runInWorktree(
 ): Promise<VerifierRun> {
   return withWorktree(root, async (worktree) => {
     const setupFailure = await prepareWorktree(worktree, timeoutMs, setup);
-    if (setupFailure) return setupFailure;
+    if (setupFailure) return { ...setupFailure, setupFailed: true };
     if (mutant) await writeFile(path.join(worktree, mutant.file), mutant.mutated, 'utf8');
     return runVerifier(command, worktree, timeoutMs);
   });
@@ -270,10 +277,28 @@ export async function runCanary(options: CanaryOptions): Promise<CanaryReport> {
   }
 
   let caught = 0;
+  let verified = 0;
   for (const mutant of mutants) {
     const run = await runInWorktree(root, mutant, command, timeoutMs, setup);
     const where = `${mutant.file}:${mutant.line}`;
     const edit = `${mutant.operator.description} (${mutant.before} -> ${mutant.after})`;
+
+    if (run.setupFailed) {
+      // The exit code belongs to --setup, not to the verifier: nothing looked at
+      // this mutant. Counting it as a rejection would credit the verifier for a
+      // broken worktree.
+      results.push(
+        skip(
+          `verifier.mutant[${mutant.operator.id}]`,
+          `verifier rejects ${mutant.operator.id} in ${where}`,
+          mode,
+          'sensitivity',
+          `--setup failed in this worktree (${run.timedOut ? `timed out after ${timeoutMs}ms` : `exit ${run.exitCode}`}), so the mutant was never verified. ${truncate(run.output)}`,
+        ),
+      );
+      continue;
+    }
+    verified += 1;
 
     if (!run.accepted) {
       caught++;
@@ -303,9 +328,9 @@ export async function runCanary(options: CanaryOptions): Promise<CanaryReport> {
 
   return {
     results,
-    mutationScore: caught / mutants.length,
+    mutationScore: verified === 0 ? null : caught / verified,
     caught,
-    escaped: mutants.length - caught,
+    escaped: verified - caught,
   };
 }
 

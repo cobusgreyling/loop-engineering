@@ -38,6 +38,13 @@ export interface VerifierRun {
     exitCode: number | null;
     timedOut: boolean;
     output: string;
+    /**
+     * The run never happened: `--setup` failed in the worktree first, so the exit
+     * code belongs to the setup command, not to the verifier. Without this the
+     * non-zero exit reads as "rejected the mutant" and a broken setup is scored
+     * as a catch.
+     */
+    setupFailed?: boolean;
 }
 /**
  * Run the verifier in `cwd`. Exit 0 means "accepted this change"; anything
