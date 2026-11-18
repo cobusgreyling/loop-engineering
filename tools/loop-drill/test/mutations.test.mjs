@@ -95,3 +95,37 @@ describe('isMutationCandidate', () => {
     assert.ok(isMutationCandidate('src\\index.ts'));
   });
 });
+
+describe('mutate only edits code, never text that looks like code', () => {
+  test('skips a match inside a /* */ block comment', () => {
+    const m = mutate('/* keep a === b as documentation */\nconst ok = c === d;\n', 'src/a.ts');
+    assert.equal(m.line, 2);
+    assert.equal(m.mutated, '/* keep a === b as documentation */\nconst ok = c !== d;\n');
+  });
+
+  test('skips a match inside a string literal', () => {
+    const m = mutate('const label = "a === b";\nconst ok = c === d;\n', 'src/a.ts');
+    assert.equal(m.line, 2);
+  });
+
+  test('skips a match inside a template literal', () => {
+    const m = mutate('const msg = `a <= b`;\nconst ok = c === d;\n', 'src/a.ts');
+    assert.equal(m.line, 2);
+  });
+
+  test('a file whose only operators are in text has no mutant at all', () => {
+    assert.equal(mutate('export const label = "a === b";\n', 'src/a.ts'), null);
+    assert.equal(mutate('/* a !== b */\nexport const done = 1;\n', 'src/a.ts'), null);
+  });
+
+  test('a string ends at its closing quote and the code after it is mutable again', () => {
+    const m = mutate('const label = "a === b"; if (x === y) run();\n', 'src/a.ts');
+    assert.equal(m.line, 1);
+    assert.equal(m.after, 'const label = "a === b"; if (x !== y) run();');
+  });
+
+  test('an escaped quote does not end the string early', () => {
+    const m = mutate('const q = "a \\" === b";\nconst ok = c === d;\n', 'src/a.ts');
+    assert.equal(m.line, 2);
+  });
+});

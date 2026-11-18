@@ -41,9 +41,10 @@ export interface Mutant {
  * occurrence. One edit per mutant keeps the signal clean: if the verifier
  * rejects, it rejected *this* defect.
  *
- * Skips occurrences inside line comments — a verifier is right not to care
- * about a flipped operator in a comment, and crediting it for catching one
- * would overstate the result.
+ * Skips occurrences that are not code — inside a comment, a string or a
+ * template literal. A verifier is right not to care about a flipped operator in
+ * prose, and crediting it for catching one would overstate the result, while a
+ * mutant that changed nothing it could see would understate it.
  */
 export declare function mutate(content: string, file: string, operators?: MutationOperator[]): Mutant | null;
 export declare function isMutationCandidate(relativePath: string): boolean;
