@@ -109,7 +109,7 @@ describe('mutate only edits code, never text that looks like code', () => {
   });
 
   test('skips a match inside a template literal', () => {
-    const m = mutate('const msg = `a <= b`;\nconst ok = c === d;\n', 'src/a.ts');
+    const m = mutate('const msg = `a === b`;\nconst ok = c === d;\n', 'src/a.ts');
     assert.equal(m.line, 2);
   });
 
