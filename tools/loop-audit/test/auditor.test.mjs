@@ -450,3 +450,37 @@ test('loop-audit CLI omits contributor CTA for --json', () => {
   const stdout = execFileSync('node', ['dist/cli.js', '../../', '--json'], { encoding: 'utf8' });
   assert.doesNotMatch(stdout, /discussions\/123/);
 });
+test('computeScore: the assessment names work the project still lacks, not work it has', () => {
+  // A project that meets every L3 condition — verifier, cost observability, a real run
+  // and a proven gate — and is graded L3 must not be told it is missing the verifier.
+  const s = emptySignals();
+  s.stateFile = { present: true, paths: ['STATE.md'] };
+  s.triage = { present: true };
+  s.verifier = { present: true };
+  s.cost = { budgetDoc: true, runLog: true, loopMdBudget: true, budgetSkill: true };
+  s.loopActivity = { present: true, evidence: ['state:STATE.md'] };
+  s.proof = provenGate();
+  s.registry = { present: true };
+
+  const { score, level, assessment } = computeScore(s);
+  assert.equal(level, 'L3');
+  assert.ok(score >= 78, `graded L3 at ${score}`);
+  assert.doesNotMatch(assessment, /add missing verifier/);
+
+  // The band is the L3 threshold, so the first L3 point already gets L3 advice.
+  s.safety = { loopMdMentionsSafety: true, safetyDocPresent: true };
+  assert.match(computeScore(s).assessment, /^Strong/);
+});
+
+test('computeScore: an L2 project is not told to start at L1', () => {
+  const s = emptySignals();
+  s.stateFile = { present: true, paths: ['STATE.md'] };
+  s.triage = { present: true };
+  s.skills = { count: 2, loopSkills: ['loop-triage', 'loop-verifier'] };
+  s.verifier = { present: true };
+
+  const { score, level, assessment } = computeScore(s);
+  assert.equal(level, 'L2');
+  assert.ok(score >= 58);
+  assert.match(assessment, /^Good foundation/);
+});

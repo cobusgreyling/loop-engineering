@@ -420,17 +420,20 @@ export function computeScore(signals) {
         level = 'L1';
     else
         level = 'L0';
-    const assessment = score >= 82 && l3Ready
+    // The bands below are the level thresholds, not private copies of them: an audit that
+    // grades a project L3 at 80 while telling it to "add missing verifier + safety docs for
+    // L3" contradicts itself, and the advice names work the project already has.
+    const assessment = score >= LEVEL_THRESHOLDS.L3 && l3Ready
         ? 'Strong loop readiness — good candidate for L3 with explicit gates.'
-        : score >= 82 && !costReady
+        : score >= LEVEL_THRESHOLDS.L3 && !costReady
             ? 'Strong signals but missing cost observability (loop-budget.md, loop-run-log.md, LOOP.md budget) — add before L3.'
-            : score >= 82 && !hasRealActivity
+            : score >= LEVEL_THRESHOLDS.L3 && !hasRealActivity
                 ? 'Strong structure but no proven loop runs yet — run one L1 cycle and commit state before L3.'
-                : score >= 82 && !proven
+                : score >= LEVEL_THRESHOLDS.L3 && !proven
                     ? 'Strong structure but guardrails are unproven — run loop-drill --record and commit loop-drill.json before L3.'
-                    : score >= 62
+                    : score >= LEVEL_THRESHOLDS.L2
                         ? 'Good foundation — add missing verifier + safety docs for L3.'
-                        : score >= 42
+                        : score >= LEVEL_THRESHOLDS.L1
                             ? 'Early loop setup — focus on L1 state + triage before enabling actions.'
                             : 'Not loop-ready — start with a starter from this repo (minimal-loop or pr-babysitter).';
     return { score, level, assessment };
