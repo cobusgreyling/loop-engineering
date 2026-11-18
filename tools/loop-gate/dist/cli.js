@@ -19,6 +19,11 @@ function parseFlags(argv) {
             flags.gateFile = argv[++i];
         else if (a === '--json')
             flags.json = true;
+        // A typo must not be ignored: "--gatefile strict.yaml" would otherwise fall back to
+        // gate.yaml and decide the change on a policy the caller did not name, while
+        // "--action auto-merge --jsonn" would silently print human output.
+        else
+            throw new Error(`Unknown flag "${a}". Run loop-gate --help for the accepted flags.`);
     }
     return flags;
 }
