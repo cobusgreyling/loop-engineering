@@ -65,3 +65,34 @@ test('autoFixProject writes a gate.yaml that loop-gate can actually load', async
     await rm(root, { recursive: true, force: true }).catch(() => {});
   }
 });
+
+test('the docs/safety.md it scaffolds lists the same denylist as its gate.yaml', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'loop-audit-autofix-'));
+  try {
+    const signals = signalsMissingOnlyGateYaml();
+    // Both files in one run, the way an empty project is scaffolded.
+    signals.safety = { ...signals.safety, safetyDocPresent: false };
+    await autoFixProject(root, { score: 0, level: 'L0', signals });
+
+    const gate = await readFile(path.join(root, 'gate.yaml'), 'utf8');
+    const safety = await readFile(path.join(root, 'docs/safety.md'), 'utf8');
+
+    const gateBlock = gate.match(/denylist:\n((?:\s+-\s+.+\n)+)/)?.[1] ?? '';
+    const fromGate = [...gateBlock.matchAll(/-\s+"([^"]+)"/g)].map((m) => m[1]);
+
+    // loop-sync's extractSafetyDenylist takes the first fenced block after the
+    // "Path Denylist" heading. A bullet list there is invisible to it, so the
+    // drift check has nothing to compare and the two twins silently diverge.
+    const afterHeading = safety.slice(safety.search(/^#{1,6}\s+Path Denylist/im));
+    const fenced = afterHeading.match(/```[^\n]*\n([\s\S]*?)```/)?.[1] ?? null;
+    assert.ok(fenced !== null, 'docs/safety.md must document the denylist in a fenced block');
+    const fromDoc = fenced
+      .split('\n')
+      .map((line) => line.split('#')[0].trim())
+      .filter(Boolean);
+
+    assert.deepEqual(fromDoc, fromGate);
+  } finally {
+    await rm(root, { recursive: true, force: true }).catch(() => {});
+  }
+});
