@@ -4,7 +4,7 @@ import path from 'node:path';
 import { mkdir, writeFile, rm, readFile, access } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { runSync, formatReport, extractFrontmatter } from '../dist/sync.js';
+import { runSync, formatReport, extractFrontmatter, levelForScore } from '../dist/sync.js';
 
 const testDir = path.join(process.cwd(), '.test-tmp');
 const exec = promisify(execFile);
@@ -261,5 +261,23 @@ describe('cli', () => {
     assert.ok(['healthy', 'warning', 'critical'].includes(report.level));
     assert.ok(Array.isArray(report.issues));
     assert.ok(Array.isArray(report.suggestions));
+  });
+});
+
+describe('levelForScore', () => {
+  // The bands `loop-sync --help` prints: 90-100 healthy, 70-89 warning, 0-69 critical.
+  test('grades a score on the scale the CLI publishes', () => {
+    assert.equal(levelForScore(100), 'healthy');
+    assert.equal(levelForScore(90), 'healthy');
+    assert.equal(levelForScore(89), 'warning');
+    assert.equal(levelForScore(70), 'warning');
+    assert.equal(levelForScore(69), 'critical');
+    assert.equal(levelForScore(0), 'critical');
+  });
+
+  // A report used to stay healthy down to 70, and one error issue costs 20 points:
+  // a single finding could print as healthy and exit 0.
+  test('one error issue is a warning, not a healthy report', () => {
+    assert.equal(levelForScore(100 - 20), 'warning');
   });
 });

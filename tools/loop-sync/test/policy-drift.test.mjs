@@ -166,6 +166,22 @@ describe('runSync policy drift integration', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
+  // The unenforced path is the one issue this module calls an error, and it was the
+  // band that let it through: one error costs 20 points, the report stayed healthy
+  // down to 70, and cli.ts exits 0 on healthy. Here the seeded project lands on
+  // exactly 70 -- the edge of the old healthy band -- and must read as a warning.
+  test('grades the report by its worst issue, not by a band 20 points wide', async () => {
+    // The prose states the maxFiles limit too, so the drift error (-20) and the
+    // LOOP.md warning (-10) are the only findings: score 70 exactly, the bottom of
+    // the band the help text calls warning and the top of the old healthy band.
+    const documented = `${SAFETY_MD}\nEscalate on more than 10 files changed.\n`;
+    await seed(GATE_YAML.replace('  - "**/secrets/**"\n', ''), documented);
+    const report = await runSync({ targetDir: dir, ...opts });
+    assert.equal(report.score, 70);
+    assert.equal(report.level, 'warning');
+    await rm(dir, { recursive: true, force: true });
+  });
+
   test('does not auto-fix a safety policy even with --auto-fix', async () => {
     const weakened = GATE_YAML.replace('  - "**/secrets/**"\n', '');
     await seed(weakened, SAFETY_MD);
