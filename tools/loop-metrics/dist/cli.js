@@ -54,7 +54,10 @@ async function main() {
         console.log(`  ${bold}Log File:${reset}  ${values.log}\n`);
         console.log(`  ${bold}Total Runs:${reset}        ${metrics.totalRuns}`);
         // Format tokens (e.g. 1.2M, 520k)
-        const fmt = (n) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${Math.round(n / 1_000)}k` : String(n);
+        const fmt = (n) => {
+            const k = Math.round(n / 1_000);
+            return k >= 1_000 ? `${(k / 1_000).toFixed(1)}M` : n >= 1_000 ? `${k}k` : String(n);
+        };
         console.log(`  ${bold}Tokens Burned:${reset}     ${fmt(metrics.totalTokens)}`);
         console.log(`  ${bold}Avg Duration:${reset}      ${metrics.avgDurationS.toFixed(1)}s\n`);
         console.log(`  ${bold}Actions Taken:${reset}     ${green}${metrics.totalActionsTaken}${reset}`);
