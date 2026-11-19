@@ -255,3 +255,31 @@ describe('buildReport / exitCodeFor', () => {
     assert.equal(exitCodeFor(report), 2);
   });
 });
+
+describe('buildReport credits only a mode something actually caught', () => {
+  test('a specificity-only pass does not cover the mode', () => {
+    // An empty gate: every sensitivity drill is skipped, only the benign
+    // (specificity) drill runs. "An ordinary change is allowed" is not
+    // evidence that over-reach is caught.
+    const report = buildReport(runGateDrills({ config: { denylist: [] } }));
+    assert.ok(!report.covered.includes('Over-Reach (Wrong Scope)'));
+    assert.ok(report.uncovered.includes('Over-Reach (Wrong Scope)'));
+  });
+
+  test('a sensitivity-only pass still covers the mode', () => {
+    // Token Burn has no specificity drill at all; requiring both directions
+    // would drop a mode that genuinely proved its guardrail fires.
+    const report = buildReport([
+      {
+        id: 'breaker.token-budget',
+        name: 'exceeding the token budget trips the breaker',
+        failureMode: 'Token Burn',
+        direction: 'sensitivity',
+        outcome: 'passed',
+        expected: 'escalate via token-budget',
+        actual: 'tripped',
+      },
+    ]);
+    assert.ok(report.covered.includes('Token Burn'));
+  });
+});

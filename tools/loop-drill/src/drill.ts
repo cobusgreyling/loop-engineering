@@ -472,9 +472,16 @@ export function buildReport(results: DrillResult[]): DrillReport {
 
   for (const mode of ALL_MODES) {
     const forMode = results.filter((r) => r.failureMode === mode);
-    const anyPassed = forMode.some((r) => r.outcome === 'passed');
+    // "Caught a seeded fault", not "did not fail": the benign (specificity)
+    // drill passes on a gate that has no denylist at all, so crediting any
+    // pass would report a mode as covered when nothing was ever caught. The
+    // reverse does not hold -- Token Burn and Verifier Theater have no
+    // specificity drill -- so a sensitivity pass is enough on its own.
+    const anyCaught = forMode.some(
+      (r) => r.outcome === 'passed' && r.direction === 'sensitivity',
+    );
     const anyFailed = forMode.some((r) => r.outcome === 'failed');
-    if (anyPassed && !anyFailed) covered.push(mode);
+    if (anyCaught && !anyFailed) covered.push(mode);
     else uncovered.push(mode);
   }
 
