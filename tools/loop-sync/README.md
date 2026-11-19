@@ -104,7 +104,7 @@ loop-sync ./my-project --auto-fix
 ```
 Loop Sync Report
 ══════════════════════════════════════════════════
-Score: 85/100 (healthy)
+Score: 95/100 (healthy)
 
 ✅ No issues detected. Configuration is consistent.
 

@@ -21,6 +21,16 @@ export interface DriftIssue {
     severity: 'error' | 'warning' | 'info';
     suggestion?: string;
 }
+/**
+ * The scale `loop-sync --help` publishes: 90-100 healthy (no issues), 70-89
+ * warning (minor inconsistencies), 0-69 critical. The report used to grade
+ * below 40 critical and below 70 warning, so its healthy band reached down to
+ * 70 and a single error issue (-20 -> 80) was still reported as healthy -- and
+ * `loop-sync` exits 0 on healthy, which is how the one drift it calls an error,
+ * a path documented in docs/safety.md but not enforced by gate.yaml, passed a
+ * CI gate that trusts the exit code.
+ */
+export declare function levelForScore(score: number): DriftReport['level'];
 export interface SyncOptions {
     targetDir: string;
     autoFix: boolean;
