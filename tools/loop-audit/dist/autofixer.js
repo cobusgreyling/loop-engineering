@@ -125,15 +125,29 @@ const LOOP_MD_TEMPLATE = `# Loop Configuration — Minimal Triage
 - Kill switch: \`loop-pause-all\` — pause schedulers and notify human
 - Estimate: \`npx @cobusgreyling/loop-cost --pattern daily-triage\`
 `;
+// The Path Denylist block below is read by loop-sync's
+// extractSafetyDenylist, which takes the first fenced block after the heading
+// and compares it entry-for-entry with gate.yaml's denylist. It has to stay a
+// fence with bare globs -- a bullet list is invisible to that parser, and any
+// glob that gate.yaml does not carry is reported as drift the moment both
+// files are scaffolded.
 const SAFETY_MD_TEMPLATE = `# Loop Safety Policy
 
 ## Auto-merge policy
 - Never auto-merge to main. All code changes require human review.
 
-## Path denylist
-- .github/workflows/
-- secrets/
-- credentials/
+## Path Denylist
+
+The loop must **never** auto-edit these without human approval:
+
+\`\`\`
+**/.env
+**/.env.*
+**/secrets/**
+**/credentials/**
+**/*_key*
+**/*_secret*
+\`\`\`
 
 ## MCP Scopes
 - Read-only unless explicitly allowed.
