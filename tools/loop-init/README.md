@@ -53,11 +53,28 @@ npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-pr
 
 | Flag | Values | Default |
 |------|--------|---------|
-| `--model-provider` | `anthropic`, `minimax`, `orcarouter`, `cheaperinference` | `anthropic` |
+| `--model-provider` | `anthropic`, `minimax`, `orcarouter`, `cheaperinference`, `api-route` | `anthropic` |
 | `--region` | `global_en`, `cn_zh` | `global_en` |
 | `--model` | `MiniMax-M3`, `MiniMax-M2.7`, `orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`, `gpt-5.4-mini`, `gpt-5.4`, `claude-sonnet-5`, `gemini-3.1-pro`, `deepseek-v4-flash`, `glm-5.3` | `MiniMax-M3` / `orcarouter/fusion` / `gpt-5.4-mini` |
 
 MiniMax model options and both endpoints (`global_en` → `https://api.minimax.io`, `cn_zh` → `https://api.minimaxi.com`) are written into `.foundry/stack.yaml`. The OrcaRouter provider writes the gateway's OpenAI- and Anthropic-compatible endpoints (`https://api.orcarouter.ai`) plus its routing model options (`orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`). The Cheaper Inference provider writes the gateway's OpenAI-compatible (`https://api.cheaperinference.com/v1`) and Anthropic-compatible (`https://api.cheaperinference.com`) endpoints plus its model options. Set `CHEAPER_INFERENCE_API_KEY` to a key from [cheaperinference.com/signup](https://cheaperinference.com/signup).
+
+### API Route
+
+Use `--model-provider api-route` to emit a `model/api-route` interface with
+`https://global.api-route.com/v1` as its OpenAI-compatible endpoint:
+
+```bash
+npx @cobusgreyling/loop-init . -p ci-sweeper -t codex --with-foundry --model-provider api-route
+npx @cobusgreyling/loop-init . -p ci-sweeper -t codex --with-foundry --model-provider api-route --model gpt-6.1-sol
+```
+
+The default is `gpt-6.1-sol`. Set `API_ROUTE_API_KEY` to a key from
+[API Route](https://www.api-route.com). Select other model IDs with `--model` using
+the [model catalog](https://www.api-route.com/pricing) or the authenticated
+`GET https://global.api-route.com/v1/models` response. The generated YAML quotes
+the selected ID and contains no API key. Configure the key in the runtime consuming
+the stack, following its OpenAI-compatible authentication settings.
 
 ## Patterns
 
