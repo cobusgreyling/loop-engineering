@@ -36,10 +36,19 @@ The state file schema and skills are tool-agnostic — only the invocation step 
 | File | Trigger | Pattern |
 |------|---------|---------|
 | [daily-triage.yml](./daily-triage.yml) | Cron weekdays | Daily Triage |
-| [thin-loop.yml](../../starters/thin-loop/.github/workflows/thin-loop.yml) | Issues/PRs + weekday cron | Thin Loop (no STATE.md) |
+| [thin-loop.yml](../../starters/thin-loop/.github/workflows/thin-loop.yml) | Issues/PRs + weekday cron | Thin Loop |
 | [ci-sweeper.yml](./ci-sweeper.yml) | `workflow_run` failure | CI Sweeper |
 | [post-merge-cleanup.yml](./post-merge-cleanup.yml) | Push to main + nightly | Post-Merge Cleanup |
 | [issue-triage.yml](./issue-triage.yml) | Cron 2h weekdays + `issues` events | Issue Triage |
+| `battle-training-controller-test.yml` | Push/PR touching the example + manual | Battle Training controller test |
+
+## Battle Training controller test
+
+An agent writes a tank-arena controller for battle.training, and CI tests it against the arena's own engine instead of letting a bad controller reach the ladder. [`battle-training-controller-test.yml`](./battle-training-controller-test.yml) runs on pushes and pull requests touching the example (and manually via `workflow_dispatch`), and plays the demo controller in [`battle-training/controller.js`](./battle-training/controller.js) against the house bots `brawler`, `holder`, `random` and `hunter` over 10 seeds.
+
+The demo controller is the exact v1 controller of ssenkuuu-bot, verified locally at 69.4% over 160 games. The CI gate passes only when the overall win rate is >= 50%, brawler >= 60%, hunter >= 50%, and there are 0 tick errors — a bad controller fails the PR instead of reaching the ladder.
+
+Upload is intentionally off: shipping a new bot version needs a `BT_API_KEY` secret and a human decision, so this example stays at L1 report / L2 assisted and never uploads unattended.
 
 ## Security
 
