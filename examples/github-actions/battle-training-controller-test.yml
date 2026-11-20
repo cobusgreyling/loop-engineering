@@ -1,0 +1,48 @@
+---
+# Battle Training controller test
+#
+# Loop: an agent writes a tank-arena controller -> CI tests it against the
+# official battle.training engine -> a bad controller fails the PR instead
+# of reaching the ladder. Upload is deliberately NOT enabled here: shipping
+# a new bot version needs a BT_API_KEY secret and a human decision, so this
+# example stays at L1 report / L2 assisted, never unattended upload.
+#
+# Prerequisite (do this BEFORE opening the PR): the action below is
+# referenced as ssenkuuu/battle-training-action@v1, but that repo currently
+# has 0 releases / 0 tags (verified 20 Nov 2026). Create the v1 release/tag
+# on https://github.com/sSenkuuu/battle-training-action first, otherwise
+# this workflow cannot resolve and will fail in loop-engineering CI.
+
+name: Battle Training controller test
+
+on:
+  push:
+    paths:
+      - "examples/github-actions/battle-training/**"
+      - "examples/github-actions/battle-training-controller-test.yml"
+  pull_request:
+    paths:
+      - "examples/github-actions/battle-training/**"
+      - "examples/github-actions/battle-training-controller-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test controller vs house bots
+        id: bt
+        uses: ssenkuuu/battle-training-action@v1
+        with:
+          controller: examples/github-actions/battle-training/controller.js
+          seeds: 10
+          opponents: brawler,holder,random,hunter
+
+      - name: Verdict
+        run: |
+          echo "win-rate=${{ steps.bt.outputs.win-rate }} games=${{ steps.bt.outputs.games }} passed=${{ steps.bt.outputs.passed }}"
