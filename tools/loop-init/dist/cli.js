@@ -72,16 +72,30 @@ const PATTERN_FOUNDRY_PRESET = {
     'thin-loop': 'minimal',
 };
 const FOUNDRY_SHOWCASE = 'https://github.com/cobusgreyling/harness-foundry/blob/main/docs/showcase.md';
-const MINIMAX_DEFAULT_MODEL = 'MiniMax-M3';
+const MINIMAX_DEFAULT_MODEL = 'MiniMax-M3.1-Flash';
 const MINIMAX_DEFAULT_REGION = 'global_en';
 const MINIMAX_MODELS = [
+    {
+        id: 'MiniMax-M3.1-Flash',
+        contextWindow: 1_000_000,
+        maxOutputTokens: 524_288,
+        inputModalities: ['text', 'image', 'video'],
+        thinking: ['adaptive'],
+        reasoningEffort: ['low', 'medium', 'high', 'xhigh', 'max'],
+        defaultReasoningEffort: 'max',
+        pricing: { input: 0.15, output: 0.6, cacheRead: 0.015, cacheWrite: null },
+    },
     {
         id: 'MiniMax-M3',
         contextWindow: 1_000_000,
         inputModalities: ['text', 'image', 'video'],
         thinking: ['adaptive', 'disabled'],
-        pricing: { input: 0.6, output: 2.4, cacheRead: 0.12, cacheWrite: null },
+        pricing: { input: 0.3, output: 1.2, cacheRead: 0.06, cacheWrite: null },
+        longContextPricing: { input: 0.6, output: 2.4, cacheRead: 0.12 },
     },
+];
+// Keep explicit legacy selections working without advertising them in new stacks.
+const MINIMAX_LEGACY_MODELS = [
     {
         id: 'MiniMax-M2.7',
         contextWindow: 204_800,
@@ -105,6 +119,7 @@ const MINIMAX_REGIONS = [
     },
 ];
 const MINIMAX_MODEL_IDS = MINIMAX_MODELS.map((m) => m.id);
+const MINIMAX_LEGACY_MODEL_IDS = MINIMAX_LEGACY_MODELS.map((m) => m.id);
 const MINIMAX_REGION_IDS = MINIMAX_REGIONS.map((r) => r.region);
 const ORCAROUTER_DEFAULT_MODEL = 'orcarouter/fusion';
 const ORCAROUTER_BASE_URL = 'https://api.orcarouter.ai';
@@ -196,11 +211,27 @@ ${models}
 }
 /** Render the `model/minimax` interface primitive for the implementer stack. */
 function minimaxInterfaceYaml(model, region) {
-    const models = MINIMAX_MODELS.map((m) => [
+    const selectedModels = [
+        ...MINIMAX_MODELS,
+        ...MINIMAX_LEGACY_MODELS.filter((m) => m.id === model),
+    ];
+    const models = selectedModels.map((m) => [
         `          - id: ${m.id}`,
         `            context_window: ${m.contextWindow}`,
         `            input_modalities: [${m.inputModalities.join(', ')}]`,
         `            thinking: [${m.thinking.join(', ')}]`,
+        ...(m.maxOutputTokens ? [`            max_output_tokens: ${m.maxOutputTokens}`] : []),
+        ...(m.reasoningEffort ? [
+            `            reasoning_effort: [${m.reasoningEffort.join(', ')}]`,
+            `            default_reasoning_effort: ${m.defaultReasoningEffort}`,
+        ] : []),
+        ...(m.longContextPricing ? [
+            `            # Standard pricing below applies to input <=512k; above 512k:`,
+            `            pricing_above_512k_usd_per_million_tokens:`,
+            `              input: ${m.longContextPricing.input}`,
+            `              output: ${m.longContextPricing.output}`,
+            `              cache_read: ${m.longContextPricing.cacheRead}`,
+        ] : []),
         `            pricing_usd_per_million_tokens:`,
         `              input: ${m.pricing.input}`,
         `              output: ${m.pricing.output}`,
@@ -754,7 +785,7 @@ Options:
   --with-fleet      Also scaffold fleet-engineering registry and inbox
   --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference)
   --region          MiniMax region when --model-provider minimax (global_en, cn_zh)
-  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini)
+  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference (default: MiniMax-M3.1-Flash / orcarouter/fusion / gpt-5.4-mini)
   --dry-run         Print actions without copying
   -h, --help        This help
 
@@ -768,7 +799,7 @@ Examples:
   npx @cobusgreyling/loop-init . --pattern daily-triage --tool claude --with-foundry
   npx @cobusgreyling/loop-init . -p pr-babysitter -t claude --with-foundry
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
-  npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M3
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference --model claude-sonnet-5
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
@@ -798,7 +829,7 @@ Examples:
             console.error(`Unknown region: ${region}. Valid: ${MINIMAX_REGION_IDS.join(', ')}`);
             process.exit(1);
         }
-        if (!MINIMAX_MODEL_IDS.includes(model)) {
+        if (!MINIMAX_MODEL_IDS.includes(model) && !MINIMAX_LEGACY_MODEL_IDS.includes(model)) {
             console.error(`Unknown model: ${model}. Valid: ${MINIMAX_MODEL_IDS.join(', ')}`);
             process.exit(1);
         }
