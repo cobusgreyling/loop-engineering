@@ -194,9 +194,9 @@ ${models}
             anthropic_base_url: ${CHEAPERINFERENCE_BASE_URL}
             docs_root: https://cheaperinference.com/docs`;
 }
-const UBERLLM_DEFAULT_MODEL = 'deepseek/deepseek-v4.1-flash';
-const UBERLLM_BASE_URL = 'https://api.uberllm.dev';
-const UBERLLM_MODELS = [
+const MARTLLM_DEFAULT_MODEL = 'deepseek/deepseek-v4.1-flash';
+const MARTLLM_BASE_URL = 'https://api.martllm.com';
+const MARTLLM_MODELS = [
     { id: 'deepseek/deepseek-v4.1-flash', contextWindow: 1_048_576, notes: 'DeepSeek' },
     { id: 'openai/gpt-5.4-mini', contextWindow: 400_000, notes: 'OpenAI' },
     { id: 'openai/gpt-5.4', contextWindow: 1_000_000, notes: 'OpenAI' },
@@ -204,30 +204,30 @@ const UBERLLM_MODELS = [
     { id: 'google/gemini-3.1-pro', contextWindow: 1_048_576, notes: 'Google' },
     { id: 'z-ai/glm-5.3', contextWindow: 1_000_000, notes: 'Z.ai' },
 ];
-const UBERLLM_MODEL_IDS = UBERLLM_MODELS.map((m) => m.id);
+const MARTLLM_MODEL_IDS = MARTLLM_MODELS.map((m) => m.id);
 /**
- * Render the `model/uberllm` interface primitive for the implementer stack.
- * UberLLM is an OpenAI-compatible LLM gateway with `vendor/model` ids. It also
+ * Render the `model/martllm` interface primitive for the implementer stack.
+ * MartLLM is an OpenAI-compatible LLM gateway with `vendor/model` ids. It also
  * serves the Anthropic Messages API (Anthropic clients append `/v1/messages`
  * to the base URL) and an MCP server at `/mcp` on the same key.
  */
-function uberllmInterfaceYaml(model) {
-    const models = UBERLLM_MODELS.map((m) => [
+function martllmInterfaceYaml(model) {
+    const models = MARTLLM_MODELS.map((m) => [
         `          - id: ${m.id}`,
         `            context_window: ${m.contextWindow}`,
         `            notes: "${m.notes}"`,
     ].join('\n')).join('\n');
-    return `    - primitive: model/uberllm
+    return `    - primitive: model/martllm
       config:
         model: ${model}
         models:
 ${models}
         endpoints:
           global:
-            openai_base_url: ${UBERLLM_BASE_URL}/v1
-            anthropic_base_url: ${UBERLLM_BASE_URL}
-            mcp_url: ${UBERLLM_BASE_URL}/mcp
-            docs_root: https://uberllm.dev/docs`;
+            openai_base_url: ${MARTLLM_BASE_URL}/v1
+            anthropic_base_url: ${MARTLLM_BASE_URL}
+            mcp_url: ${MARTLLM_BASE_URL}/mcp
+            docs_root: https://martllm.com/docs`;
 }
 /** Render the `model/minimax` interface primitive for the implementer stack. */
 function minimaxInterfaceYaml(model, region) {
@@ -303,8 +303,8 @@ function foundryStackYaml(stackName, pattern, preset, provider = 'anthropic', re
                 ? orcarouterInterfaceYaml(model)
                 : provider === 'cheaperinference'
                     ? cheaperinferenceInterfaceYaml(model)
-                    : provider === 'uberllm'
-                        ? uberllmInterfaceYaml(model)
+                    : provider === 'martllm'
+                        ? martllmInterfaceYaml(model)
                         : `    - primitive: model/anthropic
       config:
         model: claude-sonnet-4-6`;
@@ -789,9 +789,9 @@ Options:
   --with-foundry    Also scaffold .foundry/ stack (harness-foundry runtime)
   --with-memory     Also scaffold memory-engineering tiers and budget
   --with-fleet      Also scaffold fleet-engineering registry and inbox
-  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference, uberllm)
+  --model-provider  Implementer interface provider (default: anthropic; minimax, orcarouter, cheaperinference, martllm)
   --region          MiniMax region when --model-provider minimax (global_en, cn_zh)
-  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference/uberllm (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini / deepseek/deepseek-v4.1-flash)
+  --model           Provider model when --model-provider minimax/orcarouter/cheaperinference/martllm (default: MiniMax-M3 / orcarouter/fusion / gpt-5.4-mini / deepseek/deepseek-v4.1-flash)
   --dry-run         Print actions without copying
   -h, --help        This help
 
@@ -808,7 +808,7 @@ Examples:
   npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
   npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference --model claude-sonnet-5
-  npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider uberllm --model anthropic/claude-sonnet-4.6
+  npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider martllm --model anthropic/claude-sonnet-4.6
   npx @cobusgreyling/loop-init . -p daily-triage -t opencode
   npx @cobusgreyling/loop-init . --with-memory
   npx @cobusgreyling/loop-init . --with-fleet
@@ -826,7 +826,7 @@ Examples:
         console.error(`Unknown tool: ${tool}. Valid: ${validTools.join(', ')}`);
         process.exit(1);
     }
-    const validProviders = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference', 'uberllm'];
+    const validProviders = ['anthropic', 'minimax', 'orcarouter', 'cheaperinference', 'martllm'];
     if (!validProviders.includes(modelProvider)) {
         console.error(`Unknown model provider: ${modelProvider}. Valid: ${validProviders.join(', ')}`);
         process.exit(1);
@@ -867,15 +867,15 @@ Examples:
             }
         }
     }
-    if (modelProvider === 'uberllm') {
+    if (modelProvider === 'martllm') {
         // `model` defaults to the MiniMax default; if the user did not pass
-        // `--model` explicitly, fall back to the UberLLM default instead.
-        if (!UBERLLM_MODEL_IDS.includes(model)) {
+        // `--model` explicitly, fall back to the MartLLM default instead.
+        if (!MARTLLM_MODEL_IDS.includes(model)) {
             if (model === MINIMAX_DEFAULT_MODEL) {
-                model = UBERLLM_DEFAULT_MODEL;
+                model = MARTLLM_DEFAULT_MODEL;
             }
             else {
-                console.error(`Unknown model: ${model}. Valid: ${UBERLLM_MODEL_IDS.join(', ')}`);
+                console.error(`Unknown model: ${model}. Valid: ${MARTLLM_MODEL_IDS.join(', ')}`);
                 process.exit(1);
             }
         }

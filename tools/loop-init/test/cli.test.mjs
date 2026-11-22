@@ -554,8 +554,8 @@ test('loop-init --help documents --model-provider cheaperinference', async () =>
   assert.match(stdout, /cheaperinference/);
 });
 
-test('loop-init --with-foundry --model-provider uberllm emits UberLLM provider primitive', async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-uberllm-'));
+test('loop-init --with-foundry --model-provider martllm emits MartLLM provider primitive', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-martllm-'));
   try {
     const { stdout } = await exec('node', [
       CLI,
@@ -566,10 +566,10 @@ test('loop-init --with-foundry --model-provider uberllm emits UberLLM provider p
       'claude',
       '--with-foundry',
       '--model-provider',
-      'uberllm',
+      'martllm',
     ]);
     const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
-    assert.match(stack, /primitive: model\/uberllm/);
+    assert.match(stack, /primitive: model\/martllm/);
     // default model
     assert.match(stack, /model: deepseek\/deepseek-v4\.1-flash/);
     // model options table
@@ -578,9 +578,9 @@ test('loop-init --with-foundry --model-provider uberllm emits UberLLM provider p
     assert.match(stack, /- id: google\/gemini-3\.1-pro/);
     assert.match(stack, /- id: z-ai\/glm-5\.3/);
     // OpenAI- and Anthropic-compatible endpoints plus MCP on the same gateway
-    assert.match(stack, /openai_base_url: https:\/\/api\.uberllm\.dev\/v1/);
-    assert.match(stack, /anthropic_base_url: https:\/\/api\.uberllm\.dev$/m);
-    assert.match(stack, /mcp_url: https:\/\/api\.uberllm\.dev\/mcp/);
+    assert.match(stack, /openai_base_url: https:\/\/api\.martllm\.dev\/v1/);
+    assert.match(stack, /anthropic_base_url: https:\/\/api\.martllm\.dev$/m);
+    assert.match(stack, /mcp_url: https:\/\/api\.martllm\.dev\/mcp/);
     assert.doesNotMatch(stack, /model\/anthropic/);
     assert.doesNotMatch(stack, /model\/minimax/);
     assert.doesNotMatch(stack, /model\/cheaperinference/);
@@ -590,8 +590,8 @@ test('loop-init --with-foundry --model-provider uberllm emits UberLLM provider p
   }
 });
 
-test('loop-init --with-foundry uberllm --model selects a different model', async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-uberllm-model-'));
+test('loop-init --with-foundry martllm --model selects a different model', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-martllm-model-'));
   try {
     await exec('node', [
       CLI,
@@ -602,7 +602,7 @@ test('loop-init --with-foundry uberllm --model selects a different model', async
       'claude',
       '--with-foundry',
       '--model-provider',
-      'uberllm',
+      'martllm',
       '--model',
       'anthropic/claude-sonnet-4.6',
     ]);
@@ -616,7 +616,7 @@ test('loop-init --with-foundry uberllm --model selects a different model', async
   }
 });
 
-test('loop-init rejects unknown uberllm model', async () => {
+test('loop-init rejects unknown martllm model', async () => {
   await assert.rejects(
     () =>
       exec('node', [
@@ -628,7 +628,7 @@ test('loop-init rejects unknown uberllm model', async () => {
         'claude',
         '--with-foundry',
         '--model-provider',
-        'uberllm',
+        'martllm',
         '--model',
         'not-a-model',
         '--dry-run',
@@ -637,10 +637,10 @@ test('loop-init rejects unknown uberllm model', async () => {
   );
 });
 
-test('loop-init --help documents --model-provider uberllm', async () => {
+test('loop-init --help documents --model-provider martllm', async () => {
   const { stdout } = await exec('node', [CLI, '--help']);
   assert.match(stdout, /--model-provider/);
-  assert.match(stdout, /uberllm/);
+  assert.match(stdout, /martllm/);
 });
 
 test('loop-init rejects unknown model provider', async () => {
