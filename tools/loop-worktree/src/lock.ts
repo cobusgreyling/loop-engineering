@@ -146,30 +146,40 @@ function isWildcardSegment(segment: string): boolean {
 }
 
 /**
- * Two path globs "overlap" if, segment by segment, every position where both
- * have a literal (non-wildcard) segment agrees -- a wildcard segment (`*` or
- * `**`) is treated as compatible with anything at that position. If one glob
- * has fewer segments, it only "covers" the longer, more specific path when
- * its last segment is itself a wildcard (e.g. "src/**" covers
- * "src/nested/foo.ts"); otherwise a shorter path is a distinct, shallower
- * file and does not overlap. Deliberately simple -- an advisory lock, not a
- * full glob engine.
+ * Two path globs "overlap" if some path could match both. Segment by segment, a
+ * position where both sides have a literal (non-wildcard) segment has to agree,
+ * and a wildcard segment (`*` or `**`) is compatible with anything at that
+ * position. `**` matches zero or more segments, so a glob with `**` in the middle
+ * also covers the same path with those segments absent. A pattern that runs out
+ * while the other still has segments left only covers them when its own last
+ * segment is a wildcard (`src/**` covers `src/nested/foo.ts`); otherwise a shorter
+ * path is a distinct, shallower file and does not overlap. Deliberately simple --
+ * an advisory lock, not a full glob engine.
  */
 export function pathsOverlap(a: string, b: string): boolean {
   if (a === b) return true;
   const segA = a.split('/').filter(Boolean);
   const segB = b.split('/').filter(Boolean);
-  const len = Math.min(segA.length, segB.length);
-  for (let i = 0; i < len; i++) {
-    const sa = segA[i];
-    const sb = segB[i];
-    if (sa === sb) continue;
-    if (isWildcardSegment(sa) || isWildcardSegment(sb)) continue;
-    return false;
-  }
-  if (segA.length === segB.length) return true;
-  const shorter = segA.length < segB.length ? segA : segB;
-  return isWildcardSegment(shorter[shorter.length - 1]);
+  return segmentsOverlap(segA, 0, segB, 0);
+}
+
+const isDoubleStar = (segment: string): boolean => segment === '**';
+
+function segmentsOverlap(a: string[], i: number, b: string[], j: number): boolean {
+  if (i === a.length && j === b.length) return true;
+  // One pattern is used up. It covers the rest only when it can match "nothing more",
+  // which is what its own trailing wildcard means.
+  if (i === a.length) return isWildcardSegment(a[a.length - 1] as string);
+  if (j === b.length) return isWildcardSegment(b[b.length - 1] as string);
+  const sa = a[i] as string;
+  const sb = b[j] as string;
+  // `**` matches zero or more segments, so it may swallow none of the other side: trying
+  // only the consuming branch meant `src/**/foo.ts` and `src/foo.ts` read as unrelated,
+  // and two owners could lock the same file at the same time.
+  if (isDoubleStar(sa)) return segmentsOverlap(a, i + 1, b, j) || segmentsOverlap(a, i, b, j + 1);
+  if (isDoubleStar(sb)) return segmentsOverlap(a, i, b, j + 1) || segmentsOverlap(a, i + 1, b, j);
+  if (sa !== sb && !isWildcardSegment(sa) && !isWildcardSegment(sb)) return false;
+  return segmentsOverlap(a, i + 1, b, j + 1);
 }
 
 export async function listLocks(root: string): Promise<LockEntry[]> {
