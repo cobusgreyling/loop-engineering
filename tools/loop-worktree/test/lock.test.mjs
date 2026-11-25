@@ -24,6 +24,38 @@ test('pathsOverlap: exact match, glob prefix, and distinct files', () => {
   assert.equal(pathsOverlap('package.json', 'package-lock.json'), false);
 });
 
+test('pathsOverlap: `**` matches zero segments, so a middle glob still collides', () => {
+  // `**` stands for zero or more segments: `src/**/foo.ts` and `src/foo.ts` name the same
+  // file, and so do `**/x` and `x`. Reading `**` as "exactly one segment" let two owners
+  // lock the same file at the same time, which is the collision the lock exists to stop.
+  assert.equal(pathsOverlap('src/**/foo.ts', 'src/foo.ts'), true);
+  assert.equal(pathsOverlap('a/**/b/c', 'a/b/c'), true);
+  assert.equal(pathsOverlap('**/x', 'x'), true);
+  assert.equal(pathsOverlap('src/**/foo.ts', 'src/bar/foo.ts'), true);
+  assert.equal(pathsOverlap('src/**/foo.ts', 'src/bar/other.ts'), false);
+  assert.equal(pathsOverlap('src/a/**', 'src/b/**'), false);
+});
+
+test('lockPaths refuses a file a middle-`**` lock already covers', async () => {
+  const root = await freshDir();
+  try {
+    await lockPaths({ root, owner: 'alice', paths: ['src/**/index.ts'] });
+    await assert.rejects(
+      () => lockPaths({ root, owner: 'bob', paths: ['src/index.ts'] }),
+      /locked by owner "alice"/
+    );
+    // The reverse order has to collide too.
+    await unlockOwner(root, 'alice');
+    await lockPaths({ root, owner: 'alice', paths: ['src/index.ts'] });
+    await assert.rejects(
+      () => lockPaths({ root, owner: 'bob', paths: ['src/**/index.ts'] }),
+      /locked by owner "alice"/
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('pathsOverlap respects path-segment boundaries, not raw string prefixes', () => {
   // A shared literal character prefix across segments must not count as overlap.
   assert.equal(pathsOverlap('docs/api', 'docs/apidocs.md'), false);
