@@ -21,8 +21,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-10-26T08:06:02Z","pattern":"daily-triage","duration_s":11,"items_found":19,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"40289917182"}
-{"run_id":"2026-10-27T08:00:52Z","pattern":"daily-triage","duration_s":14,"items_found":16,"actions_taken":1,"escalations":3,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"40470598209"}
 {"run_id":"2026-10-28T08:01:09Z","pattern":"daily-triage","duration_s":8,"items_found":17,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"40653799566"}
 {"run_id":"2026-10-29T08:00:51Z","pattern":"daily-triage","duration_s":10,"items_found":16,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"40839101676"}
 {"run_id":"2026-10-30T08:00:58Z","pattern":"daily-triage","duration_s":9,"items_found":16,"actions_taken":1,"escalations":1,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"41023601709"}
@@ -44,3 +42,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-23T08:00:49Z","pattern":"daily-triage","duration_s":8,"items_found":22,"actions_taken":1,"escalations":3,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"45135228434"}
 {"run_id":"2026-11-24T08:01:11Z","pattern":"daily-triage","duration_s":13,"items_found":22,"actions_taken":1,"escalations":3,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"45352461545"}
 {"run_id":"2026-11-25T08:01:08Z","pattern":"daily-triage","duration_s":14,"items_found":24,"actions_taken":1,"escalations":3,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"45572627898"}
+{"run_id":"2026-11-26T08:00:58Z","pattern":"daily-triage","duration_s":12,"items_found":24,"actions_taken":1,"escalations":3,"tokens_estimate":52000,"readiness_score":100,"outcome":"report-only","workflow_run":"45779598407"}
