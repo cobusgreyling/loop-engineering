@@ -49,7 +49,7 @@
     "access": "public"
   },
   "dependencies": {
-    "minimatch": "^10.0.0",
+    "minimatch": "^11.0.1",
     "yaml": "^2.8.0"
   },
   "devDependencies": {
