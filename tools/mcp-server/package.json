@@ -49,7 +49,7 @@
     "@cobusgreyling/loop-cost": "file:../loop-cost",
     "@cobusgreyling/loop-gate": "file:../loop-gate",
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "minimatch": "^10.2.5",
+    "minimatch": "^11.0.9",
     "yaml": "^2.8.0",
     "zod": "^3.25 || ^4.0"
   },
