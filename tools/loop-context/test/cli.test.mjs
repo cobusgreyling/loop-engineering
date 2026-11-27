@@ -102,6 +102,19 @@ test('cli rejects missing numeric flag values', () => {
   assert.match(r.stderr, /--stagnation requires a positive integer value/);
 });
 
+test('cli rejects an unknown flag instead of running the breaker without it', () => {
+  const spent = JSON.stringify({
+    goal: 'x',
+    attempts: [{ iteration: 1, action: 'a', outcome: 'success', tokensUsed: 5000 }],
+  });
+  assert.equal(runCli(['--check', '--token-budget', '1000'], spent).status, 2);
+
+  const r = runCli(['--check', '--token-budgett', '1000'], spent);
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout, '');
+  assert.match(r.stderr, /Unknown flag "--token-budgett"/);
+});
+
 const cheapLedger = JSON.stringify({
   goal: 'x',
   attempts: [{ iteration: 1, action: 'a', outcome: 'success', tokensUsed: 100 }],

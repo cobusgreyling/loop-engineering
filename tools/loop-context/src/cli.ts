@@ -118,6 +118,9 @@ function parseArgs(argv: string[]): Args {
       breaker.similarityThreshold = val;
       prune.similarityThreshold = val;
     }
+    // "--token-budgett 1000" would otherwise run --check with no budget at all and
+    // come back CONTINUE, the same silent fail-open the value checks above refuse.
+    else throw new Error(`Unknown flag "${a}". Run loop-context --help for the accepted flags.`);
   }
 
   return { help: false, ledger, ...base() };
