@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sem": {
+      "command": "npx",
+      "args": ["-y", "@ataraxy-labs/sem@0.27.0", "mcp"],
+      "env": {
+        "SEM_REPO": "/absolute/path/to/trusted/git/repository",
+        "SEM_NO_NETWORK": "1",
+        "SEM_NO_TELEMETRY": "1"
+      }
+    }
+  }
+}
