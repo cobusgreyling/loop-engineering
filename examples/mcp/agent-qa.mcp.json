@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "agent-qa": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "agent-qa@0.2.3",
+        "--config",
+        "/absolute/path/to/project/agent-qa.config.yaml",
+        "mcp"
+      ]
+    }
+  }
+}

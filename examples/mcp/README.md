@@ -32,6 +32,7 @@ The local clone/dev path still works if you want to inspect or change the server
 | Safe propose flow | Any write action | Loop opens PR / draft / comment. Human merges or approves. | All L2+ patterns |
 | Knos (shared state) | Give parallel loops one state record instead of one STATE.md each | Local only; no network, no account | Anti-pattern 5, PR Babysitter, Daily Triage |
 | Parallel Search | Find public release notes and fetch migration guidance | Anonymous search + fetch; report-only, public inputs | Dependency Sweeper, Daily Triage |
+| [agent-qa](./agent-qa.md) | Inspect recorded web/mobile journey results before proposing a fix | Host-enforced reader allowlist or manual call approval; execution needs a separate human gate | CI Sweeper, PR Babysitter |
 
 ## Example Configurations
 
@@ -49,6 +50,8 @@ See the files in this directory:
   Python 3.10+). `knos-decisions.example.md` beside it shows the record shape; it
   is plain markdown, so it reads with nothing installed and the server is only
   needed for live claims.
+- [`agent-qa.mcp.json`](./agent-qa.mcp.json) — pinned local stdio server; see the
+  [setup and report-only evidence walkthrough](./agent-qa.md) before enabling tools.
 - `safe-write-pattern.md` — the recommended architecture for any mutating action.
 
 ## Usage in a Loop Prompt (Grok example)
