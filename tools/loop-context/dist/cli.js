@@ -219,7 +219,7 @@ async function main() {
             console.log(JSON.stringify(pruneLedger(ledger, args.prune), null, 2));
             return;
         case 'summary': {
-            const summary = summarizeAttempts(ledger);
+            const summary = summarizeAttempts(ledger, args.breaker.similarityThreshold);
             if (args.json)
                 console.log(JSON.stringify(summary, null, 2));
             else
@@ -231,7 +231,7 @@ async function main() {
             return;
         case 'status':
         default: {
-            const summary = summarizeAttempts(ledger);
+            const summary = summarizeAttempts(ledger, args.breaker.similarityThreshold);
             const decision = checkCircuitBreaker(ledger, args.breaker);
             console.log(formatSummary(summary));
             console.log('');
