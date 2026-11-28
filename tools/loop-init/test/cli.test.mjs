@@ -554,6 +554,95 @@ test('loop-init --help documents --model-provider cheaperinference', async () =>
   assert.match(stdout, /cheaperinference/);
 });
 
+test('loop-init --with-foundry --model-provider martllm emits MartLLM provider primitive', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-martllm-'));
+  try {
+    const { stdout } = await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'claude',
+      '--with-foundry',
+      '--model-provider',
+      'martllm',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /primitive: model\/martllm/);
+    // default model
+    assert.match(stack, /model: deepseek\/deepseek-v4\.1-flash/);
+    // model options table
+    assert.match(stack, /- id: deepseek\/deepseek-v4-pro/);
+    assert.match(stack, /- id: anthropic\/claude-sonnet-4\.6/);
+    assert.match(stack, /- id: google\/gemini-3\.1-pro/);
+    assert.match(stack, /- id: z-ai\/glm-5\.3/);
+    // OpenAI- and Anthropic-compatible endpoints plus MCP on the same gateway
+    assert.match(stack, /openai_base_url: https:\/\/api\.martllm\.com\/v1/);
+    assert.match(stack, /anthropic_base_url: https:\/\/api\.martllm\.com$/m);
+    assert.match(stack, /mcp_url: https:\/\/api\.martllm\.com\/mcp/);
+    assert.doesNotMatch(stack, /model\/anthropic/);
+    assert.doesNotMatch(stack, /model\/minimax/);
+    assert.doesNotMatch(stack, /model\/cheaperinference/);
+    assert.match(stdout, /preset: implementer/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init --with-foundry martllm --model selects a different model', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-foundry-martllm-model-'));
+  try {
+    await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'ci-sweeper',
+      '--tool',
+      'claude',
+      '--with-foundry',
+      '--model-provider',
+      'martllm',
+      '--model',
+      'anthropic/claude-sonnet-4.6',
+    ]);
+    const stack = await readFile(path.join(dir, '.foundry', 'stack.yaml'), 'utf8');
+    assert.match(stack, /model: anthropic\/claude-sonnet-4\.6/);
+    // all model options remain available in config
+    assert.match(stack, /- id: deepseek\/deepseek-v4\.1-flash/);
+    assert.match(stack, /- id: anthropic\/claude-opus-4\.6/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init rejects unknown martllm model', async () => {
+  await assert.rejects(
+    () =>
+      exec('node', [
+        CLI,
+        '.',
+        '--pattern',
+        'ci-sweeper',
+        '--tool',
+        'claude',
+        '--with-foundry',
+        '--model-provider',
+        'martllm',
+        '--model',
+        'not-a-model',
+        '--dry-run',
+      ]),
+    (err) => err.stderr?.includes('Unknown model') || err.message?.includes('Unknown model'),
+  );
+});
+
+test('loop-init --help documents --model-provider martllm', async () => {
+  const { stdout } = await exec('node', [CLI, '--help']);
+  assert.match(stdout, /--model-provider/);
+  assert.match(stdout, /martllm/);
+});
+
 test('loop-init rejects unknown model provider', async () => {
   await assert.rejects(
     () =>
