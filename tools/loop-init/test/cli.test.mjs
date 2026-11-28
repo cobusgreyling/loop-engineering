@@ -573,14 +573,14 @@ test('loop-init --with-foundry --model-provider martllm emits MartLLM provider p
     // default model
     assert.match(stack, /model: deepseek\/deepseek-v4\.1-flash/);
     // model options table
-    assert.match(stack, /- id: openai\/gpt-5\.4-mini/);
+    assert.match(stack, /- id: deepseek\/deepseek-v4-pro/);
     assert.match(stack, /- id: anthropic\/claude-sonnet-4\.6/);
     assert.match(stack, /- id: google\/gemini-3\.1-pro/);
     assert.match(stack, /- id: z-ai\/glm-5\.3/);
     // OpenAI- and Anthropic-compatible endpoints plus MCP on the same gateway
-    assert.match(stack, /openai_base_url: https:\/\/api\.martllm\.dev\/v1/);
-    assert.match(stack, /anthropic_base_url: https:\/\/api\.martllm\.dev$/m);
-    assert.match(stack, /mcp_url: https:\/\/api\.martllm\.dev\/mcp/);
+    assert.match(stack, /openai_base_url: https:\/\/api\.martllm\.com\/v1/);
+    assert.match(stack, /anthropic_base_url: https:\/\/api\.martllm\.com$/m);
+    assert.match(stack, /mcp_url: https:\/\/api\.martllm\.com\/mcp/);
     assert.doesNotMatch(stack, /model\/anthropic/);
     assert.doesNotMatch(stack, /model\/minimax/);
     assert.doesNotMatch(stack, /model\/cheaperinference/);
@@ -610,7 +610,7 @@ test('loop-init --with-foundry martllm --model selects a different model', async
     assert.match(stack, /model: anthropic\/claude-sonnet-4\.6/);
     // all model options remain available in config
     assert.match(stack, /- id: deepseek\/deepseek-v4\.1-flash/);
-    assert.match(stack, /- id: openai\/gpt-5\.4/);
+    assert.match(stack, /- id: anthropic\/claude-opus-4\.6/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

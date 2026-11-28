@@ -198,8 +198,8 @@ const MARTLLM_DEFAULT_MODEL = 'deepseek/deepseek-v4.1-flash';
 const MARTLLM_BASE_URL = 'https://api.martllm.com';
 const MARTLLM_MODELS = [
     { id: 'deepseek/deepseek-v4.1-flash', contextWindow: 1_048_576, notes: 'DeepSeek' },
-    { id: 'openai/gpt-5.4-mini', contextWindow: 400_000, notes: 'OpenAI' },
-    { id: 'openai/gpt-5.4', contextWindow: 1_000_000, notes: 'OpenAI' },
+    { id: 'deepseek/deepseek-v4-pro', contextWindow: 1_000_000, notes: 'DeepSeek' },
+    { id: 'anthropic/claude-opus-4.6', contextWindow: 1_000_000, notes: 'Anthropic' },
     { id: 'anthropic/claude-sonnet-4.6', contextWindow: 1_000_000, notes: 'Anthropic' },
     { id: 'google/gemini-3.1-pro', contextWindow: 1_048_576, notes: 'Google' },
     { id: 'z-ai/glm-5.3', contextWindow: 1_000_000, notes: 'Z.ai' },
