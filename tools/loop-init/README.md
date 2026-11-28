@@ -44,7 +44,7 @@ The `implementer` preset defaults to the built-in interface primitive. Pass `--m
 
 ```bash
 npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax
-npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M2.7
+npx @cobusgreyling/loop-init . -p ci-sweeper -t grok --with-foundry --model-provider minimax --region cn_zh --model MiniMax-M3
 npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter
 npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider orcarouter --model orcarouter/auto
 npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-provider cheaperinference
@@ -55,7 +55,11 @@ npx @cobusgreyling/loop-init . -p ci-sweeper -t claude --with-foundry --model-pr
 |------|--------|---------|
 | `--model-provider` | `anthropic`, `minimax`, `orcarouter`, `cheaperinference` | `anthropic` |
 | `--region` | `global_en`, `cn_zh` | `global_en` |
-| `--model` | `MiniMax-M3`, `MiniMax-M2.7`, `orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`, `gpt-5.4-mini`, `gpt-5.4`, `claude-sonnet-5`, `gemini-3.1-pro`, `deepseek-v4-flash`, `glm-5.3` | `MiniMax-M3` / `orcarouter/fusion` / `gpt-5.4-mini` |
+| `--model` | `MiniMax-M3.1-Flash`, `MiniMax-M3`, `orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`, `gpt-5.4-mini`, `gpt-5.4`, `claude-sonnet-5`, `gemini-3.1-pro`, `deepseek-v4-flash`, `glm-5.3` | `MiniMax-M3.1-Flash` / `orcarouter/fusion` / `gpt-5.4-mini` |
+
+MiniMax's current catalog lists `MiniMax-M3.1-Flash` first, followed by `MiniMax-M3`. Explicit `--model MiniMax-M2.7` remains accepted and adds that legacy model's metadata only when selected. Existing `.foundry/stack.yaml` files, including saved custom models, are never overwritten.
+
+Flash supports adaptive thinking only, with effort levels `low`, `medium`, `high`, `xhigh`, and `max` (default). The generated capability metadata is descriptive; the consuming runtime maps effort to OpenAI `reasoning_effort` or Anthropic `output_config.effort`. No API requests are sent by this scaffolder. M3's standard pricing is recorded for input up to 512k, with the higher tier above 512k recorded separately. See the [MiniMax API reference](https://platform.minimax.io/docs/api-reference/text-openai-api) and [pricing](https://platform.minimax.io/docs/pricing/overview#models/text).
 
 MiniMax model options and both endpoints (`global_en` → `https://api.minimax.io`, `cn_zh` → `https://api.minimaxi.com`) are written into `.foundry/stack.yaml`. The OrcaRouter provider writes the gateway's OpenAI- and Anthropic-compatible endpoints (`https://api.orcarouter.ai`) plus its routing model options (`orcarouter/fusion`, `orcarouter/fusion-flash`, `orcarouter/auto`, `orcarouter/free`). The Cheaper Inference provider writes the gateway's OpenAI-compatible (`https://api.cheaperinference.com/v1`) and Anthropic-compatible (`https://api.cheaperinference.com`) endpoints plus its model options. Set `CHEAPER_INFERENCE_API_KEY` to a key from [cheaperinference.com/signup](https://cheaperinference.com/signup).
 
